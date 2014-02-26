@@ -15,12 +15,12 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using ShairportSharp.Audio;
-using ShairportSharp.Rtsp;
+using ShairportSharp.Http;
 using ShairportSharp.Remote;
 
-namespace ShairportSharp
+namespace ShairportSharp.Raop
 {    
-    class RaopSession : RtspServer
+    class RaopSession : HttpServer
     {        
         #region Private Variables
 

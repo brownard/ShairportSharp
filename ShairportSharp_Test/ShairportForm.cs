@@ -1,6 +1,7 @@
 ﻿using AlacDecoder;
 using ShairportSharp;
 using ShairportSharp.Audio;
+using ShairportSharp.Raop;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;

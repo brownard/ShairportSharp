@@ -1,5 +1,6 @@
 ﻿using ShairportSharp.Audio;
 using ShairportSharp.Remote;
+using ShairportSharp.Raop;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -332,7 +333,7 @@ namespace ShairportSharp
         void publishBonjour()
         {
             Logger.Debug("Starting bonjour service");
-            bonjour = new BonjourEmitter(getSafeName(name), macAddress.StringFromAddressBytes(), port, !string.IsNullOrEmpty(password));
+            bonjour = new RaopEmitter(getSafeName(name), macAddress.StringFromAddressBytes(), port, !string.IsNullOrEmpty(password));
             bonjour.Publish();
         }
 

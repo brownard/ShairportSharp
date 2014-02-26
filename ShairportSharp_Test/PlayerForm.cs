@@ -1,5 +1,6 @@
 ﻿using ShairportSharp;
 using ShairportSharp.Audio;
+using ShairportSharp.Raop;
 using ShairportSharp.Remote;
 using System;
 using System.Collections.Generic;

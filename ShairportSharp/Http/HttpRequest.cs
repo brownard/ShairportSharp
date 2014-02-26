@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace ShairportSharp.Rtsp
+namespace ShairportSharp.Http
 {
     class HttpRequest
     {
@@ -113,6 +113,11 @@ namespace ShairportSharp.Rtsp
             if (headers.TryGetValue(headerName, out value) && value != "")
                 return value;
             return null;
+        }
+
+        public string this[string header]
+        {
+            get { return GetHeader(header); }
         }
 
         public string GetContentString()

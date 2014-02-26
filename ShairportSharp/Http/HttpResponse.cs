@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace ShairportSharp.Rtsp
+namespace ShairportSharp.Http
 {
     class HttpResponse
     {

@@ -5,9 +5,9 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Text;
 
-namespace ShairportSharp.Rtsp
+namespace ShairportSharp.Http
 {
-    abstract class RtspServer : IDisposable
+    abstract class HttpServer : IDisposable
     {
         #region Variables
 
@@ -23,7 +23,7 @@ namespace ShairportSharp.Rtsp
 
         #region Constructor
 
-        public RtspServer(Socket socket)
+        public HttpServer(Socket socket)
         {
             this.socket = socket;
             inputStream = new BufferedStream(new NetworkStream(socket));

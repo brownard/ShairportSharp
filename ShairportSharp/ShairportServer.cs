@@ -365,7 +365,7 @@ namespace ShairportSharp
                     if (listener == null)
                     {
                         //Server stopped
-                        Logger.Debug("TCP Listener: Aborting new connection, server stopped");
+                        Logger.Debug("TCP Listener: Stopped");
                         return;
                     }
 

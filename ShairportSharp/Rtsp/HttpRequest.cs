@@ -6,21 +6,21 @@ using System.Text.RegularExpressions;
 
 namespace ShairportSharp.Rtsp
 {
-    class RtspRequest
+    class HttpRequest
     {
         #region Static Members
         static readonly byte[] headerDelimiter = { 0x0D, 0x0A, 0x0D, 0x0A }; // \r\n\r\n
         static readonly Regex headerPattern = new Regex("^([\\w-]+):\\W(.+)\r\n", RegexOptions.Compiled | RegexOptions.Multiline);
-        static readonly Regex requestPattern = new Regex("^(\\w+)\\W(.+)\\WRTSP/(.+)\r\n", RegexOptions.Compiled);       
+        static readonly Regex requestPattern = new Regex("^(\\w+)\\W(.+)\\W(.+)/(.+)\r\n", RegexOptions.Compiled);       
 
         /// <summary>
-        /// Tries to parse the first complete RTSP packet from binary data. If successful parsedPacket will hold the completed packet.
+        /// Tries to parse the first complete HTTP packet from binary data. If successful parsedPacket will hold the completed packet.
         /// If the Length property of the parsed packet is less than the length of the binary data there may be more packets to process. 
         /// </summary>
         /// <param name="data">The binary data to process</param>
         /// <param name="parsedPacket">Will hold the parsed packet if successful</param>
         /// <returns>True if a complete packet was successfully parsed</returns>
-        public static bool TryParse(byte[] data, out RtspRequest parsedPacket)
+        public static bool TryParse(byte[] data, out HttpRequest parsedPacket)
         {
             parsedPacket = null;
             int packetLength;
@@ -41,19 +41,21 @@ namespace ShairportSharp.Rtsp
                 packetLength += contentLength;
             }
                        
-            string request = "";
+            string method = "";
             string directory = "";
-            string rtspVersion = ""; 
+            string protocol = "";
+            string version = ""; 
             //Once we know we have a complete packet, parse the request info
             Match m = requestPattern.Match(packet);
             if (m.Success)
             {
-                request = m.Groups[1].Value;
+                method = m.Groups[1].Value;
                 directory = m.Groups[2].Value;
-                rtspVersion = m.Groups[3].Value;
+                protocol = m.Groups[3].Value;
+                version = m.Groups[4].Value;
             }
 
-            parsedPacket = new RtspRequest(request, directory, rtspVersion, headers, packetLength, content);
+            parsedPacket = new HttpRequest(method, directory, protocol, version, headers, packetLength, content);
             return true;
         }
 
@@ -86,18 +88,20 @@ namespace ShairportSharp.Rtsp
         }
         #endregion
         
-        string request;
+        string method;
         string directory;
-        string rtspVersion;
+        string protocol;
+        string version;
         byte[] content;
         Dictionary<string, string> headers;
         int totalLength; //total length (including headers) in bytes
 
-        private RtspRequest(string request, string directory, string rtspVersion, Dictionary<string, string> headers, int totalLength, byte[] content) 
+        private HttpRequest(string method, string directory, string protocol, string version, Dictionary<string, string> headers, int totalLength, byte[] content) 
         {
-            this.request = request;
+            this.method = method;
             this.directory = directory;
-            this.rtspVersion = rtspVersion;
+            this.protocol = protocol;
+            this.version = version;
             this.headers = headers;
             this.content = content;
             this.totalLength = totalLength;
@@ -132,11 +136,19 @@ namespace ShairportSharp.Rtsp
             }
         }
 
-        public string Request
+        public string Method
         {
             get
             {
-                return request;
+                return method;
+            }
+        }
+
+        public string Protocol
+        {
+            get
+            {
+                return protocol;
             }
         }
 
@@ -144,7 +156,7 @@ namespace ShairportSharp.Rtsp
         {
             get
             {
-                return rtspVersion;
+                return version;
             }
         }
 
@@ -167,7 +179,7 @@ namespace ShairportSharp.Rtsp
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine(string.Format("{0} {1} RTSP/{2}", request, directory, rtspVersion));
+            sb.AppendLine(string.Format("{0} {1} {2}/{3}", method, directory, protocol, version));
             sb.AppendLine();
             foreach (string header in headers.Keys)
                 sb.AppendLine(string.Format("{0}: {1}", header, headers[header]));

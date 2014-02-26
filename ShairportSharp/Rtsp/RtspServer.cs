@@ -81,15 +81,15 @@ namespace ShairportSharp.Rtsp
                 for (int x = 0; x < read; x++)
                     byteBuffer.Add(buffer[x]);
 
-                RtspRequest parsedPacket;
+                HttpRequest parsedPacket;
                 //Try and parse a complete packet from our data
-                while (RtspRequest.TryParse(byteBuffer.ToArray(), out parsedPacket))
+                while (HttpRequest.TryParse(byteBuffer.ToArray(), out parsedPacket))
                 {
                     //Logger.Debug("RAOPSession:\r\n{0}", parsedPacket.ToString());
                     //remove packet from our buffer
                     byteBuffer.RemoveRange(0, parsedPacket.Length);
                     //get the response
-                    RtspResponse response = HandleRequest(parsedPacket);
+                    HttpResponse response = HandleRequest(parsedPacket);
                     lock (socketLock)
                     {
                         if (socket != null)
@@ -134,7 +134,7 @@ namespace ShairportSharp.Rtsp
 
         #region Virtual Methods
 
-        protected abstract RtspResponse HandleRequest(RtspRequest request);
+        protected abstract HttpResponse HandleRequest(HttpRequest request);
 
         /// <summary>
         /// Stops listening for new packets and closes the underlying socket.

@@ -1182,10 +1182,10 @@
     <Compile Include="Audio\WaveStream.cs" />
     <Compile Include="Remote\RemoteCommand.cs" />
     <Compile Include="Remote\RemoteServerInfo.cs" />
-    <Compile Include="Rtsp\RtspRequest.cs" />
+    <Compile Include="Rtsp\HttpRequest.cs" />
     <Compile Include="RaopSession.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Rtsp\RtspResponse.cs" />
+    <Compile Include="Rtsp\HttpResponse.cs" />
     <Compile Include="Rtsp\RtspServer.cs" />
     <Compile Include="ShairportServer.cs" />
     <Compile Include="Audio\UdpListener.cs" />

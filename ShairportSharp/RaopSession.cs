@@ -193,9 +193,9 @@ namespace ShairportSharp
             OnStreamStopped(EventArgs.Empty);
         }
 
-        protected override RtspResponse HandleRequest(RtspRequest request)
+        protected override HttpResponse HandleRequest(HttpRequest request)
         {
-            RtspResponse response = new RtspResponse();
+            HttpResponse response = new HttpResponse();
             //iTunes wants to know we are legit before it will even authenticate
             string challengeResponse = getChallengeResponse(request);
             if (challengeResponse != null)
@@ -215,7 +215,7 @@ namespace ShairportSharp
                 return response;
             }
 
-            string requestType = request.Request;
+            string requestType = request.Method;
             lock (requestLock)
             {
                 if (requestType == "OPTIONS")
@@ -314,7 +314,7 @@ namespace ShairportSharp
 
         #region Private Methods
         
-        bool isAuthorised(RtspRequest request)
+        bool isAuthorised(HttpRequest request)
         {
             if (string.IsNullOrEmpty(password))
                 return true;
@@ -330,7 +330,7 @@ namespace ShairportSharp
                     string nonce = authMatch.Groups[3].Value;
                     string uri = authMatch.Groups[4].Value;
                     string resp = authMatch.Groups[5].Value;
-                    string method = request.Request;
+                    string method = request.Method;
 
                     string hash1 = md5Hash(username + ":" + realm + ":" + password).ToUpper();
                     string hash2 = md5Hash(method + ":" + uri).ToUpper();
@@ -345,7 +345,7 @@ namespace ShairportSharp
             return false;
         }
 
-        string getChallengeResponse(RtspRequest request)
+        string getChallengeResponse(HttpRequest request)
         {
             string challenge = request.GetHeader("Apple-Challenge");
             if (challenge != null)
@@ -378,7 +378,7 @@ namespace ShairportSharp
             return null;
         }
 
-        void getSessionParams(RtspRequest request)
+        void getSessionParams(HttpRequest request)
         {
             foreach (Match m in Regex.Matches(request.GetContentString(), "^a=([^:]+):(.+)", RegexOptions.Multiline))
             {
@@ -404,7 +404,7 @@ namespace ShairportSharp
             }
         }
 
-        void initRemoteHandler(RtspRequest request)
+        void initRemoteHandler(HttpRequest request)
         {
             string dacpId = request.GetHeader("DACP-ID");
             string activeRemote = request.GetHeader("Active-Remote");
@@ -416,7 +416,7 @@ namespace ShairportSharp
             }
         }
 
-        bool setupAudioServer(RtspRequest request)
+        bool setupAudioServer(HttpRequest request)
         {
             if (fmtp == null)
             {

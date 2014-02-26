@@ -5,22 +5,14 @@ using System.Text;
 
 namespace ShairportSharp.Rtsp
 {
-    class RtspResponse
+    class HttpResponse
     {
         Dictionary<string, string> headers;
 
-        public RtspResponse()
+        public HttpResponse()
         {
-            Status = "RTSP/1.0 200 OK";
             headers = new Dictionary<string, string>();
         }
-
-        public RtspResponse(string status)
-        {
-            Status = status;
-            headers = new Dictionary<string, string>();
-        }
-
 
         public string Status 
         { 

@@ -13,6 +13,7 @@ using System.Windows.Forms;
 using ShairportSharp.Audio;
 using AirPlayer.Config;
 using ShairportSharp.Remote;
+using ShairportSharp.Raop;
 
 namespace AirPlayer
 {

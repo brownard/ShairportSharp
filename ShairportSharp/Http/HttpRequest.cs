@@ -10,8 +10,8 @@ namespace ShairportSharp.Http
     {
         #region Static Members
         static readonly byte[] headerDelimiter = { 0x0D, 0x0A, 0x0D, 0x0A }; // \r\n\r\n
-        static readonly Regex headerPattern = new Regex("^([\\w-]+):\\W(.+)\r\n", RegexOptions.Compiled | RegexOptions.Multiline);
-        static readonly Regex requestPattern = new Regex("^(\\w+)\\W(.+)\\W(.+)/(.+)\r\n", RegexOptions.Compiled);       
+        static readonly Regex headerPattern = new Regex(@"^([\w-]+):\W(.+)\r\n", RegexOptions.Compiled | RegexOptions.Multiline);
+        static readonly Regex requestPattern = new Regex(@"^(\w+)\W(\S+)\W(\S+)/(\S+)\r", RegexOptions.Compiled);       
 
         /// <summary>
         /// Tries to parse the first complete HTTP packet from binary data. If successful parsedPacket will hold the completed packet.
@@ -46,6 +46,7 @@ namespace ShairportSharp.Http
             string protocol = "";
             string version = ""; 
             //Once we know we have a complete packet, parse the request info
+            //Logger.Debug(packet);
             Match m = requestPattern.Match(packet);
             if (m.Success)
             {
@@ -170,14 +171,6 @@ namespace ShairportSharp.Http
             get
             {
                 return directory;
-            }
-        }
-
-        public int Code
-        {
-            get
-            {
-                return 200;
             }
         }
 

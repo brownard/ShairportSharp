@@ -108,7 +108,11 @@ namespace ShairportSharp_Test
             if (panelArtwork.BackgroundImage != null)
                 panelArtwork.BackgroundImage.Dispose();
             Image image;
-            try { image = Image.FromStream(new MemoryStream(e.ImageData)); }
+            try
+            {
+                using (MemoryStream ms = new MemoryStream(e.ImageData))
+                    image = Image.FromStream(ms);
+            }
             catch { image = null; }
             panelArtwork.BackgroundImage = image;
         }

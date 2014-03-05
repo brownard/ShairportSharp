@@ -11,6 +11,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using ShairportSharp.Airplay;
 
 namespace ShairportSharp_Test
 {
@@ -18,8 +19,10 @@ namespace ShairportSharp_Test
     {
         #region Variables
 
+        AirplayServer airplay;
         ShairportServer server;
         PlayerForm playerForm = null;
+        PhotoForm photoForm = null;
         bool closed = false;
 
         #endregion
@@ -56,10 +59,23 @@ namespace ShairportSharp_Test
                 server.StopCurrentSession();
         }
 
+        void photoForm_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            if (photoForm != null)
+            {
+                photoForm.Dispose();
+                photoForm = null;
+            }
+        }
+
         private void buttonStart_Click(object sender, EventArgs e)
         {
             if (server == null)
             {
+                airplay = new AirplayServer(nameTextBox.Text, passwordTextBox.Text);
+                airplay.PhotoReceived += airplay_PhotoReceived;
+                airplay.Start();
+
                 server = new ShairportServer(nameTextBox.Text, passwordTextBox.Text)
                 {
                     Port = (int)rtspPortUpDown.Value,
@@ -82,6 +98,9 @@ namespace ShairportSharp_Test
             }
             else
             {
+                airplay.Stop();
+                airplay = null;
+
                 closePlayerForm();
                 server.Stop();
                 server = null;
@@ -92,7 +111,37 @@ namespace ShairportSharp_Test
 
         #endregion
 
-        #region Server Events
+        #region AirPlay Events
+                
+        void airplay_PhotoReceived(object sender, PhotoEventArgs e)
+        {
+            Image image;
+            try
+            {
+                using (MemoryStream ms = new MemoryStream(e.Photo))
+                    image = Image.FromStream(ms);
+            }
+            catch
+            {
+                image = null;
+            }
+            BeginInvoke((MethodInvoker)delegate() { showPhoto(image); });
+        }
+
+        void showPhoto(Image photo)
+        {
+            if (photoForm == null)
+            {
+                photoForm = new PhotoForm();
+                photoForm.FormClosed += photoForm_FormClosed;
+                photoForm.Show();
+            }
+            photoForm.SetPhoto(photo);
+        }
+
+        #endregion
+
+        #region AirTunes Events
 
         void server_StreamStarting(object sender, EventArgs e)
         {
@@ -197,9 +246,13 @@ namespace ShairportSharp_Test
         void closePlayerForm()
         {
             if (playerForm != null)
-            {
                 playerForm.Close();
-            }
+        }
+
+        void closePhotoForm()
+        {
+            if (photoForm != null)
+                photoForm.Close();
         }
 
         void logToTextBox(object sender, LogEventArgs e)

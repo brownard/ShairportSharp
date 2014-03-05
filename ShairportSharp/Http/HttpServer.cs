@@ -32,6 +32,20 @@ namespace ShairportSharp.Http
 
         #endregion
 
+        #region Events
+        
+        /// <summary>
+        /// Fired when the client has disconnected
+        /// </summary>
+        public event EventHandler Closed;
+        protected virtual void OnClosed(EventArgs e)
+        {
+            if (Closed != null)
+                Closed(this, e);
+        }
+
+        #endregion
+
         #region Public Methods
 
         /// <summary>
@@ -48,16 +62,35 @@ namespace ShairportSharp.Http
                     return;
                 try
                 {
-                    Logger.Debug("RtspServer: Listening for new RTSP packets");
+                    //Logger.Debug("HttpServer: Listening for new requests");
                     inputStream.BeginRead(buffer, 0, buffer.Length, onInputReadComplete, null);
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("RtspServer: Failed to start -", ex);
+                    Logger.Error("HttpServer: Failed to start -", ex);
                     inputStream.Close();
                     outputStream.Close();
                     socket.Close();
                     socket = null;
+                }
+            }
+        }
+
+        public void Send(HttpResponse response)
+        {
+            lock (socketLock)
+            {
+                if (socket != null)
+                {
+                    try
+                    {
+                        byte[] txtBytes = response.GetBytes();
+                        outputStream.Write(txtBytes, 0, txtBytes.Length);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Debug("HttpServer: Error sending response -", ex);
+                    }
                 }
             }
         }
@@ -95,7 +128,7 @@ namespace ShairportSharp.Http
                         if (socket != null)
                         {
                             //send it
-                            byte[] txtBytes = encoding.GetBytes(response.ToString());
+                            byte[] txtBytes = response.GetBytes();
                             outputStream.Write(txtBytes, 0, txtBytes.Length);
                         }
                         else
@@ -120,12 +153,12 @@ namespace ShairportSharp.Http
             }
             catch (IOException)
             {
-                Logger.Debug("RtspServer: IO Exception, stream probably closed");
+                Logger.Debug("HttpServer: IO Exception, socket probably closed");
                 Close();
             }
             catch (Exception ex)
             {
-                Logger.Error("RtspServer: Error receiving RTSP packets -", ex);
+                Logger.Error("HttpServer: Error receiving requests -", ex);
                 Close();
             }
         }
@@ -149,9 +182,10 @@ namespace ShairportSharp.Http
                     outputStream.Close();
                     socket.Close();
                     socket = null;
-                    Logger.Debug("RtspServer: Closed socket");
+                    //Logger.Debug("HttpServer: Closed socket");
                 }
             }
+            OnClosed(EventArgs.Empty);
         }
 
         #endregion

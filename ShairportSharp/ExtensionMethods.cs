@@ -2,17 +2,34 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Windows.Forms;
 
 namespace ShairportSharp
 {
     static class ExtensionMethods
     {
-        public static string StringFromAddressBytes(this byte[] addressBytes)
+        public static string ComputerNameIfNullOrEmpty(this string name)
         {
-            StringBuilder sb = new StringBuilder();
-            foreach (byte b in addressBytes)
-                sb.Append(b.ToString("X2"));
-            return sb.ToString();
+            if (string.IsNullOrEmpty(name))
+                return SystemInformation.ComputerName;
+            return name;
+        }
+
+        public static string StringFromAddressBytes(this byte[] addressBytes, string seperator = null)
+        {
+            string addressString = "";
+            if (addressBytes == null || addressBytes.Length < 1)
+                return addressString;
+
+            bool addSeperator = !string.IsNullOrEmpty(seperator);
+            for (int x = 0; x < addressBytes.Length - 1; x++)
+            {
+                addressString += addressBytes[x].ToString("X2");
+                if (addSeperator)
+                    addressString += seperator;
+            }
+            addressString += addressBytes[addressBytes.Length - 1].ToString("X2");
+            return addressString;
         }
 
         public static uint UIntFromBigEndian(this byte[] buffer, int offset, int count)

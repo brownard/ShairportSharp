@@ -48,7 +48,12 @@
   <ItemGroup>
     <Compile Include="Airplay\AirplayEmitter.cs" />
     <Compile Include="Airplay\AirplayEventArgs.cs" />
+    <Compile Include="Airplay\AirplayServerInfo.cs" />
+    <Compile Include="Airplay\AirplayServer.cs" />
     <Compile Include="Airplay\AirplaySession.cs" />
+    <Compile Include="Airplay\IPlistResponse.cs" />
+    <Compile Include="Airplay\PlaybackInfo.cs" />
+    <Compile Include="Airplay\Plist.cs" />
     <Compile Include="AlacDecoder\AlacDecodeUtils.cs" />
     <Compile Include="AlacDecoder\AlacFile.cs" />
     <Compile Include="AlacDecoder\Consts.cs" />
@@ -1174,6 +1179,7 @@
     <Compile Include="BouncyCastle\x509\X509V2AttributeCertificateGenerator.cs" />
     <Compile Include="BouncyCastle\x509\X509V2CRLGenerator.cs" />
     <Compile Include="BouncyCastle\x509\X509V3CertificateGenerator.cs" />
+    <Compile Include="Http\ServerListener.cs" />
     <Compile Include="Raop\RaopEmitter.cs" />
     <Compile Include="Raop\Constants.cs" />
     <Compile Include="Raop\DmapData.cs" />
@@ -1193,6 +1199,7 @@
     <Compile Include="Http\HttpServer.cs" />
     <Compile Include="ShairportServer.cs" />
     <Compile Include="Audio\UdpListener.cs" />
+    <Compile Include="Utils.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

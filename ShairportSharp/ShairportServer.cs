@@ -9,6 +9,7 @@ using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
 using System.Windows.Forms;
+using ShairportSharp.Http;
 
 namespace ShairportSharp
 {
@@ -28,7 +29,7 @@ namespace ShairportSharp
         BonjourEmitter bonjour;
         byte[] macAddress;
         object listenerLock = new object();
-        TcpListener listener = null;
+        ServerListener listener = null;
         object sessionLock = new object();
         RaopSession currentSession = null;
         RemoteHandler remoteHandler;
@@ -223,7 +224,8 @@ namespace ShairportSharp
         {
             //We need the mac address as part of the authentication response
             //and it also prefixes the name of the server in bonjour
-            if (!getHardwareAddress())
+            macAddress = Utils.GetMacAddress();
+            if (macAddress == null)
                 return;
 
             Logger.Info("Server starting: MAC address {0}, port {1}", macAddress.StringFromAddressBytes(), port);
@@ -258,15 +260,8 @@ namespace ShairportSharp
 
                 if (listener != null)
                 {
-                    try
-                    {
-                        listener.Server.Close();
-                    }
-                    finally
-                    {
-                        listener.Stop();
-                        listener = null;
-                    }
+                    listener.Stop();
+                    listener = null;
                 }
             }
             lock (sessionLock)
@@ -333,67 +328,20 @@ namespace ShairportSharp
         void publishBonjour()
         {
             Logger.Debug("Starting bonjour service");
-            bonjour = new RaopEmitter(getSafeName(name), macAddress.StringFromAddressBytes(), port, !string.IsNullOrEmpty(password));
+            bonjour = new RaopEmitter(name.ComputerNameIfNullOrEmpty(), macAddress.StringFromAddressBytes(), port, !string.IsNullOrEmpty(password));
             bonjour.Publish();
         }
 
         void startListener()
         {
             //Create a TCPListener on the specified port
-            try
-            {
-                Logger.Debug("Starting TCP Listener");
-                listener = new TcpListener(IPAddress.Any, port);
-                listener.Start(1000);
-                listener.BeginAcceptSocket(acceptSocket, null);
-            }
-            catch (Exception ex)
-            {
-                //cleanup
-                Logger.Error("Error starting TCP Listener -", ex);
+            listener = new ServerListener(IPAddress.Any, port);
+            listener.SocketAccepted += listener_SocketAccepted;
+            if (!listener.Start())
                 Stop();
-            }
         }
 
-        void acceptSocket(IAsyncResult result)
-        {
-            Socket socket = null;
-            try
-            {
-                //New connection
-                lock (listenerLock)
-                {
-                    if (listener == null)
-                    {
-                        //Server stopped
-                        Logger.Debug("TCP Listener: Stopped");
-                        return;
-                    }
-
-                    socket = listener.EndAcceptSocket(result);                    
-                    if (socket != null)
-                    {
-                        Logger.Debug("TCP Listener: New connection");
-                        onSocketAccepted(socket);
-                    }
-                    listener.BeginAcceptSocket(acceptSocket, null);
-                }
-            }
-            catch (SocketException)
-            {
-                Logger.Debug("TCP Listener: SocketException, stream probably closed");
-                if (socket != null)
-                    socket.Close();
-            }
-            catch (Exception ex)
-            {
-                Logger.Error("TCP Listener: Error accepting new connection -", ex);
-                if (socket != null)
-                    socket.Close();
-            }
-        }
-
-        void onSocketAccepted(Socket socket)
+        void listener_SocketAccepted(object sender, SocketAcceptedEventArgs e)
         {
             lock (sessionLock)
             {
@@ -408,16 +356,16 @@ namespace ShairportSharp
                     else
                     {
                         Logger.Info("Rejecting new connection, existing connection exists");
-                        socket.Close();
                         return;
                     }
                 }
                 //Start a responder to handle the connection
-                RaopSession raop = new RaopSession(macAddress, socket, password);
+                e.Handled = true;
+                RaopSession raop = new RaopSession(macAddress, e.Socket, password);
                 raop.UDPPort = AudioPort;
                 raop.BufferSize = AudioBufferSize;
                 raop.StreamStarting += streamStarting;
-                raop.StreamStopped += streamStopped;
+                raop.Closed += streamStopped;
                 raop.StreamReady += raop_StreamReady;
                 raop.ProgressChanged += raop_ProgressChanged;
                 raop.MetaDataChanged += raop_MetaDataChanged;
@@ -512,30 +460,6 @@ namespace ShairportSharp
                 if (sender == currentSession)
                     currentRemote = e.RemoteServer;
             }
-        }
-
-        bool getHardwareAddress()
-        {
-            try
-            {
-                NetworkInterface[] nics = NetworkInterface.GetAllNetworkInterfaces();
-                if (nics.Length > 0)
-                    macAddress = nics[0].GetPhysicalAddress().GetAddressBytes();
-                else
-                    Logger.Error("No network connection detected");
-            }
-            catch (Exception ex)
-            {
-                Logger.Error("Error retrieving MAC address of network adapter -", ex);
-            }
-            return macAddress != null;
-        }
-
-        static string getSafeName(string name)
-        {
-            if (string.IsNullOrEmpty(name))
-                return SystemInformation.ComputerName;
-            return name;
         }
 
         #endregion

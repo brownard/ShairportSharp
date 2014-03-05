@@ -65,16 +65,6 @@ namespace ShairportSharp.Raop
         }
 
         /// <summary>
-        /// Fired when the client has disconnected
-        /// </summary>
-        public event EventHandler StreamStopped;
-        protected virtual void OnStreamStopped(EventArgs e)
-        {
-            if (StreamStopped != null)
-                StreamStopped(this, e);
-        }
-
-        /// <summary>
         /// Fired when new volume information is received from the client
         /// </summary>
         public event EventHandler<VolumeChangedEventArgs> VolumeChanged;
@@ -179,8 +169,6 @@ namespace ShairportSharp.Raop
         /// </summary>
         public override void Close()
         {
-            base.Close();
-
             lock (requestLock)
             {
                 if (audioServer != null)
@@ -190,7 +178,7 @@ namespace ShairportSharp.Raop
                     Logger.Debug("RAOPSession: Stopped audio server");
                 }
             }
-            OnStreamStopped(EventArgs.Empty);
+            base.Close();
         }
 
         protected override HttpResponse HandleRequest(HttpRequest request)
@@ -463,11 +451,11 @@ namespace ShairportSharp.Raop
 
         void handleParameterString(string parameterString)
         {
-            Match m = Regex.Match(parameterString, @"([^:]+):\s*(.+)");
-            if (m.Success)
+            Dictionary<string, string> paramaters = Utils.ParseTextParameters(parameterString);
+            foreach (KeyValuePair<string, string> keyVal in paramaters)
             {
-                string paramName = m.Groups[1].Value;
-                string paramVal = m.Groups[2].Value;
+                string paramName = keyVal.Key;
+                string paramVal = keyVal.Value;
                 if (paramName == "volume")
                 {
                     double volume = double.Parse(paramVal);
@@ -476,14 +464,14 @@ namespace ShairportSharp.Raop
                 }
                 else if (paramName == "progress")
                 {
-                    m = Regex.Match(paramVal, @"(\d+)/(\d+)/(\d+)");
+                    Match m = Regex.Match(paramVal, @"(\d+)/(\d+)/(\d+)");
                     if (m.Success)
                     {
                         uint start = uint.Parse(m.Groups[1].Value);
                         uint current = uint.Parse(m.Groups[2].Value);
                         uint stop = uint.Parse(m.Groups[3].Value);
                         Logger.Debug("RAOPSession: Set Progress: {0} / {1} / {2}", start, current, stop);
-                        OnProgressChanged(new PlaybackProgressChangedEventArgs(start, stop, current)); 
+                        OnProgressChanged(new PlaybackProgressChangedEventArgs(start, stop, current));
                     }
                 }
             }

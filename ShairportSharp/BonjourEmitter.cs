@@ -36,12 +36,14 @@ namespace ShairportSharp
 
         void service_DidPublishService(NetService service)
         {
+            Logger.Debug("Bonjour: Published service '{0}'", service.Name);
             if (DidPublishService != null)
                 DidPublishService(service);
         }
 
         void service_DidNotPublishService(NetService service, DNSServiceException exception)
         {
+            Logger.Debug("Bonjour: Failed to publish service '{0}' - {1}", service.Name, exception.Message);
             if (DidNotPublishService != null)
                 DidNotPublishService(service, exception);
         }

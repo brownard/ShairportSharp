@@ -121,8 +121,18 @@ namespace ShairportSharp.Http
                     //Logger.Debug("RAOPSession:\r\n{0}", parsedPacket.ToString());
                     //remove packet from our buffer
                     byteBuffer.RemoveRange(0, parsedPacket.Length);
-                    //get the response
-                    HttpResponse response = HandleRequest(parsedPacket);
+                    HttpResponse response;
+                    try
+                    {
+                        //get the response
+                        response = HandleRequest(parsedPacket);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error("HttpServer: Exception handling message -", ex);
+                        response = null;
+                    }
+
                     if (response != null)
                     {
                         lock (socketLock)

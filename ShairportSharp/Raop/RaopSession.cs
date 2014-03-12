@@ -17,6 +17,7 @@ using System.Threading;
 using ShairportSharp.Audio;
 using ShairportSharp.Http;
 using ShairportSharp.Remote;
+using System.Globalization;
 
 namespace ShairportSharp.Raop
 {    
@@ -377,7 +378,7 @@ namespace ShairportSharp.Raop
                     string[] temp = m.Groups[2].Value.Split(' ');
                     fmtp = new int[temp.Length];
                     for (int i = 0; i < temp.Length; i++)
-                        fmtp[i] = int.Parse(temp[i]);
+                        fmtp[i] = int.Parse(temp[i], CultureInfo.InvariantCulture);
                     Logger.Debug("RAOPSession: Received audio info - '{0}'", m.Groups[2].Value);
                 }
                 else if (m.Groups[1].Value == "rsaaeskey")
@@ -421,14 +422,14 @@ namespace ShairportSharp.Raop
             Match m = Regex.Match(value, @";control_port=(\d+)");
             if (m.Success)
             {
-                controlPort = int.Parse(m.Groups[1].Value);
+                controlPort = int.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture);
                 Logger.Debug("RAOPSession: Set client control port to {0}", controlPort);
             }
             // Timing port
             m = Regex.Match(value, @";timing_port=(\d+)");
             if (m.Success)
             {
-                timingPort = int.Parse(m.Groups[1].Value);
+                timingPort = int.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture);
                 Logger.Debug("RAOPSession: Set client timing port to {0}", timingPort);
             }
 
@@ -459,7 +460,7 @@ namespace ShairportSharp.Raop
                 string paramVal = keyVal.Value;
                 if (paramName == "volume")
                 {
-                    double volume = double.Parse(paramVal);
+                    double volume = double.Parse(paramVal, CultureInfo.InvariantCulture);
                     Logger.Debug("RAOPSession: Set Volume: {0}", volume);
                     OnVolumeChanged(new VolumeChangedEventArgs(volume));
                 }
@@ -468,9 +469,9 @@ namespace ShairportSharp.Raop
                     Match m = Regex.Match(paramVal, @"(\d+)/(\d+)/(\d+)");
                     if (m.Success)
                     {
-                        uint start = uint.Parse(m.Groups[1].Value);
-                        uint current = uint.Parse(m.Groups[2].Value);
-                        uint stop = uint.Parse(m.Groups[3].Value);
+                        uint start = uint.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture);
+                        uint current = uint.Parse(m.Groups[2].Value, CultureInfo.InvariantCulture);
+                        uint stop = uint.Parse(m.Groups[3].Value, CultureInfo.InvariantCulture);
                         Logger.Debug("RAOPSession: Set Progress: {0} / {1} / {2}", start, current, stop);
                         OnProgressChanged(new PlaybackProgressChangedEventArgs(start, stop, current));
                     }

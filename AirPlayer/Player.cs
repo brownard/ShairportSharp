@@ -256,7 +256,7 @@ namespace AirPlayer
             {
                 graphBuilder = (IGraphBuilder)new FilterGraph();
                 iStage = 5;
-                AddFilterByName(graphBuilder, DirectShow.FilterCategory.AudioRendererCategory, audioDevice);
+                DirectShow.Helper.Utils.AddFilterByName(graphBuilder, DirectShow.FilterCategory.AudioRendererCategory, audioDevice);
 
                 var sourceFilter = new GenericPushSourceFilter(settings.Source, settings.GetMediaType());
                 hr = graphBuilder.AddFilter(sourceFilter, sourceFilter.Name);
@@ -415,30 +415,5 @@ namespace AirPlayer
 
         #endregion
 
-        public static IBaseFilter AddFilterByName(IGraphBuilder graphBuilder, Guid deviceCategory, string friendlyName)
-        {
-            IBaseFilter filter = null;
-
-            if (graphBuilder == null)
-            {
-                return null;// throw new ArgumentNullException("graphBuilder");
-            }
-
-            foreach (DSDevice t in new DSCategory(deviceCategory))
-            {
-                if (String.Compare(t.Name, friendlyName, true) != 0)
-                {
-                    continue;
-                }
-
-                int hr = ((IFilterGraph2)graphBuilder).AddSourceFilterForMoniker(t.Value, null, friendlyName, out filter);
-                if (hr != 0 || filter == null)
-                    return null; //new HRESULT(hr).Throw();
-
-                break;
-            }
-
-            return filter;
-        }
     }
 }

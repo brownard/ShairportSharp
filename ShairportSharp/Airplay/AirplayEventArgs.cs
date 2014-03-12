@@ -18,9 +18,20 @@ namespace ShairportSharp.Airplay
         Stopped
     }
 
-    public class PhotoEventArgs : EventArgs
+    public class AirplayEventArgs : EventArgs
     {
-        public PhotoEventArgs(string assetKey, string transition, byte[] photo)
+        public AirplayEventArgs(string sessionId)
+        {
+            SessionId = sessionId;
+        }
+
+        public string SessionId { get; protected set; }
+    }
+
+    public class PhotoEventArgs : AirplayEventArgs
+    {
+        public PhotoEventArgs(string assetKey, string transition, byte[] photo, string sessionId)
+            : base(sessionId)
         {
             AssetKey = assetKey;
             Transition = transition;
@@ -34,8 +45,8 @@ namespace ShairportSharp.Airplay
 
     public class PhotoReceivedEventArgs : PhotoEventArgs
     {
-        public PhotoReceivedEventArgs(string assetKey, string transition, byte[] photo, string assetAction)
-            : base(assetKey, transition, photo)
+        public PhotoReceivedEventArgs(string assetKey, string transition, byte[] photo, string assetAction, string sessionId)
+            : base(assetKey, transition, photo, sessionId)
         {
             switch (assetAction)
             {
@@ -55,9 +66,21 @@ namespace ShairportSharp.Airplay
         public bool NotInCache { get; set; }
     }
 
-    public class SlideshowSettingsEventArgs : EventArgs
+    public class SlideshowFeaturesEventArgs : AirplayEventArgs
     {
-        public SlideshowSettingsEventArgs(string state, int slideDuration, string theme)
+        public SlideshowFeaturesEventArgs(string sessionId)
+            : base(sessionId)
+        {
+            Features = new SlideshowFeatures();
+        }
+
+        public SlideshowFeatures Features { get; protected set; }
+    }
+
+    public class SlideshowSettingsEventArgs : AirplayEventArgs
+    {
+        public SlideshowSettingsEventArgs(string state, int slideDuration, string theme, string sessionId)
+            : base(sessionId)
         {
             SlideDuration = slideDuration;
             Theme = theme;
@@ -72,9 +95,10 @@ namespace ShairportSharp.Airplay
         public string Theme { get; protected set; }
     }
 
-    public class VideoEventArgs : EventArgs
+    public class VideoEventArgs : AirplayEventArgs
     {
-        public VideoEventArgs(string contentLocation, double startPosition)
+        public VideoEventArgs(string contentLocation, double startPosition, string sessionId)
+            : base(sessionId)
         {
             ContentLocation = contentLocation;
             StartPosition = startPosition;
@@ -84,9 +108,10 @@ namespace ShairportSharp.Airplay
         public double StartPosition { get; protected set; }
     }
 
-    public class PlaybackInfoEventArgs : EventArgs
+    public class PlaybackInfoEventArgs : AirplayEventArgs
     {
-        public PlaybackInfoEventArgs()
+        public PlaybackInfoEventArgs(string sessionId)
+            : base(sessionId)
         {
             PlaybackInfo = new PlaybackInfo()
             {
@@ -95,5 +120,37 @@ namespace ShairportSharp.Airplay
         }
 
         public PlaybackInfo PlaybackInfo { get; protected set; }
+    }
+
+    public class PlaybackRateEventArgs : AirplayEventArgs
+    {
+        public PlaybackRateEventArgs(double rate, string sessionId)
+            : base(sessionId)
+        {
+            Rate = rate;
+        }
+
+        public double Rate { get; protected set; }
+    }
+
+    public class PlaybackPositionEventArgs : AirplayEventArgs
+    {
+        public PlaybackPositionEventArgs(double position, string sessionId)
+            : base(sessionId)
+        {
+            Position = position;
+        }
+
+        public double Position { get; protected set; }
+    }
+
+    public class GetPlaybackPositionEventArgs : AirplayEventArgs
+    {
+        public GetPlaybackPositionEventArgs(string sessionId)
+            : base(sessionId)
+        { }
+
+        public double Duration { get; set; }
+        public double Position { get; set; }
     }
 }

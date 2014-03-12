@@ -10,38 +10,44 @@ namespace ShairportSharp
 {
     abstract class BonjourEmitter
     {
-        NetService currentService = null;
         public event NetService.ServicePublished DidPublishService;
         public event NetService.ServiceNotPublished DidNotPublishService;
+        protected NetService CurrentService = null;
+        protected abstract NetService GetNetService();
 
-        public void Publish()
+        public virtual void Publish()
         {
-            currentService = GetNetService();
-            currentService.AllowMultithreadedCallbacks = true;
-            currentService.DidPublishService += service_DidPublishService;
-            currentService.DidNotPublishService += service_DidNotPublishService;
-            currentService.Publish();
-        }
-
-        public void Stop()
-        {
-            if (currentService != null)
+            if (CurrentService == null)
             {
-                currentService.Stop();
-                currentService = null;
+                CurrentService = GetNetService();
+                if (CurrentService != null)
+                {
+                    CurrentService.AllowMultithreadedCallbacks = true;
+                    CurrentService.DidPublishService += OnDidPublishService;
+                    CurrentService.DidNotPublishService += OnDidNotPublishService;
+                    CurrentService.Publish();
+                }
             }
         }
 
-        protected abstract NetService GetNetService();
-
-        void service_DidPublishService(NetService service)
+        public virtual void Stop()
+        {
+            if (CurrentService != null)
+            {
+                CurrentService.Stop();
+                CurrentService.Dispose();
+                CurrentService = null;
+            }
+        }
+        
+        protected virtual void OnDidPublishService(NetService service)
         {
             Logger.Debug("Bonjour: Published service '{0}'", service.Name);
             if (DidPublishService != null)
                 DidPublishService(service);
         }
 
-        void service_DidNotPublishService(NetService service, DNSServiceException exception)
+        protected virtual void OnDidNotPublishService(NetService service, DNSServiceException exception)
         {
             Logger.Debug("Bonjour: Failed to publish service '{0}' - {1}", service.Name, exception.Message);
             if (DidNotPublishService != null)

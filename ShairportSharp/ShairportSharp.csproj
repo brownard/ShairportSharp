@@ -53,7 +53,9 @@
     <Compile Include="Airplay\AirplaySession.cs" />
     <Compile Include="Airplay\IPlistResponse.cs" />
     <Compile Include="Airplay\PlaybackInfo.cs" />
+    <Compile Include="Airplay\PlaybackStateInfo.cs" />
     <Compile Include="Airplay\Plist.cs" />
+    <Compile Include="Airplay\SlideshowFeatures.cs" />
     <Compile Include="AlacDecoder\AlacDecodeUtils.cs" />
     <Compile Include="AlacDecoder\AlacFile.cs" />
     <Compile Include="AlacDecoder\Consts.cs" />

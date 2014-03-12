@@ -23,6 +23,7 @@ namespace ShairportSharp_Test
         ShairportServer server;
         PlayerForm playerForm = null;
         PhotoForm photoForm = null;
+        VideoForm videoForm = null;
         bool closed = false;
 
         #endregion
@@ -45,7 +46,7 @@ namespace ShairportSharp_Test
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
             closed = true;
-            closePlayerForm();
+            closeForms();
             if (server != null)
                 server.Stop();
         }
@@ -68,14 +69,19 @@ namespace ShairportSharp_Test
             }
         }
 
+        void videoForm_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            if (videoForm != null)
+            {
+                videoForm.Dispose();
+                videoForm = null;
+            }
+        }
+
         private void buttonStart_Click(object sender, EventArgs e)
         {
             if (server == null)
             {
-                airplay = new AirplayServer(nameTextBox.Text, passwordTextBox.Text);
-                airplay.PhotoReceived += airplay_PhotoReceived;
-                airplay.Start();
-
                 server = new ShairportServer(nameTextBox.Text, passwordTextBox.Text)
                 {
                     Port = (int)rtspPortUpDown.Value,
@@ -93,15 +99,27 @@ namespace ShairportSharp_Test
                     server.VolumeChanged += server_VolumeChange;
                 server.AudioBufferChanged += server_AudioBufferChanged;
                 server.Start();
+
+                airplay = new AirplayServer(nameTextBox.Text, passwordTextBox.Text);
+                airplay.PhotoReceived += airplay_PhotoReceived;
+                airplay.VideoReceived += airplay_VideoReceived;
+                airplay.PlaybackInfoRequested += airplay_PlaybackInfoRequested;
+                airplay.GetPlaybackPosition += airplay_GetPlaybackPosition;
+                airplay.PlaybackPositionChanged += airplay_PlaybackPositionChanged;
+                airplay.PlaybackRateChanged += airplay_PlaybackRateChanged;
+                airplay.SessionClosed += airplay_SessionClosed;
+                airplay.Start();
+
                 panelSettings.Enabled = false;
                 buttonStart.Text = "Stop";
             }
             else
             {
+                closeForms();
+
                 airplay.Stop();
                 airplay = null;
 
-                closePlayerForm();
                 server.Stop();
                 server = null;
                 panelSettings.Enabled = true;
@@ -128,6 +146,58 @@ namespace ShairportSharp_Test
             BeginInvoke((MethodInvoker)delegate() { showPhoto(image); });
         }
 
+        void airplay_GetPlaybackPosition(object sender, GetPlaybackPositionEventArgs e)
+        {
+            Invoke((MethodInvoker)delegate() 
+            {
+                if (videoForm != null)
+                    videoForm.GetProgress(e);
+            });
+        }
+
+        void airplay_PlaybackPositionChanged(object sender, PlaybackPositionEventArgs e)
+        {
+            Invoke((MethodInvoker)delegate()
+            {
+                if (videoForm != null)
+                    videoForm.SetPosition(e);
+            });
+        }
+
+        void airplay_PlaybackInfoRequested(object sender, PlaybackInfoEventArgs e)
+        {
+            Invoke((MethodInvoker)delegate()
+            {
+                if (videoForm != null)
+                    videoForm.GetPlaybackInfo(e.PlaybackInfo);
+            });
+        }
+
+        void airplay_PlaybackRateChanged(object sender, PlaybackRateEventArgs e)
+        {
+            Invoke((MethodInvoker)delegate()
+            {
+                if (videoForm != null)
+                    videoForm.SetPlaybackRate(e);
+            });
+        }
+
+        void airplay_VideoReceived(object sender, VideoEventArgs e)
+        {
+            Invoke((MethodInvoker)delegate()
+            {
+                showVideo(e);
+            });
+        }
+
+        void airplay_SessionClosed(object sender, AirplayEventArgs e)
+        {
+            Invoke((MethodInvoker)delegate()
+            {
+                closeAirplayForms();
+            });
+        }
+
         void showPhoto(Image photo)
         {
             if (photoForm == null)
@@ -137,6 +207,17 @@ namespace ShairportSharp_Test
                 photoForm.Show();
             }
             photoForm.SetPhoto(photo);
+        }
+
+        void showVideo(VideoEventArgs e)
+        {
+            if (videoForm == null)
+            {
+                videoForm = new VideoForm(airplay);
+                videoForm.FormClosed += videoForm_FormClosed;
+                videoForm.Show();
+            }
+            videoForm.LoadVideo(e);
         }
 
         #endregion
@@ -151,7 +232,7 @@ namespace ShairportSharp_Test
                 return;
             }
 
-            closePlayerForm();
+            closeForms();
             playerForm = new PlayerForm(server, sendCommandCheckBox.Checked);
             playerForm.Location = new Point(this.Location.X + this.Width + 10, this.Location.Y);
             playerForm.FormClosed += playerForm_FormClosed;
@@ -164,7 +245,7 @@ namespace ShairportSharp_Test
                 BeginInvoke((MethodInvoker)delegate() { server_StreamStopped(sender, e); });
                 return;
             }
-            closePlayerForm();
+            closeAirtunesForms();
         }
 
         void server_StreamReady(object sender, EventArgs e)
@@ -243,16 +324,24 @@ namespace ShairportSharp_Test
 
         #region Utils
 
-        void closePlayerForm()
+        void closeForms()
+        {
+            closeAirtunesForms();
+            closeAirplayForms();
+        }
+
+        void closeAirtunesForms()
         {
             if (playerForm != null)
                 playerForm.Close();
         }
 
-        void closePhotoForm()
+        void closeAirplayForms()
         {
             if (photoForm != null)
                 photoForm.Close();
+            if (videoForm != null)
+                videoForm.Close();
         }
 
         void logToTextBox(object sender, LogEventArgs e)

@@ -123,23 +123,26 @@ namespace ShairportSharp.Http
                     byteBuffer.RemoveRange(0, parsedPacket.Length);
                     //get the response
                     HttpResponse response = HandleRequest(parsedPacket);
-                    lock (socketLock)
+                    if (response != null)
                     {
-                        if (socket != null)
+                        lock (socketLock)
                         {
-                            //send it
-                            byte[] txtBytes = response.GetBytes();
-                            outputStream.Write(txtBytes, 0, txtBytes.Length);
+                            if (socket != null)
+                            {
+                                //send it
+                                byte[] txtBytes = response.GetBytes();
+                                outputStream.Write(txtBytes, 0, txtBytes.Length);
+                            }
+                            else
+                            {
+                                return;
+                            }
                         }
-                        else
-                        {
-                            return;
-                        }
-                    }
 
-                    if (response["Connection"] == "close")
-                    {
-                        Close();
+                        if (response["Connection"] == "close")
+                        {
+                            Close();
+                        }
                     }
                 }
 
@@ -182,7 +185,7 @@ namespace ShairportSharp.Http
                     outputStream.Close();
                     socket.Close();
                     socket = null;
-                    //Logger.Debug("HttpServer: Closed socket");
+                    Logger.Debug("HttpServer: Closed socket");
                 }
             }
             OnClosed(EventArgs.Empty);

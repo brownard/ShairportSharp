@@ -267,6 +267,7 @@ namespace ShairportSharp.Raop
                 {
                     //Unsupported
                     Logger.Debug("RAOPSession: Unsupported request type: {0}", requestType);
+                    Logger.Debug(request.ToString());
                 }
             }
             return response;

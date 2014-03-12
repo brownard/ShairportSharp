@@ -7,6 +7,12 @@ namespace ShairportSharp.Airplay
 {
     public class PlaybackInfo : IPlistResponse
     {
+        public PlaybackInfo()
+        {
+            LoadedTimeRanges = new List<PlaybackTimeRange>();
+            SeekableTimeRanges = new List<PlaybackTimeRange>();
+        }
+
         public double Duration { get; set; }
         public double Position { get; set; }
         public double Rate { get; set; }
@@ -14,12 +20,8 @@ namespace ShairportSharp.Airplay
         public bool PlaybackBufferEmpty { get; set; }
         public bool PlaybackBufferFull { get; set; }
         public bool PlaybackLikelyToKeepUp { get; set; }
-
-        List<PlaybackTimeRange> loadedTimeRanges = new List<PlaybackTimeRange>();
-        public List<PlaybackTimeRange> LoadedTimeRanges { get { return loadedTimeRanges; } }
-
-        List<PlaybackTimeRange> seekableTimeRanges = new List<PlaybackTimeRange>();
-        public List<PlaybackTimeRange> SeekableTimeRanges { get { return seekableTimeRanges; } }
+        public List<PlaybackTimeRange> LoadedTimeRanges { get; protected set; }
+        public List<PlaybackTimeRange> SeekableTimeRanges { get; protected set; }
 
         public Dictionary<string, object> GetPlist()
         {
@@ -33,12 +35,12 @@ namespace ShairportSharp.Airplay
             plist["playbackLikelyToKeepUp"] = PlaybackLikelyToKeepUp;
 
             List<object> loadedList = new List<object>();
-            foreach (PlaybackTimeRange range in loadedTimeRanges)
+            foreach (PlaybackTimeRange range in LoadedTimeRanges)
                 loadedList.Add(range.GetPlist());
             plist["loadedTimeRanges"] = loadedList;
 
             List<object> seekableList = new List<object>();
-            foreach (PlaybackTimeRange range in seekableTimeRanges)
+            foreach (PlaybackTimeRange range in SeekableTimeRanges)
                 seekableList.Add(range.GetPlist());
             plist["seekableTimeRanges"] = seekableList;
 

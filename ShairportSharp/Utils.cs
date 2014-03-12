@@ -35,5 +35,26 @@ namespace ShairportSharp
                 parameters[m.Groups[1].Value] = m.Groups[2].Value;
             return parameters;
         }
+
+        public static Dictionary<string, string> ParseQueryString(string queryString)
+        {
+            Dictionary<string, string> query = new Dictionary<string, string>();
+            if (string.IsNullOrEmpty(queryString))
+                return query;
+
+            int index = queryString.IndexOf("?");
+            if (index > -1)
+                queryString = queryString.Substring(index + 1);
+
+            string[] keyVals = queryString.Split('&');
+            foreach (string keyVal in keyVals)
+            {
+                string[] keyValSplit = keyVal.Split('=');
+                if (keyValSplit.Length == 2)
+                    query[keyValSplit[0]] = keyValSplit[1];
+            }
+
+            return query;
+        }
     }
 }

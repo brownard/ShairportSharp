@@ -88,6 +88,12 @@
       <DependentUpon>Configuration.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="MPE\airplay-icon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="MPE\airplay-icon-faded.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>xcopy "$(ProjectDir)..\External\merge.bat" "$(TargetDir)" /Y /E /I

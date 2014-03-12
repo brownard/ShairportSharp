@@ -17,6 +17,7 @@ using ShairportSharp.Raop;
 
 namespace AirPlayer
 {
+    [MediaPortal.Configuration.PluginIcons("AirPlayer.MPE.airplay-icon.png", "AirPlayer.MPE.airplay-icon-faded.png")]
     public class AirPlayer : IPlugin, ISetupForm
     {
         #region Consts

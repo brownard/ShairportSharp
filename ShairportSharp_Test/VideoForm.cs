@@ -15,12 +15,14 @@ namespace ShairportSharp_Test
     public partial class VideoForm : Form
     {
         AirplayServer server;
+        string sessionId;
         DSFilePlayback m_Playback = null;
         bool playing = false;
-        public VideoForm(AirplayServer server)
+        public VideoForm(AirplayServer server, string sessionId)
         {
             InitializeComponent();
             this.server = server;
+            this.sessionId = sessionId;
             m_Playback = new DSFilePlayback();
             m_Playback.VideoControl = this.videoControl;
             m_Playback.OnPlaybackStart += Playback_OnPlaybackStart;
@@ -38,7 +40,7 @@ namespace ShairportSharp_Test
         {
             m_Playback.Stop();
             m_Playback.FileName = e.ContentLocation;
-            server.SetPlaybackState(PlaybackState.Loading);
+            server.SetPlaybackState(sessionId, PlaybackState.Loading);
             playing = false;
         }
 

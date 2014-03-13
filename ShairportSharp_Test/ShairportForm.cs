@@ -213,7 +213,7 @@ namespace ShairportSharp_Test
         {
             if (videoForm == null)
             {
-                videoForm = new VideoForm(airplay);
+                videoForm = new VideoForm(airplay, e.SessionId);
                 videoForm.FormClosed += videoForm_FormClosed;
                 videoForm.Show();
             }

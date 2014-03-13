@@ -16,6 +16,11 @@ namespace ShairportSharp.Raop
         public double Volume { get; private set; }
     }
 
+    public class VolumeRequestedEventArgs : EventArgs
+    {
+        public double Volume { get; set; }
+    }
+
     public class MetaDataChangedEventArgs : EventArgs
     {
         public MetaDataChangedEventArgs(DmapData metaData)

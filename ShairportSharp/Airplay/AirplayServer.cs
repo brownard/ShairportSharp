@@ -21,7 +21,7 @@ namespace ShairportSharp.Airplay
 
         object connectionSync = new object();
         List<AirplaySession> connections = new List<AirplaySession>();
-        AirplaySession twoWayConnection;
+        Dictionary<string, AirplaySession> eventConnections = new Dictionary<string, AirplaySession>();
 
         object photoSync = new object();
         Dictionary<string, byte[]> photoCache = new Dictionary<string, byte[]>();
@@ -167,28 +167,29 @@ namespace ShairportSharp.Airplay
             }
         }
 
-        public void SetPlaybackState(PlaybackState state)
+        public void SetPlaybackState(string sessionId, PlaybackState state)
         {
             System.Threading.ThreadPool.QueueUserWorkItem(o => 
             {
                 lock (connectionSync)
                 {
-                    if (twoWayConnection != null)
+                    AirplaySession eventConnection;
+                    if (eventConnections.TryGetValue(sessionId, out eventConnection))
                     {
                         PlaybackStateInfo info = new PlaybackStateInfo()
                         {
                             State = state,
-                            SessionId = twoWayConnection.SessionId
+                            SessionId = eventConnection.SessionId
                         };
 
                         HttpResponse response = new HttpResponse();
                         response.Status = "POST /event HTTP/1.1";
                         response["Content-Type"] = "text/x-apple-plist";
-                        response["X-Apple-Session-ID"] = twoWayConnection.SessionId;
+                        response["X-Apple-Session-ID"] = eventConnection.SessionId;
                         string plistXml = PlistCS.Plist.writeXml(info.GetPlist());
                         //Logger.Debug("Created plist xml - '{0}'", plistXml);
                         response.SetContent(plistXml);
-                        twoWayConnection.Send(response);
+                        eventConnection.Send(response);
                     }
                 }
             });
@@ -220,8 +221,11 @@ namespace ShairportSharp.Airplay
 
         void session_EventConnection(object sender, AirplayEventArgs e)
         {
-            lock (connectionSync)
-                twoWayConnection = (AirplaySession)sender;
+            if (string.IsNullOrEmpty(e.SessionId))
+                Logger.Warn("Event connection received without session id");
+            else
+                lock (connectionSync)
+                    eventConnections[e.SessionId] = (AirplaySession)sender;
         }
 
         void session_PhotoReceived(object sender, PhotoReceivedEventArgs e)
@@ -301,10 +305,10 @@ namespace ShairportSharp.Airplay
             {
                 AirplaySession session = (AirplaySession)sender;
                 connections.Remove(session);
-                if (twoWayConnection == session)
+                if (eventConnections.ContainsValue(session))
                 {
                     Logger.Debug("Airplay Server: Event connection closed");
-                    twoWayConnection = null;
+                    eventConnections.Remove(session.SessionId);
                     OnSessionClosed(new AirplayEventArgs(session.SessionId));
                 }
             }

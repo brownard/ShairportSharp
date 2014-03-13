@@ -76,6 +76,16 @@ namespace ShairportSharp.Raop
         }
 
         /// <summary>
+        /// Fired when new volume information is received from the client
+        /// </summary>
+        public event EventHandler<VolumeRequestedEventArgs> VolumeRequested;
+        protected virtual void OnVolumeRequested(VolumeRequestedEventArgs e)
+        {
+            if (VolumeRequested != null)
+                VolumeRequested(this, e);
+        }
+
+        /// <summary>
         /// Fired when new track metadata is received from the client
         /// </summary>
         public event EventHandler<MetaDataChangedEventArgs> MetaDataChanged;
@@ -263,6 +273,24 @@ namespace ShairportSharp.Raop
                     {
                         handleParameterString(request.GetContentString());
                     }
+                }
+                else if (requestType == "GET_PARAMETER")
+                {
+                    bool handled = false;
+                    if (request["Content-Type"] == "text/parameters")
+                    {
+                        if (request.GetContentString().StartsWith("volume"))
+                        {
+                            handled = true;
+                            Logger.Debug("RAOPSession: Client requested volume");
+                            VolumeRequestedEventArgs e = new VolumeRequestedEventArgs();
+                            OnVolumeRequested(e);
+                            response["Content-Type"] = "text/parameters";
+                            response.SetContent(string.Format(CultureInfo.InvariantCulture, "volume: {0}", e.Volume));
+                        }
+                    }
+                    if (!handled)
+                        Logger.Debug("Unhandled GET_PARAMETER request\r\n{0}", request.ToString());
                 }
                 else
                 {

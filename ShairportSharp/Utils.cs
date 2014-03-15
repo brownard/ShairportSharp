@@ -31,8 +31,11 @@ namespace ShairportSharp
         public static Dictionary<string, string> ParseTextParameters(string textParameters)
         {
             Dictionary<string, string> parameters = new Dictionary<string, string>();
-            foreach (Match m in textParamatersReg.Matches(textParameters))
-                parameters[m.Groups[1].Value] = m.Groups[2].Value;
+            if (!string.IsNullOrEmpty(textParameters))
+            {
+                foreach (Match m in textParamatersReg.Matches(textParameters))
+                    parameters[m.Groups[1].Value] = m.Groups[2].Value;
+            }
             return parameters;
         }
 

@@ -165,7 +165,10 @@ namespace AirPlayer
         void startPlayback(AudioBufferStream stream)
         {
             if (g_Player.Playing)
+            {
                 g_Player.Stop();
+                GUIGraphicsContext.ResetLastActivity();
+            }
 
             IPlayerFactory savedFactory = g_Player.Factory;
             lock (streamLock)
@@ -271,6 +274,18 @@ namespace AirPlayer
             {
                 switch (action.wID)
                 {
+                    case MediaPortal.GUI.Library.Action.ActionType.ACTION_MUSIC_PLAY:
+                    case MediaPortal.GUI.Library.Action.ActionType.ACTION_PLAY:
+                    case MediaPortal.GUI.Library.Action.ActionType.ACTION_PAUSE:
+                    case MediaPortal.GUI.Library.Action.ActionType.ACTION_PAUSE_PICTURE:
+                        if (g_Player.Paused)
+                            server.SendCommand(RemoteCommand.Pause);
+                        else
+                            server.SendCommand(RemoteCommand.Play);
+                        break;
+                    case MediaPortal.GUI.Library.Action.ActionType.ACTION_STOP:
+                        server.SendCommand(RemoteCommand.Stop);
+                        break;
                     case MediaPortal.GUI.Library.Action.ActionType.ACTION_PREV_CHAPTER:
                     case MediaPortal.GUI.Library.Action.ActionType.ACTION_PREV_ITEM:
                         server.SendCommand(RemoteCommand.PrevItem);

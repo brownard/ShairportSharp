@@ -170,13 +170,13 @@ namespace AirPlayer
         {
             if (m_state == PlayState.Paused)
             {
-                settings.SendCommand(RemoteCommand.Play);
+                //settings.SendCommand(RemoteCommand.Play);
                 mediaCtrl.Run();
                 m_state = PlayState.Playing;
             }
             else if (m_state == PlayState.Playing)
             {
-                settings.SendCommand(RemoteCommand.Pause);
+                //settings.SendCommand(RemoteCommand.Pause);
                 m_state = PlayState.Paused;
                 mediaCtrl.Pause();
             }
@@ -206,7 +206,7 @@ namespace AirPlayer
         {
             if (m_state != PlayState.Init)
             {
-                settings.SendCommand(RemoteCommand.Stop);
+                //settings.SendCommand(RemoteCommand.Stop);
                 mediaCtrl.StopWhenReady();
                 MovieEnded(true);
             }

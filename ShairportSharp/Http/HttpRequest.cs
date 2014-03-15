@@ -123,7 +123,9 @@ namespace ShairportSharp.Http
 
         public string GetContentString()
         {
-            return Encoding.ASCII.GetString(content);
+            if (content != null && content.Length > 0)
+                return Encoding.ASCII.GetString(content);
+            return "";
         }
 
         public int Length

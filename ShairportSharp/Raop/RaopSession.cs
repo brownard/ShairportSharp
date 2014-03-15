@@ -259,12 +259,15 @@ namespace ShairportSharp.Raop
                 else if (requestType == "SET_PARAMETER")
                 {
                     string contentType = request.GetHeader("Content-Type");
+                    if (contentType == null)
+                        Logger.Debug("RAOPSession: Empty Content-Type\r\n{0}", request.ToString());
+
                     if (contentType == "application/x-dmap-tagged")
                     {
                         Logger.Debug("RAOPSession: Received metadata");
                         OnMetaDataChanged(new MetaDataChangedEventArgs(new DmapData(request.Content)));
                     }
-                    else if (contentType.StartsWith("image/"))
+                    else if (contentType != null && contentType.StartsWith("image/"))
                     {
                         Logger.Debug("RAOPSession: Received cover art");
                         OnArtworkChanged(new ArtwokChangedEventArgs(request.Content, contentType));

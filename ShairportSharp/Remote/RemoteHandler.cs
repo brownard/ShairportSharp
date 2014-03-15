@@ -81,12 +81,18 @@ namespace ShairportSharp.Remote
         {
             lock (serverInfoLock)
             {
-                NetService service;
-                if (serverInfos != null && serverInfos.TryGetValue("iTunes_Ctrl_" + dacpId, out service))
+                if (serverInfos != null)
                 {
-                    hostName = service.HostName;
-                    port = service.Port;
-                    return true;
+                    foreach (string key in serverInfos.Keys)
+                    {
+                        if (key.EndsWith(dacpId))
+                        {
+                            NetService service = serverInfos[key];
+                            hostName = service.HostName;
+                            port = service.Port;
+                            return true;
+                        }
+                    }
                 }
             }
 

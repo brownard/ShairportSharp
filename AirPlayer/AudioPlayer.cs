@@ -15,7 +15,7 @@ using ShairportSharp.Remote;
 
 namespace AirPlayer
 {
-    class Player : IPlayer
+    class AudioPlayer : IPlayer
     {
         public enum PlayState
         {
@@ -65,7 +65,7 @@ namespace AirPlayer
         private const int WS_CLIPCHILDREN = 0x02000000;
         private const int WS_CLIPSIBLINGS = 0x04000000;
 
-        public Player(PlayerSettings settings) 
+        public AudioPlayer(PlayerSettings settings) 
         {
             this.settings = settings;
         }
@@ -80,7 +80,7 @@ namespace AirPlayer
             VideoRendererStatistics.VideoState = VideoRendererStatistics.State.VideoPresent;
             Logger.Instance.Info("ShairportPlayer.play {0}", strFile);
 
-            lock (typeof(Player))
+            lock (typeof(AudioPlayer))
             {
                 CloseInterfaces();
                 if (!GetInterfaces())

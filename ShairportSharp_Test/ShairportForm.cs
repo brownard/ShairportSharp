@@ -101,7 +101,7 @@ namespace ShairportSharp_Test
                 server.Start();
 
                 airplay = new AirplayServer(nameTextBox.Text, passwordTextBox.Text);
-                airplay.PhotoReceived += airplay_PhotoReceived;
+                airplay.ShowPhoto += airplay_ShowPhoto;
                 airplay.VideoReceived += airplay_VideoReceived;
                 airplay.PlaybackInfoRequested += airplay_PlaybackInfoRequested;
                 airplay.GetPlaybackPosition += airplay_GetPlaybackPosition;
@@ -131,7 +131,7 @@ namespace ShairportSharp_Test
 
         #region AirPlay Events
                 
-        void airplay_PhotoReceived(object sender, PhotoEventArgs e)
+        void airplay_ShowPhoto(object sender, PhotoEventArgs e)
         {
             Image image;
             try

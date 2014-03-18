@@ -186,7 +186,11 @@ namespace ShairportSharp.Audio
                 ushort seqno = (ushort)packet.IntFromBigEndian(2 + offset, 2);
                 //next 12 bytes are rtp header
                 int dataLength = packet.Length - offset - 12;
-                if (dataLength > 16)
+
+                //Logger.Debug("Audio data: {0} bytes", dataLength);
+                //Video apps sometimes start an AirTunes session before sending video,
+                //they send small packets of empty data so we try and ignore them here
+                if (dataLength > 32)
                 {
                     uint timeStamp = packet.UIntFromBigEndian(4 + offset, 4);
                     byte[] pktp = new byte[dataLength];

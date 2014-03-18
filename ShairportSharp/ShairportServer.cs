@@ -443,7 +443,7 @@ namespace ShairportSharp
                     OnVolumeChanged(e);
             }
         }
-
+                
         void raop_BufferChanged(object sender, BufferChangedEventArgs e)
         {
             lock (sessionLock)

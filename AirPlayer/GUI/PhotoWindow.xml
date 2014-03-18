@@ -1,0 +1,62 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<window>
+  <id>9421</id>
+  <defaultcontrol>50</defaultcontrol>
+  <allowoverlay>yes</allowoverlay>
+  <controls>
+    <control>
+      <description>Photo Dummy 1</description>
+      <type>image</type>
+      <id>1230</id>
+      <posX>-5</posX>
+      <posY>0</posY>
+      <width>1</width>
+      <height>1</height>
+    </control>
+    <control>
+      <description>Photo Dummy 2</description>
+      <type>image</type>
+      <id>1231</id>
+      <posX>-5</posX>
+      <posY>0</posY>
+      <width>1</width>
+      <height>1</height>
+    </control>
+    
+    <control>
+      <description>Photo 1</description>
+      <type>image</type>
+      <id>0</id>
+      <posX>0</posX>
+      <posY>0</posY>
+      <width>1920</width>
+      <height>1080</height>
+      <texture>#AirPlay.Photo1</texture>
+      <keepaspectratio>yes</keepaspectratio>
+      <align>center</align>
+      <valign>middle</valign>
+      <animation effect="fade" start="0" end="100" time="3000">WindowOpen</animation>
+      <animation effect="fade" start="0" end="100" time="200">Visible</animation>
+      <animation effect="fade" start="100" end="0" time="200" delay="200">Hidden</animation>
+      <visible>control.isvisible(1230)</visible>
+    </control>
+
+    <control>
+      <description>Photo 2</description>
+      <type>image</type>
+      <id>0</id>
+      <posX>0</posX>
+      <posY>0</posY>
+      <width>1920</width>
+      <height>1080</height>
+      <texture>#AirPlay.Photo2</texture>
+      <keepaspectratio>yes</keepaspectratio>
+      <align>center</align>
+      <valign>middle</valign>
+      <animation effect="fade" start="0" end="100" time="200">Visible</animation>
+      <animation effect="fade" start="100" end="0" time="200" delay="200">Hidden</animation>
+      <visible>control.isvisible(1231)</visible>
+    </control>
+    <import>common.time.xml</import>
+  </controls>
+</window>

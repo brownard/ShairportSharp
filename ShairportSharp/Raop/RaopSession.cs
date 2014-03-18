@@ -10,7 +10,6 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -24,12 +23,8 @@ namespace ShairportSharp.Raop
     class RaopSession : HttpServer
     {        
         #region Private Variables
-
-        static readonly Regex authPattern = new Regex("Digest username=\"(.*)\", realm=\"(.*)\", nonce=\"(.*)\", uri=\"(.*)\", response=\"(.*)\"", RegexOptions.Compiled);
-
+                
         const string DIGEST_REALM = "raop";
-        string password;
-        string nonce;        
         byte[] hardwareAddress;
         byte[] localEndpoint;
 
@@ -42,6 +37,8 @@ namespace ShairportSharp.Raop
         byte[] aesKey; //audio data encryption key
         byte[] aesIV; //IV
 
+        bool bufferStarted = false;
+
         #endregion
 
         #region Events
@@ -51,6 +48,7 @@ namespace ShairportSharp.Raop
         public event EventHandler StreamStarting;
         protected virtual void OnStreamStarting(EventArgs e)
         {
+            Logger.Debug("RAOPSession: Stream starting");
             if (StreamStarting != null)
                 StreamStarting(this, e);
         }      
@@ -117,7 +115,7 @@ namespace ShairportSharp.Raop
 
         public event EventHandler<BufferChangedEventArgs> BufferChanged;
         protected virtual void OnBufferChanged(BufferChangedEventArgs e)
-        {
+        {            
             if (BufferChanged != null)
                 BufferChanged(this, e);
         }
@@ -134,16 +132,10 @@ namespace ShairportSharp.Raop
         #region Constructor
 
         public RaopSession(byte[] hardwareAddress, Socket socket, string password = null)
-            : base(socket)
+            : base(socket, password, DIGEST_REALM)
         {
             this.hardwareAddress = hardwareAddress;
             localEndpoint = ((IPEndPoint)socket.LocalEndPoint).Address.GetAddressBytes();
-
-            if (!string.IsNullOrEmpty(password))
-            {
-                this.password = password;
-                nonce = createRandomString();
-            }
         }
 
         #endregion
@@ -194,21 +186,21 @@ namespace ShairportSharp.Raop
 
         protected override HttpResponse HandleRequest(HttpRequest request)
         {
-            HttpResponse response = new HttpResponse();
+            HttpResponse response = new HttpResponse("RTSP/1.0");
             //iTunes wants to know we are legit before it will even authenticate
             string challengeResponse = getChallengeResponse(request);
             if (challengeResponse != null)
                 response.SetHeader("Apple-Response", challengeResponse);
 
-            if (isAuthorised(request))
+            if (IsAuthorised(request))
             {
-                response.Status = "RTSP/1.0 200 OK";
+                response.Status = "200 OK";
                 response.SetHeader("Audio-Jack-Status", "connected; type=analog");
                 response.SetHeader("CSeq", request.GetHeader("CSeq"));
             }
             else
             {
-                response.Status = "RTSP/1.0 401 UNAUTHORIZED";
+                response.Status = "401 UNAUTHORIZED";
                 response.SetHeader("WWW-Authenticate", string.Format("Digest realm=\"{0}\" nonce=\"{1}\"", DIGEST_REALM, nonce));
                 response.SetHeader("Method", "DENIED");
                 return response;
@@ -335,37 +327,6 @@ namespace ShairportSharp.Raop
 
         #region Private Methods
         
-        bool isAuthorised(HttpRequest request)
-        {
-            if (string.IsNullOrEmpty(password))
-                return true;
-
-            string authRaw = request.GetHeader("Authorization");
-            if (authRaw != null)
-            {
-                Match authMatch = authPattern.Match(authRaw);
-                if (authMatch.Success)
-                {
-                    string username = authMatch.Groups[1].Value;
-                    string realm = authMatch.Groups[2].Value;
-                    string nonce = authMatch.Groups[3].Value;
-                    string uri = authMatch.Groups[4].Value;
-                    string resp = authMatch.Groups[5].Value;
-                    string method = request.Method;
-
-                    string hash1 = md5Hash(username + ":" + realm + ":" + password).ToUpper();
-                    string hash2 = md5Hash(method + ":" + uri).ToUpper();
-                    string hash = md5Hash(hash1 + ":" + nonce + ":" + hash2).ToUpper();
-
-                    // Check against password
-                    if (hash == resp && nonce == this.nonce)
-                        return true;
-                }
-            }
-            //Logger.Info("RAOPSession: Client authorisation falied");
-            return false;
-        }
-
         string getChallengeResponse(HttpRequest request)
         {
             string challenge = request.GetHeader("Apple-Challenge");
@@ -464,12 +425,21 @@ namespace ShairportSharp.Raop
                 Logger.Debug("RAOPSession: Set client timing port to {0}", timingPort);
             }
 
-            OnStreamStarting(EventArgs.Empty);
+            //OnStreamStarting(EventArgs.Empty);
 
             AudioSession session = new AudioSession(aesIV, aesKey, fmtp, controlPort, timingPort, BufferSize);
             audioServer = new AudioServer(session, UDPPort);
             audioServer.Buffer.BufferReady += (o, e) => OnStreamReady(EventArgs.Empty);
-            audioServer.Buffer.BufferChanged += (o, e) => OnBufferChanged(e);
+            audioServer.Buffer.BufferChanged += (o, e) => 
+            {
+                if (!bufferStarted && e.CurrentSize > 0)
+                {
+                    OnStreamStarting(EventArgs.Empty);
+                    bufferStarted = true;
+                }
+                OnBufferChanged(e); 
+            };
+
             if (audioServer.Start())
             {
                 Logger.Debug("RAOPSession: Started new Audio Server");
@@ -508,34 +478,6 @@ namespace ShairportSharp.Raop
                     }
                 }
             }
-        }
-
-        /// <summary>
-        /// Generates an MD5 hash from a string 
-        /// </summary>
-        /// <param name="plainText">The string to use to generate the hash</param>
-        /// <returns>The MD5 hash</returns>
-        static string md5Hash(string plainText)
-        {
-            String hashtext = "";
-            try
-            {
-                HashAlgorithm md = new MD5CryptoServiceProvider();
-                byte[] txtBytes = Encoding.ASCII.GetBytes(plainText);
-                //md.TransformFinalBlock(txtBytes, 0, txtBytes.Length);
-                byte[] digest = md.ComputeHash(txtBytes);
-
-                BigInteger bigInt = new BigInteger(1, digest);
-                hashtext = bigInt.ToString(16);
-
-                // Now we need to zero pad it if you actually want the full 32 chars.
-                while (hashtext.Length < 32)
-                {
-                    hashtext = "0" + hashtext;
-                }
-            }
-            catch { }
-            return hashtext;
         }
 
         /// <summary>
@@ -588,12 +530,6 @@ namespace ShairportSharp.Raop
             return Convert.FromBase64String(encoded);
         }
 
-        static string createRandomString()
-        {
-            byte[] buffer = new byte[16];
-            new Random().NextBytes(buffer);
-            return Convert.ToBase64String(buffer);
-        }
         #endregion
     }
 }

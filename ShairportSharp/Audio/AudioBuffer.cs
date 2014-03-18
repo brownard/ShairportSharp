@@ -44,13 +44,16 @@ namespace ShairportSharp.Audio
         public event EventHandler<BufferChangedEventArgs> BufferChanged;
         protected virtual void OnBufferChanged(BufferChangedEventArgs e, bool alwaysFire = false)
         {
-            DateTime now = DateTime.Now;
-            if (alwaysFire || now.Subtract(lastBufferUpdate).TotalMilliseconds > bufferUpdateInterval)
+            if (!alwaysFire)
             {
+                DateTime now = DateTime.Now;
+                if (now.Subtract(lastBufferUpdate).TotalMilliseconds < bufferUpdateInterval)
+                    return;
                 lastBufferUpdate = now;
-                if (BufferChanged != null)
-                    BufferChanged(this, e);
             }
+
+            if (BufferChanged != null)
+                BufferChanged(this, e);
         }
 
         public event EventHandler<BufferChangedEventArgs> BufferReady;

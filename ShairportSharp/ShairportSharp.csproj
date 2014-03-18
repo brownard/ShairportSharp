@@ -1181,6 +1181,7 @@
     <Compile Include="BouncyCastle\x509\X509V2AttributeCertificateGenerator.cs" />
     <Compile Include="BouncyCastle\x509\X509V2CRLGenerator.cs" />
     <Compile Include="BouncyCastle\x509\X509V3CertificateGenerator.cs" />
+    <Compile Include="Http\HttpRequest.cs" />
     <Compile Include="Http\ServerListener.cs" />
     <Compile Include="Raop\RaopEmitter.cs" />
     <Compile Include="Raop\Constants.cs" />
@@ -1194,7 +1195,7 @@
     <Compile Include="Audio\WaveStream.cs" />
     <Compile Include="Remote\RemoteCommand.cs" />
     <Compile Include="Remote\RemoteServerInfo.cs" />
-    <Compile Include="Http\HttpRequest.cs" />
+    <Compile Include="Http\HttpMessage.cs" />
     <Compile Include="Raop\RaopSession.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Http\HttpResponse.cs" />

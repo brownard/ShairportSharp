@@ -8,8 +8,8 @@ namespace AirPlayer
 {
     class PlayerFactory : IPlayerFactory
     {
-        Player player;
-        public PlayerFactory(Player player)
+        IPlayer player;
+        public PlayerFactory(IPlayer player)
         {
             this.player = player;
         }

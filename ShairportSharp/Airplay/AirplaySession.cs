@@ -13,6 +13,7 @@ namespace ShairportSharp.Airplay
     {
         #region Variables
 
+        const string DIGEST_REALM = "AirPlay";
         AirplayServerInfo serverInfo;
 
         #endregion
@@ -25,8 +26,8 @@ namespace ShairportSharp.Airplay
 
         #region Ctor
 
-        public AirplaySession(Socket socket, AirplayServerInfo serverInfo)
-            : base(socket) 
+        public AirplaySession(Socket socket, AirplayServerInfo serverInfo, string password = null)
+            : base(socket, password, DIGEST_REALM) 
         {
             this.serverInfo = serverInfo;
         }
@@ -119,6 +120,13 @@ namespace ShairportSharp.Airplay
 
         protected override HttpResponse HandleRequest(HttpRequest request)
         {
+            if (!IsAuthorised(request))
+            {
+                HttpResponse authResponse = getEmptyResponse("401 Unauthorized");
+                authResponse.SetHeader("WWW-Authenticate", string.Format("Digest realm=\"{0}\" nonce=\"{1}\"", DIGEST_REALM, nonce));
+                return authResponse;
+            }
+
             string sessionId = request["X-Apple-Session-ID"];
             if (!string.IsNullOrEmpty(sessionId))
             {
@@ -129,7 +137,7 @@ namespace ShairportSharp.Airplay
 
             HttpResponse response = null;
 
-            if (request.Directory == "/reverse")
+            if (request.Uri == "/reverse")
             {
                 Logger.Debug("Airplay: Event connection received, '{0}'", request["X-Apple-Session-ID"]);
                 response = handleEventRequest();
@@ -137,17 +145,17 @@ namespace ShairportSharp.Airplay
 
             #region Photos
 
-            else if (request.Directory == "/photo")
+            else if (request.Uri == "/photo")
             {
                 response = handlePhoto(request);
             }
 
-            else if (request.Directory == "/slideshow-features")
+            else if (request.Uri == "/slideshow-features")
             {
                 response = getSlideshowFeatures();
             }
 
-            else if (request.Directory == "/slideshows/1")
+            else if (request.Uri == "/slideshows/1")
             {
                 response = handleSlideshowSettings(request);
             }
@@ -156,27 +164,27 @@ namespace ShairportSharp.Airplay
 
             #region Videos
 
-            else if (request.Directory == "/server-info")
+            else if (request.Uri == "/server-info")
             {
                 response = handleServerInfo();
             }
 
-            else if (request.Directory == "/play")
+            else if (request.Uri == "/play")
             {
                 response = handleVideoPlay(request);
             }
 
-            else if (request.Directory == "/playback-info")
+            else if (request.Uri == "/playback-info")
             {
                 response = getPlaybackInfo();
             }
 
-            else if (request.Directory.StartsWith("/rate"))
+            else if (request.Uri.StartsWith("/rate"))
             {
                 response = setPlaybackRate(request);
             }
 
-            else if (request.Directory.StartsWith("/scrub"))
+            else if (request.Uri.StartsWith("/scrub"))
             {
                 if (request.Method == "POST")
                     response = setPlaybackPosition(request);
@@ -184,19 +192,19 @@ namespace ShairportSharp.Airplay
                     response = getPlaybackPosition();
             }
 
-            else if (request.Directory.StartsWith("/getProperty"))
+            else if (request.Uri.StartsWith("/getProperty"))
             {
                 response = getEmptyResponse("404 Not Found");
             }
 
-            else if (request.Directory.StartsWith("/setProperty"))
+            else if (request.Uri.StartsWith("/setProperty"))
             {
                 response = getEmptyResponse("404 Not Found");
             }
 
             #endregion
 
-            else if (request.Directory == "/stop")
+            else if (request.Uri == "/stop")
             {
                 OnStopped(new AirplayEventArgs(SessionId));
                 response = getEmptyResponse();
@@ -214,6 +222,12 @@ namespace ShairportSharp.Airplay
             return response;
         }
 
+        protected override void HandleResponse(HttpResponse response)
+        {
+            Logger.Debug("Airplay Session: Received response, '{0}'", response.Status);
+            base.HandleResponse(response);
+        }
+
         #endregion
 
         #region Generic Methods
@@ -221,8 +235,8 @@ namespace ShairportSharp.Airplay
         HttpResponse handleEventRequest()
         {
             OnEventConnection(new AirplayEventArgs(SessionId));
-            HttpResponse response = new HttpResponse();
-            response.Status = "HTTP/1.1 101 Switching Protocols";
+            HttpResponse response = new HttpResponse("HTTP/1.1");
+            response.Status = "101 Switching Protocols";
             response["Date"] = rfcTimeNow();
             response["Upgrade"] = "PTTH/1.0";
             response["Connection"] = "Upgrade";
@@ -236,10 +250,11 @@ namespace ShairportSharp.Airplay
         HttpResponse handlePhoto(HttpRequest request)
         {
             Logger.Debug("Airplay: Photo received: Transition '{0}', Action '{1}'", request["X-Apple-Transition"], request["X-Apple-AssetAction"]);
-            Logger.Debug(request.ToString());
             PhotoReceivedEventArgs e = new PhotoReceivedEventArgs(request["X-Apple-AssetKey"], request["X-Apple-Transition"], request.Content, request["X-Apple-AssetAction"], SessionId);            
             OnPhotoReceived(e);
-            return getEmptyResponse(e.NotInCache ? "412 Precondition Failed" : "200 OK");
+            if (e.NotInCache)
+                return getEmptyResponse("412 Precondition Failed");
+            return getEmptyResponse();
         }
 
         HttpResponse getSlideshowFeatures()
@@ -256,7 +271,7 @@ namespace ShairportSharp.Airplay
             Dictionary<string, object> settings = (Dictionary<string, object>)pList["settings"];
             int slideDuration = (int)settings["slideDuration"];
             string theme = (string)settings["theme"];
-
+            Logger.Debug("AirplaySession: Slideshow settings received - state: '{0}', duration: '{1}', theme: '{2}'", playState, slideDuration, theme);
             OnSlideshowSettingsReceived(new SlideshowSettingsEventArgs(playState, slideDuration, theme, SessionId));
             return getPlistResponse(new Dictionary<string, object>());
         }
@@ -313,7 +328,7 @@ namespace ShairportSharp.Airplay
 
         HttpResponse setPlaybackRate(HttpRequest request)
         {
-            Dictionary<string, string> queryString = Utils.ParseQueryString(request.Directory);
+            Dictionary<string, string> queryString = Utils.ParseQueryString(request.Uri);
             string rateStr;
             if (queryString.TryGetValue("value", out rateStr))
             {
@@ -329,7 +344,7 @@ namespace ShairportSharp.Airplay
 
         HttpResponse setPlaybackPosition(HttpRequest request)
         {
-            Dictionary<string, string> queryString = Utils.ParseQueryString(request.Directory);
+            Dictionary<string, string> queryString = Utils.ParseQueryString(request.Uri);
             string positionStr;
             if (queryString.TryGetValue("position", out positionStr))
             {
@@ -357,10 +372,10 @@ namespace ShairportSharp.Airplay
             return response;
         }
 
-        static HttpResponse getEmptyResponse(string statusCode = "200 OK", bool noContent = true)
+        static HttpResponse getEmptyResponse(string status = "200 OK", bool noContent = true)
         {
-            HttpResponse response = new HttpResponse();
-            response.Status = "HTTP/1.1 " + statusCode;
+            HttpResponse response = new HttpResponse("HTTP/1.1");
+            response.Status = status;
             response["Date"] = rfcTimeNow();
             if (noContent)
                 response["Content-Length"] = "0";
@@ -378,8 +393,8 @@ namespace ShairportSharp.Airplay
 
         static HttpResponse getPlistResponse(Dictionary<string, object> plist)
         {
-            HttpResponse response = new HttpResponse();
-            response.Status = "HTTP/1.1 200 OK";
+            HttpResponse response = new HttpResponse("HTTP/1.1");
+            response.Status = "200 OK";
             response["Date"] = rfcTimeNow();
             response["Content-Type"] = "text/x-apple-plist+xml";
             string plistXml = Plist.writeXml(plist);

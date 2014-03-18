@@ -24,7 +24,22 @@ namespace ShairportSharp.Airplay
         Dictionary<string, AirplaySession> eventConnections = new Dictionary<string, AirplaySession>();
 
         object photoSync = new object();
-        Dictionary<string, byte[]> photoCache = new Dictionary<string, byte[]>();
+        Dictionary<string, Dictionary<string, byte[]>> photoCache = new Dictionary<string, Dictionary<string, byte[]>>();
+
+        #endregion
+
+        #region Public Properties
+
+        public int Port
+        {
+            get { return port; }
+            set { port = value; }
+        }
+
+        public AirplayServerInfo ServerInfo
+        {
+            get { return serverInfo; }
+        }
 
         #endregion
 
@@ -39,8 +54,7 @@ namespace ShairportSharp.Airplay
                 Model = "MediaPortal,1",
                 ProtocolVersion = "1.0",
                 ServerVersion = "130.14",
-                Features =
-                AirplayFeature.Photo |
+                Features = AirplayFeature.Photo |
                 AirplayFeature.PhotoCaching |
                 AirplayFeature.Slideshow |
                 AirplayFeature.Video
@@ -65,11 +79,18 @@ namespace ShairportSharp.Airplay
 
         #region Photo Events
 
-        public event EventHandler<PhotoEventArgs> PhotoReceived;
-        protected virtual void OnPhotoReceived(PhotoEventArgs e)
+        public event EventHandler<PhotoReceivedEventArgs> PhotoReceived;
+        protected virtual void OnPhotoReceived(PhotoReceivedEventArgs e)
         {
             if (PhotoReceived != null)
                 PhotoReceived(this, e);
+        }
+
+        public event EventHandler<PhotoEventArgs> ShowPhoto;
+        protected virtual void OnShowPhoto(PhotoEventArgs e)
+        {
+            if (ShowPhoto != null)
+                ShowPhoto(this, e);
         }
 
         public event EventHandler<SlideshowFeaturesEventArgs> SlideshowFeaturesRequested;
@@ -161,9 +182,8 @@ namespace ShairportSharp.Airplay
             }
             lock (connectionSync)
             {
-                List<AirplaySession> lConnections = new List<AirplaySession>(connections);
-                foreach (AirplaySession connection in lConnections)
-                    connection.Close();
+                while(connections.Count > 0)
+                    connections[0].Close();
             }
         }
 
@@ -182,14 +202,13 @@ namespace ShairportSharp.Airplay
                             SessionId = eventConnection.SessionId
                         };
 
-                        HttpResponse response = new HttpResponse();
-                        response.Status = "POST /event HTTP/1.1";
-                        response["Content-Type"] = "text/x-apple-plist";
-                        response["X-Apple-Session-ID"] = eventConnection.SessionId;
+                        HttpRequest request = new HttpRequest("POST", "/event", "HTTP/1.1");
+                        request["Content-Type"] = "text/x-apple-plist";
+                        request["X-Apple-Session-ID"] = eventConnection.SessionId;
                         string plistXml = PlistCS.Plist.writeXml(info.GetPlist());
                         //Logger.Debug("Created plist xml - '{0}'", plistXml);
-                        response.SetContent(plistXml);
-                        eventConnection.Send(response);
+                        request.SetContent(plistXml);
+                        eventConnection.Send(request);
                     }
                 }
             });
@@ -197,10 +216,12 @@ namespace ShairportSharp.Airplay
 
         #endregion
 
+        #region Event Handlers
+
         void listener_SocketAccepted(object sender, SocketAcceptedEventArgs e)
         {
             e.Handled = true;
-            AirplaySession session = new AirplaySession(e.Socket, serverInfo);
+            AirplaySession session = new AirplaySession(e.Socket, serverInfo, password);
             session.EventConnection += session_EventConnection;
 
             session.PhotoReceived += session_PhotoReceived;
@@ -230,18 +251,21 @@ namespace ShairportSharp.Airplay
 
         void session_PhotoReceived(object sender, PhotoReceivedEventArgs e)
         {
+            OnPhotoReceived(e);
+
             byte[] photo;
             lock (photoSync)
             {
                 if (e.AssetAction == PhotoAction.CacheOnly)
                 {
-                    cachePhoto(e.AssetKey, e.Photo);
+                    cachePhoto(e.SessionId, e.AssetKey, e.Photo);
                     return;
                 }
 
                 if (e.AssetAction == PhotoAction.DisplayCached)
                 {
-                    if (!photoCache.TryGetValue(e.AssetKey, out photo))
+                    Dictionary<string, byte[]> sessionCache;
+                    if (!photoCache.TryGetValue(e.SessionId, out sessionCache) || !sessionCache.TryGetValue(e.AssetKey, out photo))
                     {
                         e.NotInCache = true;
                         return;
@@ -253,7 +277,7 @@ namespace ShairportSharp.Airplay
                 }
             }
 
-            OnPhotoReceived(new PhotoEventArgs(e.AssetKey, e.Transition, photo, e.SessionId));
+            OnShowPhoto(new PhotoEventArgs(e.AssetKey, e.Transition, photo, e.SessionId));
         }
 
         void session_SlideshowFeaturesRequested(object sender, SlideshowFeaturesEventArgs e)
@@ -291,11 +315,18 @@ namespace ShairportSharp.Airplay
             OnGetPlaybackPosition(e);
         }
 
-        void cachePhoto(string key, byte[] value)
+        void cachePhoto(string sessionId, string key, byte[] value)
         {
-            if (!photoCache.ContainsKey(key))
+            Dictionary<string, byte[]> sessionCache;
+            if (!photoCache.TryGetValue(sessionId, out sessionCache))
             {
-                photoCache[key] = value;
+                sessionCache = new Dictionary<string, byte[]>();
+                sessionCache[key] = value;
+                photoCache[sessionId] = sessionCache;
+            }
+            else if (!sessionCache.ContainsKey(key))
+            {
+                sessionCache[key] = value;
             }
         }
 
@@ -309,9 +340,13 @@ namespace ShairportSharp.Airplay
                 {
                     Logger.Debug("Airplay Server: Event connection closed");
                     eventConnections.Remove(session.SessionId);
+                    lock (photoSync)
+                        photoCache.Remove(session.SessionId);
                     OnSessionClosed(new AirplayEventArgs(session.SessionId));
                 }
             }
         }
+
+        #endregion
     }
 }

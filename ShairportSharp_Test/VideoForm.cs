@@ -12,18 +12,37 @@ using DirectShow.Helper;
 
 namespace ShairportSharp_Test
 {
+    public class rotPlayer : DSFilePlayback
+    {
+        DirectShow.DsROTEntry _rot = null;
+        protected override HRESULT OnInitInterfaces()
+        {
+            _rot = new DirectShow.DsROTEntry(m_GraphBuilder);
+            return base.OnInitInterfaces();
+        }
+
+        public override void Dispose()
+        {
+            if (_rot != null)
+            {
+                _rot.Dispose();
+                _rot = null;
+            }
+            base.Dispose();
+        }
+    }
+
     public partial class VideoForm : Form
     {
         AirplayServer server;
         string sessionId;
-        DSFilePlayback m_Playback = null;
-        bool playing = false;
+        rotPlayer m_Playback = null;
         public VideoForm(AirplayServer server, string sessionId)
         {
             InitializeComponent();
             this.server = server;
             this.sessionId = sessionId;
-            m_Playback = new DSFilePlayback();
+            m_Playback = new rotPlayer();
             m_Playback.VideoControl = this.videoControl;
             m_Playback.OnPlaybackStart += Playback_OnPlaybackStart;
             m_Playback.OnPlaybackStop += Playback_OnPlaybackStop;
@@ -33,7 +52,7 @@ namespace ShairportSharp_Test
 
         void Playback_OnPlaybackPause(object sender, EventArgs e)
         {
-            //server.SetPlaybackState(PlaybackState.Paused);
+            
         }
 
         public void LoadVideo(VideoEventArgs e)
@@ -41,7 +60,6 @@ namespace ShairportSharp_Test
             m_Playback.Stop();
             m_Playback.FileName = e.ContentLocation;
             server.SetPlaybackState(sessionId, PlaybackState.Loading);
-            playing = false;
         }
 
         public void GetProgress(GetPlaybackPositionEventArgs e)
@@ -71,11 +89,18 @@ namespace ShairportSharp_Test
             PlaybackTimeRange timeRange = new PlaybackTimeRange() { Duration = playbackInfo.Duration };
             playbackInfo.LoadedTimeRanges.Add(timeRange);
             playbackInfo.SeekableTimeRanges.Add(timeRange);
-            playbackInfo.Rate = m_Playback.Rate;
+            playbackInfo.Rate = m_Playback.IsPaused ? 0 : 1;
         }
 
+        bool ignoreRate = true;
         public void SetPlaybackRate(PlaybackRateEventArgs e)
         {
+            if (ignoreRate)
+            {
+                ignoreRate = false;
+                return;
+            }
+
             if (e.Rate == 0)
             {
                 if (!m_Playback.IsPaused)
@@ -94,12 +119,12 @@ namespace ShairportSharp_Test
 
         private void Playback_OnPlaybackStart(object sender, EventArgs e)
         {
-            playing = true;
+            
         }
 
         private void Playback_OnPlaybackStop(object sender, EventArgs e)
         {
-            playing = false;
+            
         }
 
         private void Playback_OnPlaybackReady(object sender, EventArgs e)

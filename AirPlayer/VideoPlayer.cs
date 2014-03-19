@@ -14,10 +14,12 @@ namespace AirPlayer
 {
     class VideoPlayer : VideoPlayerVMR9
     {
-        const string SOURCE_FILTER_NAME = "File Source (URL)"; //"MediaPortal Url Source Splitter";
         const float INITIAL_BUFFER_PERCENT = 2;
         public const string DUMMY_URL = "http://localhost/AirPlayer.mp4";
+        public const string DEFAULT_SOURCE_FILTER = "File Source (URL)";
+        public const string MPURL_SOURCE_FILTER = "MediaPortal Url Source Splitter";
 
+        string sourceFilterName;
         float percentageBuffered;
         DateTime lastProgressCheck = DateTime.MinValue;
 
@@ -27,11 +29,12 @@ namespace AirPlayer
         protected bool skipBuffering = false;
         public void SkipBuffering() { skipBuffering = true; }
 
-        public VideoPlayer(string url, string sessionId)
+        public VideoPlayer(string url, string sessionId, string sourceFilterName = "File Source (URL)")
             : base(g_Player.MediaType.Video)
         {
             m_strCurrentFile = url;
             SessionId = sessionId;
+            this.sourceFilterName = sourceFilterName;
         }
 
         public string SessionId { get; protected set; }
@@ -57,7 +60,7 @@ namespace AirPlayer
         /// <returns>true, if the url can be buffered (a graph was started), false if it can't be and null if an error occured building the graph</returns>
         public bool? PrepareGraph()
         {
-            string sourceFilterName = SOURCE_FILTER_NAME; //GetSourceFilterName(m_strCurrentFile);
+            //string sourceFilterName = SOURCE_FILTER_NAME; //GetSourceFilterName(m_strCurrentFile);
 
             if (!string.IsNullOrEmpty(sourceFilterName))
             {
@@ -86,26 +89,38 @@ namespace AirPlayer
                 videoWin = (IVideoWindow)graphBuilder;
 
                 // add the source filter
-                IBaseFilter sourceFilter = null;
-                try
-                {
-                    sourceFilter = DirectShowUtil.AddFilterToGraph(graphBuilder, sourceFilterName);
-                }
-                catch (Exception ex)
-                {
-                    Logger.Instance.Warn("Error adding '{0}' filter to graph: {1}", sourceFilterName, ex.Message);
-                    return null;
-                }
-                finally
-                {
-                    if (sourceFilter != null) DirectShowUtil.ReleaseComObject(sourceFilter, 2000);
-                }
-                return true;
+                return tryAddSourceFilter();
             }
             else
             {
                 return false;
             }
+        }
+
+        bool? tryAddSourceFilter()
+        {
+            IBaseFilter sourceFilter = null;
+            try
+            {
+                sourceFilter = DirectShowUtil.AddFilterToGraph(graphBuilder, sourceFilterName);
+            }
+            catch (Exception ex)
+            {
+                Logger.Instance.Warn("Error adding '{0}' filter to graph: {1}", sourceFilterName, ex.Message);
+                if (sourceFilterName != DEFAULT_SOURCE_FILTER)
+                {
+                    Logger.Instance.Warn("Falling back to default source filter '{0}'", DEFAULT_SOURCE_FILTER);
+                    sourceFilterName = DEFAULT_SOURCE_FILTER;
+                    return tryAddSourceFilter();
+                }
+                return null;
+            }
+            finally
+            {
+                if (sourceFilter != null) DirectShowUtil.ReleaseComObject(sourceFilter, 2000);
+            }
+            Logger.Instance.Debug("AirPlayer: Using source filter '{0}'", sourceFilterName);
+            return true;
         }
 
         /// <summary>
@@ -120,11 +135,8 @@ namespace AirPlayer
             VideoRendererStatistics.VideoState = VideoRendererStatistics.State.VideoPresent; // prevents the BlackRectangle on first time playback
             bool PlaybackReady = false;
             IBaseFilter sourceFilter = null;
-            string sourceFilterName = null;
             try
             {
-                sourceFilterName = SOURCE_FILTER_NAME; //GetSourceFilterName(m_strCurrentFile);
-
                 int result = graphBuilder.FindFilterByName(sourceFilterName, out sourceFilter);
                 if (result != 0)
                 {
@@ -235,12 +247,12 @@ namespace AirPlayer
                 //    throw new OnlineVideosException(((MPUrlSourceFilter.MPUrlSourceSplitterError)comEx.ErrorCode).ToString());
                 //}
 
-                //string errorText = DirectShowLib.DsError.GetErrorText(comEx.ErrorCode);
-                //if (errorText != null) errorText = errorText.Trim();
-                //if (!string.IsNullOrEmpty(errorText))
-                //{
-                //    throw new OnlineVideosException(errorText);
-                //}
+                string errorText = DirectShowLib.DsError.GetErrorText(comEx.ErrorCode);
+                if (errorText != null) errorText = errorText.Trim();
+                if (!string.IsNullOrEmpty(errorText))
+                {
+                    throw new Exception(errorText);
+                }
             }
             catch (Exception ex)
             {

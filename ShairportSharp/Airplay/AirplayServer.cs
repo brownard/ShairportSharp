@@ -16,7 +16,7 @@ namespace ShairportSharp.Airplay
         string password;
         int port = 7000;
         AirplayEmitter emitter;
-        ServerListener listener;
+        HttpConnectionHandler listener;
         AirplayServerInfo serverInfo;
 
         object connectionSync = new object();
@@ -57,7 +57,9 @@ namespace ShairportSharp.Airplay
                 Features = AirplayFeature.Photo |
                 AirplayFeature.PhotoCaching |
                 AirplayFeature.Slideshow |
-                AirplayFeature.Video
+                AirplayFeature.Video |
+                AirplayFeature.VideoHTTPLiveStreams |
+                AirplayFeature.VideoVolumeControl
             };
             byte[] macAddress = Utils.GetMacAddress();
             if (macAddress != null)
@@ -157,7 +159,7 @@ namespace ShairportSharp.Airplay
                 if (listener != null)
                     Stop();
 
-                listener = new ServerListener(IPAddress.Any, port);
+                listener = new HttpConnectionHandler(IPAddress.Any, port);
                 listener.SocketAccepted += listener_SocketAccepted;
                 listener.Start();
                 emitter = new AirplayEmitter(name.ComputerNameIfNullOrEmpty(), serverInfo, port, !string.IsNullOrEmpty(password));

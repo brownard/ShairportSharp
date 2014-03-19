@@ -20,7 +20,7 @@ using System.Globalization;
 
 namespace ShairportSharp.Raop
 {    
-    class RaopSession : HttpServer
+    class RaopSession : HttpParser
     {        
         #region Private Variables
                 

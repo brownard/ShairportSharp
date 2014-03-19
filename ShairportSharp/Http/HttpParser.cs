@@ -10,7 +10,7 @@ using Org.BouncyCastle.Math;
 
 namespace ShairportSharp.Http
 {
-    abstract class HttpServer : IDisposable
+    abstract class HttpParser : IDisposable
     {
         #region Variables
 
@@ -31,14 +31,14 @@ namespace ShairportSharp.Http
 
         #region Constructor
 
-        public HttpServer(Socket socket)
+        public HttpParser(Socket socket)
         {
             this.socket = socket;
             inputStream = new BufferedStream(new NetworkStream(socket));
             outputStream = new NetworkStream(socket);
         }
 
-        public HttpServer(Socket socket, string password, string digestRealm)
+        public HttpParser(Socket socket, string password, string digestRealm)
             : this(socket)
         {
             if (!string.IsNullOrEmpty(password))
@@ -223,13 +223,15 @@ namespace ShairportSharp.Http
                     string resp = authMatch.Groups[5].Value;
                     string method = request.Method;
 
-                    string hash1 = md5Hash(username + ":" + realm + ":" + password).ToUpper();
-                    string hash2 = md5Hash(method + ":" + uri).ToUpper();
-                    string hash = md5Hash(hash1 + ":" + nonce + ":" + hash2).ToUpper();
+                    if (nonce == this.nonce && realm == this.digestRealm)
+                    {
+                        string hash1 = md5Hash(username + ":" + realm + ":" + password).ToUpper();
+                        string hash2 = md5Hash(method + ":" + uri).ToUpper();
+                        string hash = md5Hash(hash1 + ":" + nonce + ":" + hash2).ToUpper();
 
-                    // Check against password
-                    if (hash == resp && nonce == this.nonce)
-                        return true;
+                        if (hash == resp)
+                            return true;
+                    }
                 }
             }
             //Logger.Info("HTTPServer: Client authorisation falied");

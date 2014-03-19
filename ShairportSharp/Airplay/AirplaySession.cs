@@ -9,7 +9,7 @@ using System.Globalization;
 
 namespace ShairportSharp.Airplay
 {
-    class AirplaySession : HttpServer
+    class AirplaySession : HttpParser
     {
         #region Variables
 

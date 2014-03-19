@@ -15,6 +15,7 @@ using AirPlayer.Config;
 using ShairportSharp.Remote;
 using ShairportSharp.Raop;
 using ShairportSharp.Airplay;
+using MediaPortal.Dialogs;
 
 namespace AirPlayer
 {
@@ -345,7 +346,7 @@ namespace AirPlayer
         {
             lock (videoInfoLock)
             {
-                if (sender != videoInfoLock)
+                if (sender != videoInfo)
                     return;
                 startVideoLoading(videoUrl, sessionId);
             }
@@ -365,7 +366,7 @@ namespace AirPlayer
                     info.BeginDownload();
                 }
                 else
-                    startVideoLoading(videoUrl, sessionId);
+                    startVideoLoading(videoUrl, sessionId, true);
             }
         }
 
@@ -391,7 +392,7 @@ namespace AirPlayer
             }
         }
 
-        void startVideoLoading(string url, string sessionId)
+        void startVideoLoading(string url, string sessionId, bool useMPSourceFilter = false)
         {
             invoke(delegate()
             {
@@ -401,7 +402,8 @@ namespace AirPlayer
                     stopCurrentItem();
                     if (currentVideoPlayer != null)
                         currentVideoPlayer.Dispose();
-                    currentVideoPlayer = new VideoPlayer(url, sessionId);
+                    string sourceFilter = useMPSourceFilter ? VideoPlayer.MPURL_SOURCE_FILTER : VideoPlayer.DEFAULT_SOURCE_FILTER;
+                    currentVideoPlayer = new VideoPlayer(url, sessionId, sourceFilter);
                     bool? prepareResult = currentVideoPlayer.PrepareGraph();
                     switch (prepareResult)
                     {
@@ -421,16 +423,19 @@ namespace AirPlayer
 
         Thread videoLoadingThread = null;
         object bufferLock = new object();
+        VideoPlayer bufferingPlayer;
         void startBuffering(VideoPlayer player)
         {
             if (videoLoadingThread != null && videoLoadingThread.IsAlive)
                 videoLoadingThread.Abort();
 
+            bufferingPlayer = player;
             videoLoadingThread = new Thread(delegate()
             {
                 lock (bufferLock)
                 {
                     bool result = false;
+                    string error = null;
                     try
                     {
                         result = player.BufferFile();
@@ -440,32 +445,46 @@ namespace AirPlayer
                         Thread.ResetAbort();
                         result = false;
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
                         result = false;
+                        error = ex.Message;
                     }
                     finally
                     {
-                        invoke(delegate() { lock (streamLock)startVideoPlayback(player, result); }, false);
+                        invoke(delegate() { lock (streamLock)startVideoPlayback(player, result, error); }, false);
                     }
                 }
             }) { Name = "AirPlayerBufferThread", IsBackground = true };
             videoLoadingThread.Start();
         }
 
-        void startVideoPlayback(VideoPlayer player, bool result)
+        void startVideoPlayback(VideoPlayer player, bool result, string error = null)
         {
             GUIWaitCursor.Hide();
             if (player != currentVideoPlayer)
                 return;
-
+            bufferingPlayer = null;
             if (currentVideoPlayer != null)
             {
                 if (!result)
                 {
+                    bool showMessage = !currentVideoPlayer.BufferingStopped;
                     currentVideoPlayer.Dispose();
                     currentVideoPlayer = null;
                     isVideoPlaying = false;
+                    if (showMessage)
+                    {
+                        GUIDialogNotify dlg = (GUIDialogNotify)GUIWindowManager.GetWindow((int)GUIWindow.Window.WINDOW_DIALOG_NOTIFY);
+                        if (dlg != null)
+                        {
+                            dlg.Reset();
+                            dlg.SetImage(getPluginIcon());
+                            dlg.SetHeading("Airplay Error");
+                            dlg.SetText("Unable to play video" + (string.IsNullOrEmpty(error) ? "" : " " + error));
+                            dlg.DoModal(GUIWindowManager.ActiveWindow);
+                        }
+                    }
                     return;
                 }
 
@@ -584,8 +603,12 @@ namespace AirPlayer
                         break;
                     case MediaPortal.GUI.Library.Action.ActionType.ACTION_STOP:
                         lock (streamLock)
+                        {
                             if (isAudioPlaying)
                                 airtunesServer.SendCommand(RemoteCommand.Stop);
+                            else if (bufferingPlayer != null)
+                                bufferingPlayer.StopBuffering();
+                        }
                         break;
                     case MediaPortal.GUI.Library.Action.ActionType.ACTION_PREV_CHAPTER:
                     case MediaPortal.GUI.Library.Action.ActionType.ACTION_PREV_ITEM:
@@ -684,6 +707,14 @@ namespace AirPlayer
                 Logger.Instance.Error("Failed to save file - {0}", ex.Message);
             }
             return null;
+        }
+
+        string pluginIcon = null;
+        string getPluginIcon()
+        {
+            if (pluginIcon == null)
+                pluginIcon = MediaPortal.Configuration.Config.GetFile(MediaPortal.Configuration.Config.Dir.Thumbs, "AirPlayer", "airplay-icon.png");
+            return pluginIcon;
         }
 
         #endregion

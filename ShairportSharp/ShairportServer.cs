@@ -29,7 +29,7 @@ namespace ShairportSharp
         BonjourEmitter bonjour;
         byte[] macAddress;
         object listenerLock = new object();
-        ServerListener listener = null;
+        HttpConnectionHandler listener = null;
         object sessionLock = new object();
         RaopSession currentSession = null;
         RemoteHandler remoteHandler;
@@ -335,7 +335,7 @@ namespace ShairportSharp
         void startListener()
         {
             //Create a TCPListener on the specified port
-            listener = new ServerListener(IPAddress.Any, port);
+            listener = new HttpConnectionHandler(IPAddress.Any, port);
             listener.SocketAccepted += listener_SocketAccepted;
             if (!listener.Start())
                 Stop();

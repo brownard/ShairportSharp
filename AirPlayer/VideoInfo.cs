@@ -196,7 +196,7 @@ namespace AirPlayer
                     catch (Exception ex)
                     {
                         failed = true;
-                        Logger.Instance.Error("VideoInfo: Could not get response -", ex);
+                        Logger.Instance.Warn("VideoInfo: Could not get response - {0}", ex.Message);
                     }
 
                     if (failed)
@@ -209,7 +209,7 @@ namespace AirPlayer
             catch (Exception ex)
             {
                 failed = true;
-                Logger.Instance.Error("VideoInfo: Could not create request -", ex);
+                Logger.Instance.Warn("VideoInfo: Could not create request - {0}", ex.Message);
             }
 
             if (failed)

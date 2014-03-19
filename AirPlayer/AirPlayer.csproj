@@ -41,8 +41,12 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\External\Core.dll</HintPath>
     </Reference>
-    <Reference Include="DirectShowLib">
-      <HintPath>..\..\..\..\..\..\..\Program Files (x86)\Team MediaPortal\MediaPortal\DirectShowLib.dll</HintPath>
+    <Reference Include="Dialogs">
+      <HintPath>..\External\Dialogs.dll</HintPath>
+    </Reference>
+    <Reference Include="DirectShowLib, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\External\DirectShowLib.dll</HintPath>
     </Reference>
     <Reference Include="log4net, Version=1.2.11.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>

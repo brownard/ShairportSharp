@@ -22,18 +22,28 @@ namespace ShairportSharp.Http
 
     #endregion
 
-    class ServerListener
+    class HttpConnectionHandler
     {
+        #region Variables
+
         TcpListener listener;
         IPAddress ipAddress;
         int port;
         object syncRoot = new object();
 
-        public ServerListener(IPAddress ipAddress, int port)
+        #endregion
+
+        #region Ctor
+
+        public HttpConnectionHandler(IPAddress ipAddress, int port)
         {
             this.ipAddress = ipAddress;
             this.port = port;
         }
+
+        #endregion
+
+        #region Events
 
         public event EventHandler<SocketAcceptedEventArgs> SocketAccepted;
         protected virtual void OnSocketAccepted(SocketAcceptedEventArgs e)
@@ -41,6 +51,10 @@ namespace ShairportSharp.Http
             if (SocketAccepted != null)
                 SocketAccepted(this, e);
         }
+
+        #endregion
+
+        #region Public Methods
 
         public bool Start()
         {
@@ -71,6 +85,10 @@ namespace ShairportSharp.Http
             lock (syncRoot)
                 stopListener();
         }
+
+        #endregion
+
+        #region Private Methods
 
         void stopListener()
         {
@@ -128,5 +146,7 @@ namespace ShairportSharp.Http
                     socket.Close();
             }
         }
+
+        #endregion
     }
 }

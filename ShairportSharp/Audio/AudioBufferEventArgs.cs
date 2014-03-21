@@ -17,7 +17,7 @@ namespace ShairportSharp.Audio
         public int MaxSize { get; private set; }
     }
 
-    public class MissingPacketEventArgs : EventArgs
+    class MissingPacketEventArgs : EventArgs
     {
         public MissingPacketEventArgs(int first, int last)
         {

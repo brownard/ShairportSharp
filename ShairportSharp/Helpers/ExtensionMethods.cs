@@ -2,10 +2,18 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
-namespace ShairportSharp
+namespace ShairportSharp.Helpers
 {
+    enum CaseType
+    {
+        Upper,
+        Lower,
+        Digit
+    }
+
     static class ExtensionMethods
     {
         public static string ComputerNameIfNullOrEmpty(this string name)
@@ -58,9 +66,19 @@ namespace ShairportSharp
             return result;
         }
 
-        public static int GetValidPortNumber(this int port, int defaultValue, int range = 1)
+        public static int CheckValidPortNumber(this int port, int defaultValue, int range = 1)
         {
-            return port > 0 && port <= ushort.MaxValue + 1 - range ? port : defaultValue;
+            if (range < 1)
+                range = 1;
+            else if (range > ushort.MaxValue)
+                range = ushort.MaxValue;
+
+            if (port < 1 || port > ushort.MaxValue + 1 - range)
+            {
+                Logger.Warn("Invalid port number {0}, setting to default {1}", port, defaultValue);
+                port = defaultValue;
+            }
+            return port;
         }
 
 
@@ -81,6 +99,55 @@ namespace ShairportSharp
                 }
             }
             return -1;
+        }
+
+        public static CaseType GetCasing(this string value)
+        {
+            if (string.IsNullOrEmpty(value))
+                return CaseType.Digit;
+
+            for (int x = 0; x < value.Length; x++)
+            {
+                char c = value[x];
+                if (!char.IsDigit(c))
+                {
+                    return char.IsLower(c) ? CaseType.Lower : CaseType.Upper;
+                }
+            }
+            return CaseType.Digit;
+        }
+
+        static readonly Regex textParamatersReg = new Regex(@"([^:]+):\s*(.+)", RegexOptions.Compiled);
+        public static Dictionary<string, string> AsTextParameters(this string value)
+        {
+            Dictionary<string, string> parameters = new Dictionary<string, string>();
+            if (!string.IsNullOrEmpty(value))
+            {
+                foreach (Match m in textParamatersReg.Matches(value))
+                    parameters[m.Groups[1].Value] = m.Groups[2].Value;
+            }
+            return parameters;
+        }
+
+        public static Dictionary<string, string> GetQueryStringParameters(this string value)
+        {
+            Dictionary<string, string> query = new Dictionary<string, string>();
+            if (string.IsNullOrEmpty(value))
+                return query;
+
+            int index = value.IndexOf("?");
+            if (index > -1)
+                value = value.Substring(index + 1);
+
+            string[] keyVals = value.Split('&');
+            foreach (string keyVal in keyVals)
+            {
+                string[] keyValSplit = keyVal.Split('=');
+                if (keyValSplit.Length == 2)
+                    query[keyValSplit[0]] = keyValSplit[1];
+            }
+
+            return query;
         }
     }
 }

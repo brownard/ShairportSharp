@@ -5,7 +5,7 @@ using System.Text;
 
 namespace ShairportSharp.Remote
 {
-    public class RemoteServerInfo
+    class RemoteServerInfo
     {
         public RemoteServerInfo(string dacpId, string activeRemote)
         {

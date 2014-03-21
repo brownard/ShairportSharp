@@ -15,13 +15,13 @@ namespace ShairportSharp.Airplay
 
         public Dictionary<string, object> GetPlist()
         {
-            Dictionary<string, object> pList = new Dictionary<string, object>();
-            pList["deviceid"] = DeviceId;
-            pList["features"] = (int)Features;
-            pList["model"] = Model;
-            pList["protovers"] = ProtocolVersion;
-            pList["srcvers"] = ServerVersion;
-            return pList;
+            Dictionary<string, object> plist = new Dictionary<string, object>();
+            plist["deviceid"] = DeviceId;
+            plist["features"] = (int)Features;
+            plist["model"] = Model;
+            plist["protovers"] = ProtocolVersion;
+            plist["srcvers"] = ServerVersion;
+            return plist;
         }
     }
 

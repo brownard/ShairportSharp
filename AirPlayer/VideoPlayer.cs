@@ -14,7 +14,6 @@ namespace AirPlayer
 {
     class VideoPlayer : VideoPlayerVMR9
     {
-        const float INITIAL_BUFFER_PERCENT = 2;
         public const string DUMMY_URL = "http://localhost/AirPlayer.mp4";
         public const string DEFAULT_SOURCE_FILTER = "File Source (URL)";
         public const string MPURL_SOURCE_FILTER = "MediaPortal Url Source Splitter";
@@ -22,6 +21,18 @@ namespace AirPlayer
         string sourceFilterName;
         float percentageBuffered;
         DateTime lastProgressCheck = DateTime.MinValue;
+
+        int bufferPercent = 2;
+        public int BufferPercent
+        {
+            get { return bufferPercent; }
+            set 
+            {
+                if (value < 0 || value > 100)
+                    return;
+                bufferPercent = value; 
+            }
+        }
 
         public bool BufferingStopped { get; protected set; }
         public void StopBuffering() { BufferingStopped = true; }
@@ -163,7 +174,7 @@ namespace AirPlayer
 
                         percentageBuffered = (float)current / (float)total * 100.0f;
                         // after configured percentage has been buffered, connect the graph
-						if (!filterConnected && (percentageBuffered >= INITIAL_BUFFER_PERCENT || skipBuffering))
+						if (!filterConnected && (percentageBuffered >= bufferPercent || skipBuffering))
 						{
                             if (((filterState != null) && (filterState.IsFilterReadyToConnectPins())) ||
                                 (filterState == null))

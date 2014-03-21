@@ -6,7 +6,7 @@ using System.Net.Sockets;
 using System.Text;
 using ZeroconfService;
 
-namespace ShairportSharp
+namespace ShairportSharp.Bonjour
 {
     abstract class BonjourEmitter
     {

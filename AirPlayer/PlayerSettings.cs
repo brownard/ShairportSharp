@@ -11,11 +11,9 @@ namespace AirPlayer
 {
     class PlayerSettings
     {
-        ShairportServer server;
         AudioBufferStream source;
-        public PlayerSettings(ShairportServer server, AudioBufferStream source)
+        public PlayerSettings(AudioBufferStream source)
         {
-            this.server = server;
             this.source = source;
         }
 
@@ -36,12 +34,6 @@ namespace AirPlayer
             if (source != null)
                 return source.CurrentTimeStamp;
             return 0;
-        }
-
-        public void SendCommand(RemoteCommand command)
-        {
-            if (server != null)
-                server.SendCommand(command);
         }
 
         AMMediaType getWaveMediaType(WaveStream stream)

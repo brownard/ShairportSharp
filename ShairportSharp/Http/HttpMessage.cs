@@ -4,10 +4,11 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using ShairportSharp.Helpers;
 
 namespace ShairportSharp.Http
 {
-    public enum HttpMessageType
+    enum HttpMessageType
     {
         Request,
         Response
@@ -106,7 +107,7 @@ namespace ShairportSharp.Http
             return contentLength;
         }
         #endregion
-        
+
         byte[] content;
         Dictionary<string, string> headers;
 
@@ -153,16 +154,22 @@ namespace ShairportSharp.Http
             set { SetHeader(header, value); }
         }
 
-
         public void SetContent(byte[] content)
         {
-            SetHeader("Content-Length", content.Length.ToString());
+            int length;
+            if (content == null)
+                length = 0;
+            else
+                length = content.Length;
+
+            SetHeader("Content-Length", length.ToString(CultureInfo.InvariantCulture));
             this.content = content;
         }
 
         public void SetContent(string content)
         {
-            SetContent(Encoding.ASCII.GetBytes(content));
+            if (!string.IsNullOrEmpty(content))
+                SetContent(Encoding.ASCII.GetBytes(content));
         }
 
         public byte[] Content
@@ -170,6 +177,17 @@ namespace ShairportSharp.Http
             get
             {
                 return content;
+            }
+        }
+
+        public int ContentLength
+        {
+            get
+            {
+                if (content == null)
+                    return 0;
+                else
+                    return content.Length;
             }
         }
 

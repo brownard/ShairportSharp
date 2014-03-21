@@ -17,6 +17,7 @@ using ShairportSharp.Audio;
 using ShairportSharp.Http;
 using ShairportSharp.Remote;
 using System.Globalization;
+using ShairportSharp.Helpers;
 
 namespace ShairportSharp.Raop
 {    
@@ -454,8 +455,8 @@ namespace ShairportSharp.Raop
 
         void handleParameterString(string parameterString)
         {
-            Dictionary<string, string> paramaters = Utils.ParseTextParameters(parameterString);
-            foreach (KeyValuePair<string, string> keyVal in paramaters)
+            Dictionary<string, string> textParamaters = parameterString.AsTextParameters();
+            foreach (KeyValuePair<string, string> keyVal in textParamaters)
             {
                 string paramName = keyVal.Key;
                 string paramVal = keyVal.Value;
@@ -508,7 +509,7 @@ namespace ShairportSharp.Raop
         static byte[] decryptRSA(byte[] array)
         {
             try
-            {
+            {                
                 PemReader pemReader = new PemReader(new StringReader(Constants.RSA_KEY));
                 AsymmetricCipherKeyPair pObj = (AsymmetricCipherKeyPair)pemReader.ReadObject();
                 IBufferedCipher cipher = CipherUtilities.GetCipher("RSA/NONE/OAEPPadding");

@@ -9,7 +9,7 @@ namespace ShairportSharp.Http
 {
     #region SocketAcceptedEventArgs
 
-    public class SocketAcceptedEventArgs : EventArgs
+    class SocketAcceptedEventArgs : EventArgs
     {
         public SocketAcceptedEventArgs(Socket socket)
         {

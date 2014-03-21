@@ -32,27 +32,39 @@
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.passwordTextBox = new System.Windows.Forms.TextBox();
-            this.rtspPortUpDown = new System.Windows.Forms.NumericUpDown();
-            this.label3 = new System.Windows.Forms.Label();
-            this.label4 = new System.Windows.Forms.Label();
-            this.udpPortUpDown = new System.Windows.Forms.NumericUpDown();
-            this.allowVolumeCheckBox = new System.Windows.Forms.CheckBox();
-            this.sendCommandCheckBox = new System.Windows.Forms.CheckBox();
-            this.bufferSizeUpDown = new System.Windows.Forms.NumericUpDown();
-            this.label5 = new System.Windows.Forms.Label();
-            this.label6 = new System.Windows.Forms.Label();
             this.okButton = new System.Windows.Forms.Button();
             this.cancelButton = new System.Windows.Forms.Button();
-            ((System.ComponentModel.ISupportInitialize)(this.rtspPortUpDown)).BeginInit();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.label6 = new System.Windows.Forms.Label();
+            this.label5 = new System.Windows.Forms.Label();
+            this.audioBufferUpDown = new System.Windows.Forms.NumericUpDown();
+            this.sendCommandCheckBox = new System.Windows.Forms.CheckBox();
+            this.allowVolumeCheckBox = new System.Windows.Forms.CheckBox();
+            this.udpPortUpDown = new System.Windows.Forms.NumericUpDown();
+            this.label4 = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
+            this.rtspPortUpDown = new System.Windows.Forms.NumericUpDown();
+            this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.label7 = new System.Windows.Forms.Label();
+            this.httpPortUpDown = new System.Windows.Forms.NumericUpDown();
+            this.label8 = new System.Windows.Forms.Label();
+            this.videoBufferUpDown = new System.Windows.Forms.NumericUpDown();
+            this.label9 = new System.Windows.Forms.Label();
+            this.allowHDCheckBox = new System.Windows.Forms.CheckBox();
+            this.groupBox1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.audioBufferUpDown)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.udpPortUpDown)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.bufferSizeUpDown)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.rtspPortUpDown)).BeginInit();
+            this.groupBox2.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.httpPortUpDown)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.videoBufferUpDown)).BeginInit();
             this.SuspendLayout();
             // 
             // nameTextBox
             // 
             this.nameTextBox.Location = new System.Drawing.Point(86, 24);
             this.nameTextBox.Name = "nameTextBox";
-            this.nameTextBox.Size = new System.Drawing.Size(194, 20);
+            this.nameTextBox.Size = new System.Drawing.Size(298, 20);
             this.nameTextBox.TabIndex = 0;
             // 
             // label1
@@ -77,53 +89,108 @@
             // 
             this.passwordTextBox.Location = new System.Drawing.Point(86, 61);
             this.passwordTextBox.Name = "passwordTextBox";
-            this.passwordTextBox.Size = new System.Drawing.Size(194, 20);
+            this.passwordTextBox.Size = new System.Drawing.Size(298, 20);
             this.passwordTextBox.TabIndex = 3;
             this.passwordTextBox.UseSystemPasswordChar = true;
             // 
-            // rtspPortUpDown
+            // okButton
             // 
-            this.rtspPortUpDown.Location = new System.Drawing.Point(86, 98);
-            this.rtspPortUpDown.Maximum = new decimal(new int[] {
-            65535,
-            0,
-            0,
-            0});
-            this.rtspPortUpDown.Minimum = new decimal(new int[] {
+            this.okButton.Location = new System.Drawing.Point(231, 341);
+            this.okButton.Name = "okButton";
+            this.okButton.Size = new System.Drawing.Size(75, 23);
+            this.okButton.TabIndex = 13;
+            this.okButton.Text = "OK";
+            this.okButton.UseVisualStyleBackColor = true;
+            this.okButton.Click += new System.EventHandler(this.okButton_Click);
+            // 
+            // cancelButton
+            // 
+            this.cancelButton.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this.cancelButton.Location = new System.Drawing.Point(312, 341);
+            this.cancelButton.Name = "cancelButton";
+            this.cancelButton.Size = new System.Drawing.Size(75, 23);
+            this.cancelButton.TabIndex = 14;
+            this.cancelButton.Text = "Cancel";
+            this.cancelButton.UseVisualStyleBackColor = true;
+            this.cancelButton.Click += new System.EventHandler(this.cancelButton_Click);
+            // 
+            // groupBox1
+            // 
+            this.groupBox1.Controls.Add(this.label6);
+            this.groupBox1.Controls.Add(this.label5);
+            this.groupBox1.Controls.Add(this.audioBufferUpDown);
+            this.groupBox1.Controls.Add(this.sendCommandCheckBox);
+            this.groupBox1.Controls.Add(this.allowVolumeCheckBox);
+            this.groupBox1.Controls.Add(this.udpPortUpDown);
+            this.groupBox1.Controls.Add(this.label4);
+            this.groupBox1.Controls.Add(this.label3);
+            this.groupBox1.Controls.Add(this.rtspPortUpDown);
+            this.groupBox1.Location = new System.Drawing.Point(15, 96);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Size = new System.Drawing.Size(372, 133);
+            this.groupBox1.TabIndex = 15;
+            this.groupBox1.TabStop = false;
+            this.groupBox1.Text = "Audio";
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(142, 62);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(47, 13);
+            this.label6.TabIndex = 21;
+            this.label6.Text = "seconds";
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(6, 62);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(64, 13);
+            this.label5.TabIndex = 20;
+            this.label5.Text = "Audio buffer";
+            // 
+            // audioBufferUpDown
+            // 
+            this.audioBufferUpDown.DecimalPlaces = 1;
+            this.audioBufferUpDown.Increment = new decimal(new int[] {
             1,
             0,
             0,
-            0});
-            this.rtspPortUpDown.Name = "rtspPortUpDown";
-            this.rtspPortUpDown.Size = new System.Drawing.Size(56, 20);
-            this.rtspPortUpDown.TabIndex = 4;
-            this.rtspPortUpDown.Value = new decimal(new int[] {
-            5000,
+            65536});
+            this.audioBufferUpDown.Location = new System.Drawing.Point(80, 60);
+            this.audioBufferUpDown.Name = "audioBufferUpDown";
+            this.audioBufferUpDown.Size = new System.Drawing.Size(56, 20);
+            this.audioBufferUpDown.TabIndex = 19;
+            this.audioBufferUpDown.Value = new decimal(new int[] {
+            2,
             0,
             0,
             0});
             // 
-            // label3
+            // sendCommandCheckBox
             // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(12, 100);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(58, 13);
-            this.label3.TabIndex = 5;
-            this.label3.Text = "RTSP Port";
+            this.sendCommandCheckBox.AutoSize = true;
+            this.sendCommandCheckBox.Location = new System.Drawing.Point(9, 96);
+            this.sendCommandCheckBox.Name = "sendCommandCheckBox";
+            this.sendCommandCheckBox.Size = new System.Drawing.Size(191, 17);
+            this.sendCommandCheckBox.TabIndex = 18;
+            this.sendCommandCheckBox.Text = "Send playback commands to client";
+            this.sendCommandCheckBox.UseVisualStyleBackColor = true;
             // 
-            // label4
+            // allowVolumeCheckBox
             // 
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(157, 100);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(52, 13);
-            this.label4.TabIndex = 6;
-            this.label4.Text = "UDP Port";
+            this.allowVolumeCheckBox.AutoSize = true;
+            this.allowVolumeCheckBox.Location = new System.Drawing.Point(200, 96);
+            this.allowVolumeCheckBox.Name = "allowVolumeCheckBox";
+            this.allowVolumeCheckBox.Size = new System.Drawing.Size(163, 17);
+            this.allowVolumeCheckBox.TabIndex = 17;
+            this.allowVolumeCheckBox.Text = "Allow client to control volume";
+            this.allowVolumeCheckBox.UseVisualStyleBackColor = true;
             // 
             // udpPortUpDown
             // 
-            this.udpPortUpDown.Location = new System.Drawing.Point(224, 98);
+            this.udpPortUpDown.Location = new System.Drawing.Point(200, 23);
             this.udpPortUpDown.Maximum = new decimal(new int[] {
             65535,
             0,
@@ -136,89 +203,139 @@
             0});
             this.udpPortUpDown.Name = "udpPortUpDown";
             this.udpPortUpDown.Size = new System.Drawing.Size(56, 20);
-            this.udpPortUpDown.TabIndex = 7;
+            this.udpPortUpDown.TabIndex = 16;
             this.udpPortUpDown.Value = new decimal(new int[] {
             6000,
             0,
             0,
             0});
             // 
-            // allowVolumeCheckBox
+            // label4
             // 
-            this.allowVolumeCheckBox.AutoSize = true;
-            this.allowVolumeCheckBox.Location = new System.Drawing.Point(15, 188);
-            this.allowVolumeCheckBox.Name = "allowVolumeCheckBox";
-            this.allowVolumeCheckBox.Size = new System.Drawing.Size(163, 17);
-            this.allowVolumeCheckBox.TabIndex = 8;
-            this.allowVolumeCheckBox.Text = "Allow client to control volume";
-            this.allowVolumeCheckBox.UseVisualStyleBackColor = true;
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(142, 25);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(52, 13);
+            this.label4.TabIndex = 15;
+            this.label4.Text = "UDP Port";
             // 
-            // sendCommandCheckBox
+            // label3
             // 
-            this.sendCommandCheckBox.AutoSize = true;
-            this.sendCommandCheckBox.Location = new System.Drawing.Point(15, 211);
-            this.sendCommandCheckBox.Name = "sendCommandCheckBox";
-            this.sendCommandCheckBox.Size = new System.Drawing.Size(191, 17);
-            this.sendCommandCheckBox.TabIndex = 9;
-            this.sendCommandCheckBox.Text = "Send playback commands to client";
-            this.sendCommandCheckBox.UseVisualStyleBackColor = true;
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(6, 25);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(58, 13);
+            this.label3.TabIndex = 14;
+            this.label3.Text = "RTSP Port";
             // 
-            // bufferSizeUpDown
+            // rtspPortUpDown
             // 
-            this.bufferSizeUpDown.DecimalPlaces = 1;
-            this.bufferSizeUpDown.Increment = new decimal(new int[] {
+            this.rtspPortUpDown.Location = new System.Drawing.Point(80, 23);
+            this.rtspPortUpDown.Maximum = new decimal(new int[] {
+            65535,
+            0,
+            0,
+            0});
+            this.rtspPortUpDown.Minimum = new decimal(new int[] {
             1,
             0,
             0,
-            65536});
-            this.bufferSizeUpDown.Location = new System.Drawing.Point(86, 135);
-            this.bufferSizeUpDown.Name = "bufferSizeUpDown";
-            this.bufferSizeUpDown.Size = new System.Drawing.Size(62, 20);
-            this.bufferSizeUpDown.TabIndex = 10;
-            this.bufferSizeUpDown.Value = new decimal(new int[] {
+            0});
+            this.rtspPortUpDown.Name = "rtspPortUpDown";
+            this.rtspPortUpDown.Size = new System.Drawing.Size(56, 20);
+            this.rtspPortUpDown.TabIndex = 13;
+            this.rtspPortUpDown.Value = new decimal(new int[] {
+            5000,
+            0,
+            0,
+            0});
+            // 
+            // groupBox2
+            // 
+            this.groupBox2.Controls.Add(this.allowHDCheckBox);
+            this.groupBox2.Controls.Add(this.label9);
+            this.groupBox2.Controls.Add(this.videoBufferUpDown);
+            this.groupBox2.Controls.Add(this.label8);
+            this.groupBox2.Controls.Add(this.httpPortUpDown);
+            this.groupBox2.Controls.Add(this.label7);
+            this.groupBox2.Location = new System.Drawing.Point(15, 236);
+            this.groupBox2.Name = "groupBox2";
+            this.groupBox2.Size = new System.Drawing.Size(372, 88);
+            this.groupBox2.TabIndex = 16;
+            this.groupBox2.TabStop = false;
+            this.groupBox2.Text = "Video/Photo";
+            // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(6, 25);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(58, 13);
+            this.label7.TabIndex = 0;
+            this.label7.Text = "HTTP Port";
+            // 
+            // httpPortUpDown
+            // 
+            this.httpPortUpDown.Location = new System.Drawing.Point(80, 23);
+            this.httpPortUpDown.Maximum = new decimal(new int[] {
+            65535,
+            0,
+            0,
+            0});
+            this.httpPortUpDown.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.httpPortUpDown.Name = "httpPortUpDown";
+            this.httpPortUpDown.Size = new System.Drawing.Size(56, 20);
+            this.httpPortUpDown.TabIndex = 1;
+            this.httpPortUpDown.Value = new decimal(new int[] {
+            7000,
+            0,
+            0,
+            0});
+            // 
+            // label8
+            // 
+            this.label8.AutoSize = true;
+            this.label8.Location = new System.Drawing.Point(6, 60);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(64, 13);
+            this.label8.TabIndex = 2;
+            this.label8.Text = "Video buffer";
+            // 
+            // videoBufferUpDown
+            // 
+            this.videoBufferUpDown.Location = new System.Drawing.Point(80, 58);
+            this.videoBufferUpDown.Name = "videoBufferUpDown";
+            this.videoBufferUpDown.Size = new System.Drawing.Size(56, 20);
+            this.videoBufferUpDown.TabIndex = 3;
+            this.videoBufferUpDown.Value = new decimal(new int[] {
             2,
             0,
             0,
             0});
             // 
-            // label5
+            // label9
             // 
-            this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(12, 137);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(61, 13);
-            this.label5.TabIndex = 11;
-            this.label5.Text = "Initial buffer";
+            this.label9.AutoSize = true;
+            this.label9.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label9.Location = new System.Drawing.Point(142, 60);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(43, 13);
+            this.label9.TabIndex = 4;
+            this.label9.Text = "percent";
             // 
-            // label6
+            // allowHDCheckBox
             // 
-            this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(154, 137);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(47, 13);
-            this.label6.TabIndex = 12;
-            this.label6.Text = "seconds";
-            // 
-            // okButton
-            // 
-            this.okButton.Location = new System.Drawing.Point(160, 277);
-            this.okButton.Name = "okButton";
-            this.okButton.Size = new System.Drawing.Size(75, 23);
-            this.okButton.TabIndex = 13;
-            this.okButton.Text = "OK";
-            this.okButton.UseVisualStyleBackColor = true;
-            this.okButton.Click += new System.EventHandler(this.okButton_Click);
-            // 
-            // cancelButton
-            // 
-            this.cancelButton.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.cancelButton.Location = new System.Drawing.Point(241, 277);
-            this.cancelButton.Name = "cancelButton";
-            this.cancelButton.Size = new System.Drawing.Size(75, 23);
-            this.cancelButton.TabIndex = 14;
-            this.cancelButton.Text = "Cancel";
-            this.cancelButton.UseVisualStyleBackColor = true;
-            this.cancelButton.Click += new System.EventHandler(this.cancelButton_Click);
+            this.allowHDCheckBox.AutoSize = true;
+            this.allowHDCheckBox.Location = new System.Drawing.Point(200, 59);
+            this.allowHDCheckBox.Name = "allowHDCheckBox";
+            this.allowHDCheckBox.Size = new System.Drawing.Size(167, 17);
+            this.allowHDCheckBox.TabIndex = 5;
+            this.allowHDCheckBox.Text = "Select HD streams if available";
+            this.allowHDCheckBox.UseVisualStyleBackColor = true;
             // 
             // Configuration
             // 
@@ -226,18 +343,11 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.cancelButton;
-            this.ClientSize = new System.Drawing.Size(326, 312);
+            this.ClientSize = new System.Drawing.Size(402, 376);
+            this.Controls.Add(this.groupBox2);
+            this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.cancelButton);
             this.Controls.Add(this.okButton);
-            this.Controls.Add(this.label6);
-            this.Controls.Add(this.label5);
-            this.Controls.Add(this.bufferSizeUpDown);
-            this.Controls.Add(this.sendCommandCheckBox);
-            this.Controls.Add(this.allowVolumeCheckBox);
-            this.Controls.Add(this.udpPortUpDown);
-            this.Controls.Add(this.label4);
-            this.Controls.Add(this.label3);
-            this.Controls.Add(this.rtspPortUpDown);
             this.Controls.Add(this.passwordTextBox);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
@@ -245,9 +355,15 @@
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
             this.Name = "Configuration";
             this.Text = "AirPlay Settings";
-            ((System.ComponentModel.ISupportInitialize)(this.rtspPortUpDown)).EndInit();
+            this.groupBox1.ResumeLayout(false);
+            this.groupBox1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.audioBufferUpDown)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.udpPortUpDown)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.bufferSizeUpDown)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.rtspPortUpDown)).EndInit();
+            this.groupBox2.ResumeLayout(false);
+            this.groupBox2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.httpPortUpDown)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.videoBufferUpDown)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -259,16 +375,24 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.TextBox passwordTextBox;
-        private System.Windows.Forms.NumericUpDown rtspPortUpDown;
-        private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.NumericUpDown udpPortUpDown;
-        private System.Windows.Forms.CheckBox allowVolumeCheckBox;
-        private System.Windows.Forms.CheckBox sendCommandCheckBox;
-        private System.Windows.Forms.NumericUpDown bufferSizeUpDown;
-        private System.Windows.Forms.Label label5;
-        private System.Windows.Forms.Label label6;
         private System.Windows.Forms.Button okButton;
         private System.Windows.Forms.Button cancelButton;
+        private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.NumericUpDown audioBufferUpDown;
+        private System.Windows.Forms.CheckBox sendCommandCheckBox;
+        private System.Windows.Forms.CheckBox allowVolumeCheckBox;
+        private System.Windows.Forms.NumericUpDown udpPortUpDown;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.NumericUpDown rtspPortUpDown;
+        private System.Windows.Forms.GroupBox groupBox2;
+        private System.Windows.Forms.CheckBox allowHDCheckBox;
+        private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.NumericUpDown videoBufferUpDown;
+        private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.NumericUpDown httpPortUpDown;
+        private System.Windows.Forms.Label label7;
     }
 }

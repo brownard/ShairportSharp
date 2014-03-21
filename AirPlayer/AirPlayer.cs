@@ -16,6 +16,7 @@ using ShairportSharp.Remote;
 using ShairportSharp.Raop;
 using ShairportSharp.Airplay;
 using MediaPortal.Dialogs;
+using ShairportSharp.Helpers;
 
 namespace AirPlayer
 {
@@ -31,79 +32,40 @@ namespace AirPlayer
         #endregion
 
         #region Variables
+        
+        RaopServer airtunesServer;
+        AirplayServer airplayServer;
 
-        ShairportServer airtunesServer = null;
-        AirplayServer airplayServer = null;
-        object streamLock = new object();
-
+        PhotoWindow photoWindow;
+        Dictionary<string, string> photoCache = new Dictionary<string, string>();
+        string photoSessionId;
         VideoPlayer currentVideoPlayer;
+        VideoPlayer bufferingPlayer;
+        Thread videoBufferThread;
+        object bufferLock = new object();
+        HlsParser hlsParser;
+        string videoSessionId;
+        DateTime videoReceiveTime = DateTime.MinValue;
+
         AudioPlayer currentAudioPlayer;
-        DmapData currentMeta = null;
-        string currentCover = null;
+        bool isAudioBuffering;
+        DmapData currentMeta;
+        string currentCover;
         uint currentStartStamp;
         uint currentStopStamp;
         
         int coverNumber = 0;
         object coverLock = new object();
 
+        int? savedVolume;
         bool allowVolumeControl;
         bool sendCommands;
+        bool allowHDStreams;
+        int videoBuffer;
 
-        bool isAudioPlaying = false;
-        bool isVideoPlaying = false;
-
-        Dictionary<string, string> photoCache = new Dictionary<string, string>();
-
-        #endregion
-
-        #region IPlugin Members
-
-        public void Start()
-        {
-            GUIWindow window = new PhotoWindow();
-            window.Init();
-            GUIWindowManager.Add(ref window);
-            ShairportServer.SetLogger(Logger.Instance);
-            PluginSettings settings = new PluginSettings();
-            allowVolumeControl = settings.AllowVolume;
-            sendCommands = settings.SendCommands;
-
-            airtunesServer = new ShairportServer(settings.ServerName, settings.Password);
-            airtunesServer.Port = settings.RtspPort;
-            airtunesServer.AudioPort = settings.UdpPort;
-            airtunesServer.AudioBufferSize = (int)(settings.BufferSize * 1000);
-            airtunesServer.StreamStopped += airtunesServer_StreamStopped;
-            airtunesServer.StreamReady += airtunesServer_StreamReady;
-            airtunesServer.PlaybackProgressChanged += airtunesServer_PlaybackProgressChanged;
-            airtunesServer.MetaDataChanged += airtunesServer_MetaDataChanged;
-            airtunesServer.ArtworkChanged += airtunesServer_ArtworkChanged;
-            if (allowVolumeControl)
-                airtunesServer.VolumeChanged += airtunesServer_VolumeChanged;
-            airtunesServer.Start();
-
-            airplayServer = new AirplayServer(settings.ServerName);
-            airplayServer.PhotoReceived += airplayServer_PhotoReceived;
-            airplayServer.VideoReceived += airplayServer_VideoReceived;
-            airplayServer.PlaybackInfoRequested += airplayServer_PlaybackInfoRequested;
-            airplayServer.GetPlaybackPosition += airplayServer_GetPlaybackPosition;
-            airplayServer.PlaybackPositionChanged += airplayServer_PlaybackPositionChanged;
-            airplayServer.PlaybackRateChanged += airplayServer_PlaybackRateChanged;
-            airplayServer.SessionClosed += airplayServer_SessionClosed;
-            airplayServer.Start();
-
-            g_Player.PlayBackChanged += g_Player_PlayBackChanged;
-            g_Player.PlayBackStopped += g_Player_PlayBackChanged;
-            GUIWindowManager.OnNewAction += GUIWindowManager_OnNewAction;
-        }
+        bool isAudioPlaying;
+        bool isVideoPlaying;
         
-        public void Stop()
-        {
-            if (airtunesServer != null)
-                airtunesServer.Stop();
-            if (airplayServer != null)
-                airplayServer.Stop();
-        }
-
         #endregion
 
         #region ISetupForm Members
@@ -159,22 +121,76 @@ namespace AirPlayer
 
         #endregion
 
-        #region Airtunes Event Handlers
+        #region IPlugin Members
 
-        void airtunesServer_StreamStopped(object sender, EventArgs e)
+        public void Start()
+        {
+            ShairportSharp.Logger.SetLogger(Logger.Instance);
+            GUIWindow window = new PhotoWindow();
+            window.Init();
+            GUIWindowManager.Add(ref window);
+            photoWindow = (PhotoWindow)window;
+
+            PluginSettings settings = new PluginSettings();
+            allowVolumeControl = settings.AllowVolume;
+            sendCommands = settings.SendCommands;
+            allowHDStreams = settings.AllowHDStreams;
+            videoBuffer = settings.VideoBuffer;
+
+            airtunesServer = new RaopServer(settings.ServerName, settings.Password);
+            airtunesServer.Port = settings.RtspPort;
+            airtunesServer.AudioPort = settings.UdpPort;
+            airtunesServer.AudioBufferSize = (int)(settings.AudioBuffer * 1000);
+            airtunesServer.StreamStarting += airtunesServer_StreamStarting;
+            airtunesServer.StreamReady += airtunesServer_StreamReady;
+            airtunesServer.StreamStopped += airtunesServer_StreamStopped;
+            airtunesServer.PlaybackProgressChanged += airtunesServer_PlaybackProgressChanged;
+            airtunesServer.MetaDataChanged += airtunesServer_MetaDataChanged;
+            airtunesServer.ArtworkChanged += airtunesServer_ArtworkChanged;
+            if (allowVolumeControl)
+                airtunesServer.VolumeChanged += airtunesServer_VolumeChanged;
+            airtunesServer.Start();
+
+            airplayServer = new AirplayServer(settings.ServerName, settings.Password);
+            airplayServer.Port = settings.AirplayPort;
+            airplayServer.PhotoReceived += airplayServer_PhotoReceived;
+            airplayServer.VideoReceived += airplayServer_VideoReceived;
+            airplayServer.PlaybackInfoRequested += airplayServer_PlaybackInfoRequested;
+            airplayServer.GetPlaybackPosition += airplayServer_GetPlaybackPosition;
+            airplayServer.PlaybackPositionChanged += airplayServer_PlaybackPositionChanged;
+            airplayServer.PlaybackRateChanged += airplayServer_PlaybackRateChanged;
+            airplayServer.SessionStopped += airplayServer_SessionClosed;
+            airplayServer.SessionClosed += airplayServer_SessionClosed;
+            airplayServer.Start();
+
+            g_Player.PlayBackChanged += g_Player_PlayBackChanged;
+            g_Player.PlayBackStopped += g_Player_PlayBackStopped;
+            g_Player.PlayBackEnded += g_Player_PlayBackEnded;
+            GUIWindowManager.OnNewAction += GUIWindowManager_OnNewAction;
+        }
+        
+        public void Stop()
+        {
+            if (airtunesServer != null)
+                airtunesServer.Stop();
+            if (airplayServer != null)
+                airplayServer.Stop();
+        }
+
+        #endregion
+
+        #region Airtunes Event Handlers
+        
+        void airtunesServer_StreamStarting(object sender, EventArgs e)
         {
             invoke(delegate()
             {
-                lock (streamLock)
-                {
-                    if (isAudioPlaying)
-                    {
-                        isAudioPlaying = false;
-                        currentAudioPlayer = null;
-                        stopCurrentItem();
-                    }
-                }
-            }, false);
+                stopCurrentItem();
+                cleanupPendingPlayback();
+                GUIWaitCursor.Init(); GUIWaitCursor.Show();
+                isAudioBuffering = true;
+            });
+
         }
 
         void airtunesServer_StreamReady(object sender, EventArgs e)
@@ -183,42 +199,50 @@ namespace AirPlayer
             if (input == null)
                 return;
 
-            invoke(delegate() { startPlayback(input); }, false);
+            invoke(delegate()
+            {
+                startPlayback(input);
+            }, false);
         }
 
         void startPlayback(AudioBufferStream stream)
         {
-            lock (streamLock)
+            if (!isAudioBuffering)
             {
-                stopCurrentItem();
-                IPlayerFactory savedFactory = g_Player.Factory;
-                currentAudioPlayer = new AudioPlayer(new PlayerSettings(sendCommands ? airtunesServer : null, stream));
-                g_Player.Factory = new PlayerFactory(currentAudioPlayer);
-                g_Player.Play(AIRPLAY_DUMMY_FILE, g_Player.MediaType.Music);
-                g_Player.Factory = savedFactory;
-                isAudioPlaying = true;
+                airtunesServer.StopCurrentSession();
+                return;
             }
+            isAudioBuffering = false;
+            GUIWaitCursor.Hide();
+            stopCurrentItem();
+            isAudioPlaying = true;
+            IPlayerFactory savedFactory = g_Player.Factory;
+            currentAudioPlayer = new AudioPlayer(new PlayerSettings(stream));
+            g_Player.Factory = new PlayerFactory(currentAudioPlayer);
+            g_Player.Play(AIRPLAY_DUMMY_FILE, g_Player.MediaType.Music);
+            g_Player.Factory = savedFactory;
 
+            //Mediaportal sets the metadata skin properties internally, we overwrite them after a small delay
             ThreadPool.QueueUserWorkItem((o) =>
             {
                 Thread.Sleep(SKIN_PROPERTIES_UPDATE_DELAY);
-                lock (streamLock)
+                invoke(delegate()
                 {
                     setMetaData(currentMeta);
                     setCover(currentCover);
                     setDuration();
-                }
+                }, false);
             });
         }
 
         void airtunesServer_PlaybackProgressChanged(object sender, PlaybackProgressChangedEventArgs e)
         {
-            lock (streamLock)
+            invoke(delegate()
             {
                 currentStartStamp = e.Start;
                 currentStopStamp = e.Stop;
                 setDuration();
-            }
+            }, false);
         }
 
         void setDuration()
@@ -229,11 +253,11 @@ namespace AirPlayer
 
         void airtunesServer_MetaDataChanged(object sender, MetaDataChangedEventArgs e)
         {
-            lock (streamLock)
+            invoke(delegate()
             {
                 currentMeta = e.MetaData;
                 setMetaData(currentMeta);
-            }
+            }, false);
         }
 
         void setMetaData(DmapData metaData)
@@ -250,12 +274,12 @@ namespace AirPlayer
         void airtunesServer_ArtworkChanged(object sender, ArtwokChangedEventArgs e)
         {
             string newCover = saveCover(e.ImageData, e.ContentType);
-            lock (streamLock)
+            invoke(delegate()
             {
                 currentCover = newCover;
                 if (currentCover != null)
                     setCover(currentCover);
-            }
+            }, false);
         }
 
         void setCover(string cover)
@@ -266,11 +290,14 @@ namespace AirPlayer
 
         void airtunesServer_VolumeChanged(object sender, VolumeChangedEventArgs e)
         {
-            lock (streamLock)
+            invoke(delegate()
             {
                 if (isAudioPlaying)
                 {
                     VolumeHandler volumeHandler = VolumeHandler.Instance;
+                    if (savedVolume == null)
+                        savedVolume = volumeHandler.Volume;
+
                     if (e.Volume < -30)
                     {
                         volumeHandler.IsMuted = true;
@@ -281,7 +308,17 @@ namespace AirPlayer
                         volumeHandler.Volume = (int)(volumeHandler.Maximum * percent);
                     }
                 }
-            }
+            }, false);
+        }
+
+        void airtunesServer_StreamStopped(object sender, EventArgs e)
+        {
+            invoke(delegate()
+            {
+                cleanupPendingAudio();
+                if (isAudioPlaying)
+                    stopCurrentItem();
+            }, false);
         }
 
         #endregion
@@ -290,6 +327,7 @@ namespace AirPlayer
         
         void airplayServer_PhotoReceived(object sender, PhotoReceivedEventArgs e)
         {
+            DateTime photoReceiveTime = DateTime.Now;
             string photoPath;
             if (e.AssetAction == PhotoAction.DisplayCached)
             {
@@ -312,125 +350,117 @@ namespace AirPlayer
 
             invoke(delegate()
             {
-                PhotoWindow photoWindow = GUIWindowManager.GetWindow(PhotoWindow.WINDOW_ID) as PhotoWindow;
-                if (photoWindow != null)
+                //When playing a video from the camera roll the client sends a thumbnail before the video.
+                //Occasionally we receive it after due to threading so we should ignore it if we have just started playing a video.
+                if (!isVideoPlaying || photoReceiveTime.Subtract(videoReceiveTime).TotalSeconds > 2)
                 {
-                    photoWindow.SetPhoto(photoPath);
-                    if (GUIWindowManager.ActiveWindow != PhotoWindow.WINDOW_ID)
-                        GUIWindowManager.ActivateWindow(PhotoWindow.WINDOW_ID);
+                    if (photoWindow != null)
+                    {
+                        photoSessionId = e.SessionId;
+                        photoWindow.SetPhoto(photoPath);
+                        if (GUIWindowManager.ActiveWindow != PhotoWindow.WINDOW_ID)
+                            GUIWindowManager.ActivateWindow(PhotoWindow.WINDOW_ID);
+                    }
                 }
-            }, false);
+            });
         }
 
-        object videoInfoLock = new object();
-        string videoUrl;
-        string sessionId;
-        VideoInfo videoInfo;
         void airplayServer_VideoReceived(object sender, VideoEventArgs e)
         {
             airplayServer.SetPlaybackState(e.SessionId, PlaybackState.Loading);
-            lock (videoInfoLock)
+            invoke(delegate()
             {
-                videoUrl = e.ContentLocation;
-                sessionId = e.SessionId;
-                videoInfo = new VideoInfo(videoUrl);
-                videoInfo.AnalyseComplete += videoInfo_AnalyseComplete;
-                videoInfo.DownloadComplete += videoInfo_DownloadComplete;
-                videoInfo.AnalyseFailed += videoInfo_Failed;
-                videoInfo.DownloadFailed += videoInfo_Failed;
-                videoInfo.BeginAnalyse();
-            }
+                videoReceiveTime = DateTime.Now;
+                stopCurrentItem();
+                cleanupPendingPlayback();
+                GUIWaitCursor.Init(); GUIWaitCursor.Show();
+
+                videoSessionId = e.SessionId;
+                //See if we are loading a HLS stream. 
+                //If so, manually select the best quality as LAVSplitter just selects the first/default.
+                //If not, allow allow MPUrlSourceFilter as it has better seeking support but doesn't seem to like HLS streams :(
+                hlsParser = new HlsParser(e.ContentLocation);
+                hlsParser.Completed += hlsParser_Completed;
+                hlsParser.Start();
+            }, false);
         }
 
-        void videoInfo_Failed(object sender, EventArgs e)
+        void hlsParser_Completed(object sender, EventArgs e)
         {
-            lock (videoInfoLock)
+            invoke(delegate()
             {
-                if (sender != videoInfo)
+                if (sender != hlsParser)
                     return;
-                startVideoLoading(videoUrl, sessionId);
-            }
-        }
 
-        void videoInfo_AnalyseComplete(object sender, EventArgs e)
-        {
-            lock (videoInfoLock)
-            {
-                if (sender != videoInfo)
-                    return;
-                VideoInfo info = (VideoInfo)sender;
-                string contentType = info.ContentType;
-                if (string.Compare(contentType, "application/x-mpegurl", true) == 0 || string.Compare(contentType, "application/vnd.apple.mpegurl", true) == 0)
+                string selectedUrl;
+                bool useMPUrlSourceFilter;
+
+                if (hlsParser.StreamInfos.Count > 0)
                 {
-                    Logger.Instance.Debug("Airplayer: HLS stream detected, selecting sub-stream");
-                    info.BeginDownload();
-                }
-                else
-                    startVideoLoading(videoUrl, sessionId, true);
-            }
-        }
+                    //HLS sub-streams, select best quality
+                    HlsStreamInfo streamInfo;
+                    if (!allowHDStreams)
+                    {
+                        streamInfo = hlsParser.StreamInfos.LastOrDefault(si => si.Height < 720);
+                        if (streamInfo == null)
+                            streamInfo = hlsParser.StreamInfos.First();
+                    }
+                    else
+                    {
+                        streamInfo = hlsParser.StreamInfos.Last();
+                    }
 
-        void videoInfo_DownloadComplete(object sender, EventArgs e)
-        {
-            lock (videoInfoLock)
-            {
-                if (sender != videoInfo)
-                    return;
-
-                HlsParser hls = new HlsParser(((VideoInfo)sender).Content);
-                if (hls.StreamInfos.Count > 0)
-                {
-                    HlsStreamInfo streamInfo = hls.StreamInfos.Last();
                     Logger.Instance.Debug("Airplayer: Selected hls stream '{0}x{1}'", streamInfo.Width, streamInfo.Height);
-                    startVideoLoading(streamInfo.Url, sessionId);
+                    selectedUrl = streamInfo.Url;
+                    useMPUrlSourceFilter = false;
                 }
                 else
                 {
-                    Logger.Instance.Debug("Airplayer: No sub-streams to select");
-                    startVideoLoading(videoUrl, sessionId);
+                    //Failed or non HLS stream or no sub-streams
+                    selectedUrl = hlsParser.Url;
+                    if (!hlsParser.Success)
+                    {
+                        //see if we can determine type by extension
+                        useMPUrlSourceFilter = !hlsParser.IsHls &&
+                            (hlsParser.Url.EndsWith(".mov", StringComparison.InvariantCultureIgnoreCase) || 
+                            hlsParser.Url.EndsWith(".mp4", StringComparison.InvariantCultureIgnoreCase));
+                    }
+                    else
+                    {
+                        useMPUrlSourceFilter = !hlsParser.IsHls;
+                    }
                 }
-            }
+                hlsParser = null;
+                startVideoLoading(selectedUrl, videoSessionId, useMPUrlSourceFilter);
+            }, false);
         }
 
         void startVideoLoading(string url, string sessionId, bool useMPSourceFilter = false)
         {
-            invoke(delegate()
+            stopCurrentItem();           
+            string sourceFilter = useMPSourceFilter ? VideoPlayer.MPURL_SOURCE_FILTER : VideoPlayer.DEFAULT_SOURCE_FILTER;
+            currentVideoPlayer = new VideoPlayer(url, sessionId, sourceFilter) { BufferPercent = videoBuffer };
+            bool? prepareResult;
+            lock (bufferLock)
+                prepareResult = currentVideoPlayer.PrepareGraph();
+            switch (prepareResult)
             {
-                GUIWaitCursor.Init(); GUIWaitCursor.Show();
-                lock (streamLock)
-                {
-                    stopCurrentItem();
-                    if (currentVideoPlayer != null)
-                        currentVideoPlayer.Dispose();
-                    string sourceFilter = useMPSourceFilter ? VideoPlayer.MPURL_SOURCE_FILTER : VideoPlayer.DEFAULT_SOURCE_FILTER;
-                    currentVideoPlayer = new VideoPlayer(url, sessionId, sourceFilter);
-                    bool? prepareResult = currentVideoPlayer.PrepareGraph();
-                    switch (prepareResult)
-                    {
-                        case true:
-                            startBuffering(currentVideoPlayer);
-                            break;
-                        case false:
-                            startVideoPlayback(currentVideoPlayer, true);
-                            break;
-                        default:
-                            startVideoPlayback(currentVideoPlayer, false);
-                            break;
-                    }
-                }
-            }, false);
+                case true:
+                    startBuffering(currentVideoPlayer);
+                    break;
+                case false:
+                    startVideoPlayback(currentVideoPlayer, true);
+                    break;
+                default:
+                    startVideoPlayback(currentVideoPlayer, false);
+                    break;
+            }
         }
 
-        Thread videoLoadingThread = null;
-        object bufferLock = new object();
-        VideoPlayer bufferingPlayer;
         void startBuffering(VideoPlayer player)
         {
-            if (videoLoadingThread != null && videoLoadingThread.IsAlive)
-                videoLoadingThread.Abort();
-
             bufferingPlayer = player;
-            videoLoadingThread = new Thread(delegate()
+            videoBufferThread = new Thread(delegate()
             {
                 lock (bufferLock)
                 {
@@ -452,18 +482,22 @@ namespace AirPlayer
                     }
                     finally
                     {
-                        invoke(delegate() { lock (streamLock)startVideoPlayback(player, result, error); }, false);
+                        invoke(delegate()
+                        {
+                            startVideoPlayback(player, result, error);
+                        }, false);
                     }
                 }
             }) { Name = "AirPlayerBufferThread", IsBackground = true };
-            videoLoadingThread.Start();
+            videoBufferThread.Start();
         }
 
         void startVideoPlayback(VideoPlayer player, bool result, string error = null)
         {
-            GUIWaitCursor.Hide();
             if (player != currentVideoPlayer)
                 return;
+            
+            GUIWaitCursor.Hide();
             bufferingPlayer = null;
             if (currentVideoPlayer != null)
             {
@@ -488,11 +522,11 @@ namespace AirPlayer
                     return;
                 }
 
+                isVideoPlaying = true;
                 IPlayerFactory savedFactory = g_Player.Factory;
                 g_Player.Factory = new PlayerFactory(currentVideoPlayer);
                 g_Player.Play(VideoPlayer.DUMMY_URL, g_Player.MediaType.Video);
                 g_Player.Factory = savedFactory;
-                isVideoPlaying = true;
             }
         }
 
@@ -500,23 +534,20 @@ namespace AirPlayer
         {
             invoke(delegate()
             {
-                lock (streamLock)
+                if (isVideoPlaying && currentVideoPlayer.Duration > 0)
                 {
-                    if (isVideoPlaying && currentVideoPlayer.Duration > 0)
-                    {
-                        PlaybackInfo playbackInfo = e.PlaybackInfo;
-                        playbackInfo.ReadyToPlay = true;
-                        playbackInfo.Duration = currentVideoPlayer.Duration;
-                        playbackInfo.Position = currentVideoPlayer.CurrentPosition;
-                        playbackInfo.PlaybackBufferEmpty = false;
-                        playbackInfo.PlaybackBufferFull = true;
-                        playbackInfo.PlaybackLikelyToKeepUp = true;
+                    PlaybackInfo playbackInfo = e.PlaybackInfo;
+                    playbackInfo.ReadyToPlay = true;
+                    playbackInfo.Duration = currentVideoPlayer.Duration;
+                    playbackInfo.Position = currentVideoPlayer.CurrentPosition;
+                    playbackInfo.PlaybackBufferEmpty = false;
+                    playbackInfo.PlaybackBufferFull = true;
+                    playbackInfo.PlaybackLikelyToKeepUp = true;
 
-                        PlaybackTimeRange timeRange = new PlaybackTimeRange() { Duration = playbackInfo.Duration };
-                        playbackInfo.LoadedTimeRanges.Add(timeRange);
-                        playbackInfo.SeekableTimeRanges.Add(timeRange);
-                        playbackInfo.Rate = currentVideoPlayer.Paused ? 0 : 1;
-                    }
+                    PlaybackTimeRange timeRange = new PlaybackTimeRange() { Duration = playbackInfo.Duration };
+                    playbackInfo.LoadedTimeRanges.Add(timeRange);
+                    playbackInfo.SeekableTimeRanges.Add(timeRange);
+                    playbackInfo.Rate = currentVideoPlayer.Paused ? 0 : 1;
                 }
             });
         }
@@ -525,12 +556,11 @@ namespace AirPlayer
         {
             invoke(delegate()
             {
-                lock (streamLock)
-                    if (isVideoPlaying)
-                    {
-                        e.Duration = currentVideoPlayer.Duration;
-                        e.Position = currentVideoPlayer.CurrentPosition;
-                    }
+                if (isVideoPlaying)
+                {
+                    e.Duration = currentVideoPlayer.Duration;
+                    e.Position = currentVideoPlayer.CurrentPosition;
+                }
             });
         }
 
@@ -538,44 +568,42 @@ namespace AirPlayer
         {
             invoke(delegate()
             {
-                lock (streamLock)
+                if (isVideoPlaying && e.Position >= 0 && e.Position <= currentVideoPlayer.Duration)
                 {
-                    if (isVideoPlaying && e.Position >= 0 && e.Position <= currentVideoPlayer.Duration)
-                    {
-                        currentVideoPlayer.SeekAbsolute(e.Position);
-                    }
+                    currentVideoPlayer.SeekAbsolute(e.Position);
                 }
-            });
+            }, false);
         }
 
         void airplayServer_PlaybackRateChanged(object sender, PlaybackRateEventArgs e)
         {
             invoke(delegate()
             {
-                lock (streamLock)
+                if (isVideoPlaying)
                 {
-                    if (isVideoPlaying)
+                    if ((e.Rate > 0 && g_Player.Paused) || (e.Rate == 0 && !g_Player.Paused))
                     {
-                        if ((e.Rate > 0 && g_Player.Paused) || (e.Rate == 0 && !g_Player.Paused))
-                        {
-                            MediaPortal.GUI.Library.Action action = new MediaPortal.GUI.Library.Action();
-                            action.wID = g_Player.Paused ? MediaPortal.GUI.Library.Action.ActionType.ACTION_PLAY : MediaPortal.GUI.Library.Action.ActionType.ACTION_PAUSE;
-                            GUIGraphicsContext.OnAction(action);
-                        }
+                        MediaPortal.GUI.Library.Action action = new MediaPortal.GUI.Library.Action();
+                        action.wID = g_Player.Paused ? MediaPortal.GUI.Library.Action.ActionType.ACTION_PLAY : MediaPortal.GUI.Library.Action.ActionType.ACTION_PAUSE;
+                        GUIGraphicsContext.OnAction(action);
                     }
                 }
-            });
+            }, false);
         }
 
         void airplayServer_SessionClosed(object sender, AirplayEventArgs e)
         {
             invoke(delegate()
             {
-                lock (streamLock)
+                if (e.SessionId == videoSessionId)
                 {
-                    isVideoPlaying = false;
-                    currentVideoPlayer = null;
-                    stopCurrentItem();
+                    cleanupPendingVideo();
+                    if (isVideoPlaying)
+                        stopCurrentItem();
+                }
+                else if (e.SessionId == photoSessionId && GUIWindowManager.ActiveWindow == PhotoWindow.WINDOW_ID)
+                {
+                    GUIWindowManager.ShowPreviousWindow();
                 }
             }, false);
         }
@@ -586,68 +614,124 @@ namespace AirPlayer
 
         void GUIWindowManager_OnNewAction(MediaPortal.GUI.Library.Action action)
         {
-            if (sendCommands && isAudioPlaying)
+            switch (action.wID)
             {
-                switch (action.wID)
-                {
-                    case MediaPortal.GUI.Library.Action.ActionType.ACTION_MUSIC_PLAY:
-                    case MediaPortal.GUI.Library.Action.ActionType.ACTION_PLAY:
-                        lock (streamLock)
-                            if (isAudioPlaying)
-                                airtunesServer.SendCommand(RemoteCommand.Play);
-                        break;
-                    case MediaPortal.GUI.Library.Action.ActionType.ACTION_PAUSE:
-                        lock(streamLock)
-                            if(isAudioPlaying)
-                                airtunesServer.SendCommand(RemoteCommand.Pause);
-                        break;
-                    case MediaPortal.GUI.Library.Action.ActionType.ACTION_STOP:
-                        lock (streamLock)
-                        {
-                            if (isAudioPlaying)
-                                airtunesServer.SendCommand(RemoteCommand.Stop);
-                            else if (bufferingPlayer != null)
-                                bufferingPlayer.StopBuffering();
-                        }
-                        break;
-                    case MediaPortal.GUI.Library.Action.ActionType.ACTION_PREV_CHAPTER:
-                    case MediaPortal.GUI.Library.Action.ActionType.ACTION_PREV_ITEM:
-                        lock (streamLock)
-                            if (isAudioPlaying)
-                                airtunesServer.SendCommand(RemoteCommand.PrevItem);
-                        break;
-                    case MediaPortal.GUI.Library.Action.ActionType.ACTION_NEXT_CHAPTER:
-                    case MediaPortal.GUI.Library.Action.ActionType.ACTION_NEXT_ITEM:
-                        lock (streamLock)
-                            if (isAudioPlaying)
-                                airtunesServer.SendCommand(RemoteCommand.NextItem);
-                        break;
-                }
+                case MediaPortal.GUI.Library.Action.ActionType.ACTION_MUSIC_PLAY:
+                case MediaPortal.GUI.Library.Action.ActionType.ACTION_PLAY:
+                    if (bufferingPlayer != null)
+                        bufferingPlayer.SkipBuffering();
+                    else if (sendCommands && isAudioPlaying)
+                        airtunesServer.SendCommand(RemoteCommand.Play);
+                    break;
+                case MediaPortal.GUI.Library.Action.ActionType.ACTION_PAUSE:
+                    if (sendCommands && isAudioPlaying)
+                        airtunesServer.SendCommand(RemoteCommand.Pause);
+                    break;
+                case MediaPortal.GUI.Library.Action.ActionType.ACTION_STOP:
+                    if (bufferingPlayer != null)
+                        bufferingPlayer.StopBuffering();
+                    else if (sendCommands && isAudioPlaying)
+                        airtunesServer.SendCommand(RemoteCommand.Stop);
+                    break;
+                case MediaPortal.GUI.Library.Action.ActionType.ACTION_PREV_CHAPTER:
+                case MediaPortal.GUI.Library.Action.ActionType.ACTION_PREV_ITEM:
+                    if (sendCommands && isAudioPlaying)
+                        airtunesServer.SendCommand(RemoteCommand.PrevItem);
+                    break;
+                case MediaPortal.GUI.Library.Action.ActionType.ACTION_NEXT_CHAPTER:
+                case MediaPortal.GUI.Library.Action.ActionType.ACTION_NEXT_ITEM:
+                    if (sendCommands && isAudioPlaying)
+                        airtunesServer.SendCommand(RemoteCommand.NextItem);
+                    break;
             }
         }
 
         void g_Player_PlayBackChanged(g_Player.MediaType type, int stoptime, string filename)
         {
-            lock (streamLock)
+            Logger.Instance.Debug("Airplayer: PlaybackChanged");
+            onPlaybackFinished();
+        }
+
+        void g_Player_PlayBackStopped(g_Player.MediaType type, int stoptime, string filename)
+        {
+            Logger.Instance.Debug("Airplayer: PlaybackStopped");
+            onPlaybackFinished();
+        }
+
+        void g_Player_PlayBackEnded(g_Player.MediaType type, string filename)
+        {
+            Logger.Instance.Debug("Airplayer: PlaybackEnded");
+            onPlaybackFinished();
+        }
+
+        void onPlaybackFinished()
+        {
+            isAudioPlaying = false;
+            isVideoPlaying = false;
+            if (currentAudioPlayer != null)
             {
-                if (currentAudioPlayer != null)
-                {
-                    isAudioPlaying = false;
-                    currentAudioPlayer = null;
-                    airtunesServer.StopCurrentSession();
-                }
-                if (currentVideoPlayer != null)
-                {
-                    airplayServer.SetPlaybackState(currentVideoPlayer.SessionId, PlaybackState.Stopped);
-                    isVideoPlaying = false;
-                    currentVideoPlayer = null;
-                }
+                currentAudioPlayer = null;
+                airtunesServer.StopCurrentSession();
+                restoreVolume();
+            }
+            if (currentVideoPlayer != null)
+            {
+                airplayServer.SetPlaybackState(currentVideoPlayer.SessionId, PlaybackState.Stopped);
+                currentVideoPlayer = null;
             }
         }
 
         #endregion
 
         #region Utils
+        
+        void cleanupPendingPlayback()
+        {
+            cleanupPendingAudio();
+            cleanupPendingVideo();
+        }
+
+        void cleanupPendingAudio()
+        {
+            if (isAudioBuffering)
+            {
+                GUIWaitCursor.Hide();
+                isAudioBuffering = false;
+            }
+            restoreVolume();
+            currentAudioPlayer = null;
+        }
+
+        void cleanupPendingVideo()
+        {
+            if (videoBufferThread != null && videoBufferThread.IsAlive)
+            {
+                videoBufferThread.Abort();
+                videoBufferThread = null;
+            }
+            if (bufferingPlayer != null)
+            {
+                GUIWaitCursor.Hide();
+                bufferingPlayer.Dispose();
+                bufferingPlayer = null;
+            }
+            else if (hlsParser != null)
+            {
+                GUIWaitCursor.Hide();
+                hlsParser = null;
+            }
+            currentVideoPlayer = null;
+            videoSessionId = null;
+        }
+
+        void restoreVolume()
+        {
+            if (savedVolume != null)
+            {
+                VolumeHandler.Instance.Volume = (int)savedVolume;
+                savedVolume = null;
+            }
+        }
 
         void invoke(System.Action action, bool wait = true)
         {
@@ -672,10 +756,7 @@ namespace AirPlayer
         void stopCurrentItem()
         {
             if (g_Player.Playing)
-            {
                 g_Player.Stop();
-                GUIGraphicsContext.ResetLastActivity();
-            }
         }
 
         string saveCover(byte[] buffer, string contentType)

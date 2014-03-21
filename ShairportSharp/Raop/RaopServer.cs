@@ -10,13 +10,15 @@ using System.Net.Sockets;
 using System.Text;
 using System.Windows.Forms;
 using ShairportSharp.Http;
+using ShairportSharp.Bonjour;
+using ShairportSharp.Helpers;
 
-namespace ShairportSharp
+namespace ShairportSharp.Raop
 {
     /// <summary>
     /// The main class used for broadcasting and listening for new connections
     /// </summary>
-    public class ShairportServer
+    public class RaopServer
     {
         #region Consts
 
@@ -42,14 +44,14 @@ namespace ShairportSharp
         /// <summary>
         /// Create a server using the machine name and no password
         /// </summary>
-        public ShairportServer() { }
+        public RaopServer() { }
 
         /// <summary>
         /// Create a server with the specified name and optional password
         /// </summary>
         /// <param name="name">The broadcasted name of the server</param>
         /// <param name="password">The password to use (use null or empty for no password)</param>
-        public ShairportServer(string name, string password = null)
+        public RaopServer(string name, string password = null)
         {
             this.name = name;
             this.password = password;
@@ -86,7 +88,7 @@ namespace ShairportSharp
         public int Port
         {
             get { return port; }
-            set { port = value.GetValidPortNumber(DEFAULT_PORT); } 
+            set { port = value.CheckValidPortNumber(DEFAULT_PORT); } 
         }
 
         /// <summary>
@@ -198,19 +200,6 @@ namespace ShairportSharp
         {
             if (AudioBufferChanged != null)
                 AudioBufferChanged(this, e);
-        }
-
-        #endregion
-
-        #region Static Methods
-
-        /// <summary>
-        /// Sets the interface to use for logging.
-        /// </summary>
-        /// <param name="logger">The ILog implementation</param>
-        public static void SetLogger(ILog logger)
-        {
-            Logger.SetLogger(logger);
         }
 
         #endregion

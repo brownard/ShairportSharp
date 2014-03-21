@@ -17,12 +17,12 @@ namespace ShairportSharp_Test
 {    
     public partial class PlayerForm : Form
     {
-        ShairportServer server;
+        RaopServer server;
         IPlayer player;
         Timer progressTimer;
         PlaybackProgressChangedEventArgs lastProgressEventArgs;
 
-        public PlayerForm(ShairportServer server, bool sendPlaybackCommands)
+        public PlayerForm(RaopServer server, bool sendPlaybackCommands)
         {
             InitializeComponent();
             this.server = server;

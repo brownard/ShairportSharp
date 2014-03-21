@@ -57,6 +57,6 @@
       <animation effect="fade" start="100" end="0" time="200" delay="200">Hidden</animation>
       <visible>control.isvisible(1231)</visible>
     </control>
-    <import>common.time.xml</import>
+    <!--<import>common.time.xml</import>-->
   </controls>
 </window>

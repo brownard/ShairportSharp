@@ -6,6 +6,7 @@ using System.Net.Sockets;
 using System.Text;
 using PlistCS;
 using System.Globalization;
+using ShairportSharp.Helpers;
 
 namespace ShairportSharp.Airplay
 {
@@ -43,7 +44,7 @@ namespace ShairportSharp.Airplay
                 EventConnection(this, e);
         }
 
-        public event EventHandler Stopped;
+        public event EventHandler<AirplayEventArgs> Stopped;
         protected virtual void OnStopped(AirplayEventArgs e)
         {
             if (Stopped != null)
@@ -139,7 +140,6 @@ namespace ShairportSharp.Airplay
 
             if (request.Uri == "/reverse")
             {
-                Logger.Debug("Airplay: Event connection received, '{0}'", request["X-Apple-Session-ID"]);
                 response = handleEventRequest();
             }
 
@@ -194,11 +194,18 @@ namespace ShairportSharp.Airplay
 
             else if (request.Uri.StartsWith("/getProperty"))
             {
+                //Logger.Debug("Airplay Session: getProperty\r\n{0}", request);
                 response = getEmptyResponse("404 Not Found");
             }
 
             else if (request.Uri.StartsWith("/setProperty"))
             {
+                //Logger.Debug("Airplay Session: setProperty\r\n{0}", request);
+                //if (request["Content-Type"] == "application/x-apple-binary-plist")
+                //{
+                //    Dictionary<string, object> pList = (Dictionary<string, object>)Plist.readPlist(request.Content);
+                //    Logger.Debug("Request plist - " + Plist.writeXml(pList));
+                //}
                 response = getEmptyResponse("404 Not Found");
             }
 
@@ -206,17 +213,19 @@ namespace ShairportSharp.Airplay
 
             else if (request.Uri == "/stop")
             {
+                Logger.Debug("Airplay Session: Stop");
                 OnStopped(new AirplayEventArgs(SessionId));
                 response = getEmptyResponse();
             }
 
             else
             {
-                Logger.Warn("Unhandled Request\r\n{0}", request.ToString());
-                if (request["Content-Type"] == "application/x-apple-binary-plist")
+                Logger.Warn("Unhandled Request\r\n{0}", request);
+                if (request.ContentLength > 0 && request["Content-Type"] == "application/x-apple-binary-plist")
                 {
-                    Dictionary<string, object> pList = (Dictionary<string, object>)Plist.readPlist(request.Content);
-                    Logger.Debug("Request plist - " + Plist.writeXml(pList));
+                    Dictionary<string, object> plist;
+                    if (tryGetPlist(request, out plist))
+                        Logger.Debug("Request plist - " + Plist.writeXml(plist));
                 }
             }
             return response;
@@ -234,6 +243,7 @@ namespace ShairportSharp.Airplay
 
         HttpResponse handleEventRequest()
         {
+            Logger.Debug("Airplay Session: Event connection received");
             OnEventConnection(new AirplayEventArgs(SessionId));
             HttpResponse response = new HttpResponse("HTTP/1.1");
             response.Status = "101 Switching Protocols";
@@ -259,6 +269,7 @@ namespace ShairportSharp.Airplay
 
         HttpResponse getSlideshowFeatures()
         {
+            Logger.Debug("Airplay Session: Slideshow features requested");
             SlideshowFeaturesEventArgs e = new SlideshowFeaturesEventArgs(SessionId);
             OnSlideshowFeaturesRequested(e);
             return getPlistResponse(e.Features);
@@ -266,13 +277,16 @@ namespace ShairportSharp.Airplay
 
         HttpResponse handleSlideshowSettings(HttpRequest request)
         {
-            Dictionary<string, object> pList = (Dictionary<string, object>)Plist.readPlist(request.Content);
-            string playState = (string)pList["state"];
-            Dictionary<string, object> settings = (Dictionary<string, object>)pList["settings"];
-            int slideDuration = (int)settings["slideDuration"];
-            string theme = (string)settings["theme"];
-            Logger.Debug("AirplaySession: Slideshow settings received - state: '{0}', duration: '{1}', theme: '{2}'", playState, slideDuration, theme);
-            OnSlideshowSettingsReceived(new SlideshowSettingsEventArgs(playState, slideDuration, theme, SessionId));
+            Dictionary<string, object> plist;
+            if (tryGetPlist(request, out plist))
+            {
+                string playState = (string)plist["state"];
+                Dictionary<string, object> settings = (Dictionary<string, object>)plist["settings"];
+                int slideDuration = (int)settings["slideDuration"];
+                string theme = (string)settings["theme"];
+                Logger.Debug("AirplaySession: Slideshow settings received - state: '{0}', duration: '{1}', theme: '{2}'", playState, slideDuration, theme);
+                OnSlideshowSettingsReceived(new SlideshowSettingsEventArgs(playState, slideDuration, theme, SessionId));
+            }
             return getPlistResponse(new Dictionary<string, object>());
         }
 
@@ -282,6 +296,7 @@ namespace ShairportSharp.Airplay
 
         HttpResponse handleServerInfo()
         {
+            Logger.Debug("Airplay Session: Server info requested");
             return getPlistResponse(serverInfo);
         }
 
@@ -293,16 +308,19 @@ namespace ShairportSharp.Airplay
 
             if (request["Content-Type"] == "application/x-apple-binary-plist")
             {
-                Dictionary<string, object> pList = (Dictionary<string, object>)Plist.readPlist(request.Content);
-                //Logger.Debug("Play plist - " + Plist.writeXml(pList));
-                if (pList.ContainsKey("Content-Location"))
-                    contentLocation = (string)pList["Content-Location"];
-                if (pList.ContainsKey("Start-Position"))
-                    startPosition = (double)pList["Start-Position"];
+                Dictionary<string, object> plist;
+                if (tryGetPlist(request, out plist))
+                {
+                    if (plist.ContainsKey("Content-Location"))
+                        contentLocation = (string)plist["Content-Location"];
+                    if (plist.ContainsKey("Start-Position"))
+                        startPosition = (double)plist["Start-Position"];
+                }
             }
             else
             {
-                foreach (KeyValuePair<string, string> keyVal in Utils.ParseTextParameters(request.GetContentString()))
+                Dictionary<string, string> textParameters = request.GetContentString().AsTextParameters();
+                foreach (KeyValuePair<string, string> keyVal in textParameters)
                 {
                     if (keyVal.Key == "Content-Location")
                         contentLocation = keyVal.Value;
@@ -316,11 +334,16 @@ namespace ShairportSharp.Airplay
                 Logger.Debug("Airplay: Video received: {0}, {1}", contentLocation, startPosition);
                 OnVideoReceived(new VideoEventArgs(contentLocation, startPosition, SessionId));
             }
+            else
+            {
+                Logger.Debug("Airplay Session: Failed to determine video url\r\n{0}", request);
+            }
             return getEmptyResponse();
         }
 
         HttpResponse getPlaybackInfo()
         {
+            Logger.Debug("Airplay Session: Playback info requested");
             PlaybackInfoEventArgs e = new PlaybackInfoEventArgs(SessionId);
             OnPlaybackInfoRequested(e);
             return getPlistResponse(e.PlaybackInfo);
@@ -328,7 +351,8 @@ namespace ShairportSharp.Airplay
 
         HttpResponse setPlaybackRate(HttpRequest request)
         {
-            Dictionary<string, string> queryString = Utils.ParseQueryString(request.Uri);
+            bool parsed = false;
+            Dictionary<string, string> queryString = request.Uri.GetQueryStringParameters();
             string rateStr;
             if (queryString.TryGetValue("value", out rateStr))
             {
@@ -336,15 +360,19 @@ namespace ShairportSharp.Airplay
                 if (double.TryParse(rateStr, out rate))
                 {
                     Logger.Debug("Airplay Session: Received playback rate - '{0}'", rate);
+                    parsed = true;
                     OnPlaybackRateChanged(new PlaybackRateEventArgs(rate, SessionId));
                 }
             }
+            if (!parsed)
+                Logger.Debug("Airplay Session: Failed to determine playback rate\r\n{0}", request);
             return getEmptyResponse();
         }
 
         HttpResponse setPlaybackPosition(HttpRequest request)
         {
-            Dictionary<string, string> queryString = Utils.ParseQueryString(request.Uri);
+            bool parsed = false;
+            Dictionary<string, string> queryString = request.Uri.GetQueryStringParameters();
             string positionStr;
             if (queryString.TryGetValue("position", out positionStr))
             {
@@ -352,9 +380,12 @@ namespace ShairportSharp.Airplay
                 if (double.TryParse(positionStr, out position))
                 {
                     Logger.Debug("Airplay Session: Received scrub position - '{0}'", position);
+                    parsed = true;
                     OnPlaybackPositionChanged(new PlaybackPositionEventArgs(position, SessionId));
                 }
             }
+            if (!parsed)
+                Logger.Debug("Airplay Session: Failed to determine scrub position\r\n{0}", request);
             return getEmptyResponse();
         }
 
@@ -362,6 +393,7 @@ namespace ShairportSharp.Airplay
         {
             GetPlaybackPositionEventArgs e = new GetPlaybackPositionEventArgs(SessionId);
             OnGetPlaybackPosition(e);
+            Logger.Debug("Airplay Session: Playback position requested: Position {0}, Duration {1}", e.Position, e.Duration);
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("duration: " + e.Duration.ToString(CultureInfo.InvariantCulture));
             sb.Append("position: " + e.Position.ToString(CultureInfo.InvariantCulture));
@@ -385,6 +417,22 @@ namespace ShairportSharp.Airplay
         #endregion
 
         #region Static Methods
+
+        static bool tryGetPlist(HttpMessage message, out Dictionary<string, object> plist)
+        {
+            try
+            {
+                plist = (Dictionary<string, object>)Plist.readPlist(message.Content);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Exception parsing plist - {0}", ex);
+                Logger.Error("Exception message\r\n{0}", message);
+                plist = null;
+            }
+            return false;
+        }
 
         static HttpResponse getPlistResponse(IPlistResponse plist)
         {

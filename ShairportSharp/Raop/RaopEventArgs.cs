@@ -57,7 +57,7 @@ namespace ShairportSharp.Raop
         public uint Current { get; private set; }
     }
 
-    public class RemoteInfoFoundEventArgs : EventArgs
+    class RemoteInfoFoundEventArgs : EventArgs
     {
         public RemoteInfoFoundEventArgs(RemoteServerInfo remoteServer)
         {

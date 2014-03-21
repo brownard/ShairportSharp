@@ -68,7 +68,7 @@
     <Compile Include="Audio\AudioSession.cs" />
     <Compile Include="Audio\BiquadFilter.cs" />
     <Compile Include="Audio\DecryptedAudioBuffer.cs" />
-    <Compile Include="BonjourEmitter.cs" />
+    <Compile Include="Bonjour\BonjourEmitter.cs" />
     <Compile Include="BouncyCastle\asn1\Asn1Encodable.cs" />
     <Compile Include="BouncyCastle\asn1\Asn1EncodableVector.cs" />
     <Compile Include="BouncyCastle\asn1\Asn1Exception.cs" />
@@ -1183,12 +1183,13 @@
     <Compile Include="BouncyCastle\x509\X509V3CertificateGenerator.cs" />
     <Compile Include="Http\HttpRequest.cs" />
     <Compile Include="Http\HttpConnectionHandler.cs" />
+    <Compile Include="Log\ILog.cs" />
+    <Compile Include="Log\Logger.cs" />
     <Compile Include="Raop\RaopEmitter.cs" />
     <Compile Include="Raop\Constants.cs" />
     <Compile Include="Raop\DmapData.cs" />
-    <Compile Include="ExtensionMethods.cs" />
-    <Compile Include="ILog.cs" />
-    <Compile Include="Logger.cs" />
+    <Compile Include="Helpers\Downloader.cs" />
+    <Compile Include="Helpers\ExtensionMethods.cs" />
     <Compile Include="Raop\RaopEventArgs.cs" />
     <Compile Include="Remote\RemoteHandler.cs" />
     <Compile Include="Audio\WaveHeader.cs" />
@@ -1200,10 +1201,13 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Http\HttpResponse.cs" />
     <Compile Include="Http\HttpParser.cs" />
-    <Compile Include="ShairportServer.cs" />
+    <Compile Include="Raop\RaopServer.cs" />
     <Compile Include="Audio\UdpListener.cs" />
-    <Compile Include="Utils.cs" />
+    <Compile Include="Helpers\HlsParser.cs" />
+    <Compile Include="Helpers\Utils.cs" />
+    <Compile Include="Helpers\VideoInfo.cs" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

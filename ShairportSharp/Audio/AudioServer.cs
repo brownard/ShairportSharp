@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using ShairportSharp.Helpers;
 
 namespace ShairportSharp.Audio
 {
@@ -29,7 +30,7 @@ namespace ShairportSharp.Audio
         public AudioServer(AudioSession audioSession, int port)
         {            
             this.audioSession = audioSession;
-            this.port = port.GetValidPortNumber(DEFAULT_PORT, 3);
+            this.port = port.CheckValidPortNumber(DEFAULT_PORT, 3);
             audioBuffer = new DecryptedAudioBuffer(audioSession);
             audioBuffer.MissingPackets += requestResend;
         }

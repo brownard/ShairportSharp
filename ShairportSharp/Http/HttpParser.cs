@@ -6,7 +6,7 @@ using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
-using Org.BouncyCastle.Math;
+using ShairportSharp.Helpers;
 
 namespace ShairportSharp.Http
 {
@@ -23,9 +23,10 @@ namespace ShairportSharp.Http
         List<byte> byteBuffer;
         byte[] buffer;
 
-        string password = null;
-        string digestRealm = null;
-        protected string nonce = null;
+        string password;
+        string digestRealm;
+        protected string nonce;
+        bool isAuthorised = true;
         
         #endregion
 
@@ -46,6 +47,7 @@ namespace ShairportSharp.Http
                 this.password = password;
                 this.digestRealm = digestRealm;
                 nonce = createRandomString();
+                isAuthorised = false;
             }
         }
 
@@ -126,7 +128,6 @@ namespace ShairportSharp.Http
                     else
                         return;
                 }
-
                 if (read < 1)
                     Close();
 
@@ -148,32 +149,20 @@ namespace ShairportSharp.Http
                             response = HandleRequest((HttpRequest)parsedMessage);
                         else
                             HandleResponse((HttpResponse)parsedMessage);
-
                     }
                     catch (Exception ex)
                     {
                         Logger.Error("HttpServer: Exception handling message -", ex);
+                        Logger.Error("HttpServer: Exception request\r\n{0}", parsedMessage);
                     }
 
                     if (response != null)
                     {
-                        lock (socketLock)
-                        {
-                            if (socket != null)
-                            {
-                                //send it
-                                byte[] txtBytes = response.GetBytes();
-                                outputStream.Write(txtBytes, 0, txtBytes.Length);
-                            }
-                            else
-                            {
-                                return;
-                            }
-                        }
-
+                        Send(response);
                         if (response["Connection"] == "close")
                         {
                             Close();
+                            return;
                         }
                     }
                 }
@@ -207,7 +196,7 @@ namespace ShairportSharp.Http
 
         protected virtual bool IsAuthorised(HttpRequest request)
         {
-            if (string.IsNullOrEmpty(password))
+            if (isAuthorised)
                 return true;
 
             string authRaw = request.GetHeader("Authorization");
@@ -225,12 +214,11 @@ namespace ShairportSharp.Http
 
                     if (nonce == this.nonce && realm == this.digestRealm)
                     {
-                        string hash1 = md5Hash(username + ":" + realm + ":" + password).ToUpper();
-                        string hash2 = md5Hash(method + ":" + uri).ToUpper();
-                        string hash = md5Hash(hash1 + ":" + nonce + ":" + hash2).ToUpper();
-
-                        if (hash == resp)
+                        if (checkDigestHash(username, realm, password, method, uri, nonce, resp))
+                        {
+                            isAuthorised = true;
                             return true;
+                        }
                     }
                 }
             }
@@ -268,32 +256,40 @@ namespace ShairportSharp.Http
             return Convert.ToBase64String(buffer);
         }
 
+        static bool checkDigestHash(string username, string realm, string password, string method, string uri, string nonce, string hashToCheck)
+        {
+            //Airtunes hashes to uppercase, Airplay hashes to lowercase, try and detect which is used
+            CaseType caseType = hashToCheck.GetCasing();
+            bool result = hashToCheck == getDigestHash(username, realm, password, method, uri, nonce, caseType);
+            //Edge case when hash is all digits so we cannot detect casing, try both
+            if (!result && caseType == CaseType.Digit)
+                result = hashToCheck == getDigestHash(username, realm, password, method, uri, nonce, CaseType.Lower);
+            return result;
+        }
+
+        static string getDigestHash(string username, string realm, string password, string method, string uri, string nonce, CaseType caseType)
+        {
+            string hash1 = md5Hash(username + ":" + realm + ":" + password, caseType);
+            string hash2 = md5Hash(method + ":" + uri, caseType);
+            return md5Hash(hash1 + ":" + nonce + ":" + hash2, caseType);
+        }
+
         /// <summary>
         /// Generates an MD5 hash from a string 
         /// </summary>
         /// <param name="plainText">The string to use to generate the hash</param>
         /// <returns>The MD5 hash</returns>
-        static string md5Hash(string plainText)
+        static string md5Hash(string input, CaseType caseType)
         {
-            String hashtext = "";
-            try
-            {
-                HashAlgorithm md = new MD5CryptoServiceProvider();
-                byte[] txtBytes = Encoding.ASCII.GetBytes(plainText);
-                //md.TransformFinalBlock(txtBytes, 0, txtBytes.Length);
-                byte[] digest = md.ComputeHash(txtBytes);
+            MD5 md5 = System.Security.Cryptography.MD5.Create();
+            byte[] inputBytes = System.Text.Encoding.ASCII.GetBytes(input);
+            byte[] hash = md5.ComputeHash(inputBytes);
 
-                BigInteger bigInt = new BigInteger(1, digest);
-                hashtext = bigInt.ToString(16);
-
-                // Now we need to zero pad it if you actually want the full 32 chars.
-                while (hashtext.Length < 32)
-                {
-                    hashtext = "0" + hashtext;
-                }
-            }
-            catch { }
-            return hashtext;
+            string format = caseType == CaseType.Lower ? "x2" : "X2";
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < hash.Length; i++)
+                sb.Append(hash[i].ToString(format));
+            return sb.ToString();
         }
 
         #endregion

@@ -20,7 +20,7 @@ namespace ShairportSharp_Test
         #region Variables
 
         AirplayServer airplay;
-        ShairportServer server;
+        RaopServer server;
         PlayerForm playerForm = null;
         PhotoForm photoForm = null;
         VideoForm videoForm = null;
@@ -35,7 +35,7 @@ namespace ShairportSharp_Test
             InitializeComponent();
             Log log = new Log();
             log.NewLog += logToTextBox;
-            ShairportServer.SetLogger(log);
+            Logger.SetLogger(log);
             nameTextBox.Text = SystemInformation.ComputerName;
         }
 
@@ -82,7 +82,7 @@ namespace ShairportSharp_Test
         {
             if (server == null)
             {
-                server = new ShairportServer(nameTextBox.Text, passwordTextBox.Text)
+                server = new RaopServer(nameTextBox.Text, passwordTextBox.Text)
                 {
                     Port = (int)rtspPortUpDown.Value,
                     AudioPort = (int)udpPortUpDown.Value,

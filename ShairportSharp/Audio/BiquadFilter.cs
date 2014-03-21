@@ -104,7 +104,7 @@ namespace ShairportSharp.Audio
         }
     }
 
-    public class BiquadLPF
+    class BiquadLPF
     {
         public double[] hist = new double[2];
         public double[] a = new double[2];

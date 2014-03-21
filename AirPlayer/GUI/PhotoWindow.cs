@@ -39,18 +39,17 @@ namespace AirPlayer
                 imageSwapper = new ImageSwapper();
                 imageSwapper.PropertyOne = "#AirPlay.Photo1";
                 imageSwapper.PropertyTwo = "#AirPlay.Photo2";
-                imageSwapper.GUIImageOne = photoControl1;
-                imageSwapper.GUIImageTwo = photoControl2;
-                imageSwapper.Filename = filename;
             }
+            imageSwapper.GUIImageOne = photoControl1;
+            imageSwapper.GUIImageTwo = photoControl2;
+            imageSwapper.Filename = filename;
         }
 
         public void SetPhoto(string filename)
         {
+            this.filename = filename;
             if (imageSwapper != null)
                 imageSwapper.Filename = filename;
-            else
-                this.filename = filename;
         }
     }
 }

@@ -4,17 +4,23 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using ShairportSharp.Http;
+using ShairportSharp.Helpers;
 
 namespace ShairportSharp.Airplay
 {
     public class AirplayServer
     {
+        #region Consts
+
+        const int DEFAULT_PORT = 7000;
+
+        #endregion
+
         #region Variables
 
         object syncRoot = new object();
         string name;
         string password;
-        int port = 7000;
         AirplayEmitter emitter;
         HttpConnectionHandler listener;
         AirplayServerInfo serverInfo;
@@ -30,10 +36,11 @@ namespace ShairportSharp.Airplay
 
         #region Public Properties
 
+        int port = DEFAULT_PORT;
         public int Port
         {
             get { return port; }
-            set { port = value; }
+            set { port = value.CheckValidPortNumber(DEFAULT_PORT); }
         }
 
         public AirplayServerInfo ServerInfo
@@ -69,6 +76,13 @@ namespace ShairportSharp.Airplay
         #endregion
 
         #region Generic Events
+
+        public event EventHandler<AirplayEventArgs> SessionStopped;
+        protected virtual void OnSessionStopped(AirplayEventArgs e)
+        {
+            if (SessionStopped != null)
+                SessionStopped(this, e);
+        }
 
         public event EventHandler<AirplayEventArgs> SessionClosed;
         protected virtual void OnSessionClosed(AirplayEventArgs e)
@@ -235,7 +249,7 @@ namespace ShairportSharp.Airplay
             session.PlaybackRateChanged += session_PlaybackRateChanged;
             session.PlaybackPositionChanged += session_PlaybackPositionChanged;
             session.GetPlaybackPosition += session_GetPlaybackPosition;
-
+            session.Stopped += session_Stopped;
             session.Closed += session_Closed;
             lock (connectionSync)
                 connections.Add(session);
@@ -247,8 +261,11 @@ namespace ShairportSharp.Airplay
             if (string.IsNullOrEmpty(e.SessionId))
                 Logger.Warn("Event connection received without session id");
             else
+            {
+                Logger.Debug("Airplay Server: Event connection received, '{0}'", e.SessionId);
                 lock (connectionSync)
                     eventConnections[e.SessionId] = (AirplaySession)sender;
+            }
         }
 
         void session_PhotoReceived(object sender, PhotoReceivedEventArgs e)
@@ -332,6 +349,11 @@ namespace ShairportSharp.Airplay
             }
         }
 
+        void session_Stopped(object sender, AirplayEventArgs e)
+        {
+            OnSessionStopped(e);
+        }
+
         void session_Closed(object sender, EventArgs e)
         {
             lock (connectionSync)
@@ -340,7 +362,7 @@ namespace ShairportSharp.Airplay
                 connections.Remove(session);
                 if (eventConnections.ContainsValue(session))
                 {
-                    Logger.Debug("Airplay Server: Event connection closed");
+                    Logger.Debug("Airplay Server: Event connection closed, '{0}'", session.SessionId);
                     eventConnections.Remove(session.SessionId);
                     lock (photoSync)
                         photoCache.Remove(session.SessionId);

@@ -107,6 +107,7 @@ namespace ShairportSharp_Test
                 airplay.GetPlaybackPosition += airplay_GetPlaybackPosition;
                 airplay.PlaybackPositionChanged += airplay_PlaybackPositionChanged;
                 airplay.PlaybackRateChanged += airplay_PlaybackRateChanged;
+                airplay.SessionStopped += airplay_SessionStopped;
                 airplay.SessionClosed += airplay_SessionClosed;
                 airplay.Start();
 
@@ -188,6 +189,11 @@ namespace ShairportSharp_Test
             {
                 showVideo(e);
             });
+        }
+
+        void airplay_SessionStopped(object sender, AirplayEventArgs e)
+        {
+            airplay.CloseSession(e.SessionId);
         }
 
         void airplay_SessionClosed(object sender, AirplayEventArgs e)

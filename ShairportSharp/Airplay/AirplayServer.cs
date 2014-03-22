@@ -271,6 +271,15 @@ namespace ShairportSharp.Airplay
             });
         }
 
+        public void CloseSession(string sessionId)
+        {
+            AirplaySession[] connectionsToClose;
+            lock (connectionSync)
+                connectionsToClose = connections.Where(s => s.SessionId == sessionId).ToArray();
+            foreach (AirplaySession session in connectionsToClose)
+                session.Close();
+        }
+
         #endregion
 
         #region Event Handlers

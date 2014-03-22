@@ -164,7 +164,7 @@ namespace AirPlayer
             airplayServer.GetPlaybackPosition += airplayServer_GetPlaybackPosition;
             airplayServer.PlaybackPositionChanged += airplayServer_PlaybackPositionChanged;
             airplayServer.PlaybackRateChanged += airplayServer_PlaybackRateChanged;
-            airplayServer.SessionStopped += airplayServer_SessionClosed;
+            airplayServer.SessionStopped += airplayServer_SessionStopped;
             airplayServer.SessionClosed += airplayServer_SessionClosed;
             airplayServer.Start();
 
@@ -597,6 +597,11 @@ namespace AirPlayer
             }, false);
         }
 
+        void airplayServer_SessionStopped(object sender, AirplayEventArgs e)
+        {
+            airplayServer_SessionClosed(sender, e);
+        }
+
         void airplayServer_SessionClosed(object sender, AirplayEventArgs e)
         {
             invoke(delegate()
@@ -607,9 +612,11 @@ namespace AirPlayer
                     if (isVideoPlaying)
                         stopCurrentItem();
                 }
-                else if (e.SessionId == photoSessionId && GUIWindowManager.ActiveWindow == PhotoWindow.WINDOW_ID)
+                else if (e.SessionId == photoSessionId)
                 {
-                    GUIWindowManager.ShowPreviousWindow();
+                    photoSessionId = null;
+                    if (GUIWindowManager.ActiveWindow == PhotoWindow.WINDOW_ID)
+                        GUIWindowManager.ShowPreviousWindow();
                 }
             }, false);
         }

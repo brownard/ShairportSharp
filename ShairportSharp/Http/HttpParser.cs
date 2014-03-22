@@ -231,6 +231,7 @@ namespace ShairportSharp.Http
         /// </summary>
         public virtual void Close()
         {
+            bool closed = false;
             lock (socketLock)
             {
                 if (socket != null)
@@ -239,10 +240,12 @@ namespace ShairportSharp.Http
                     outputStream.Close();
                     socket.Close();
                     socket = null;
+                    closed = true;
                     Logger.Debug("HttpServer: Closed socket");
                 }
             }
-            OnClosed(EventArgs.Empty);
+            if (closed)
+                OnClosed(EventArgs.Empty);
         }
 
         #endregion

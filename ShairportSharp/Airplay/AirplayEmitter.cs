@@ -32,7 +32,7 @@ namespace ShairportSharp.Airplay
             this.identifier = serverInfo.DeviceId;
             this.model = serverInfo.Model;
             this.features = "0x" + ((int)serverInfo.Features).ToString("X4");
-            Logger.Debug("Features: {0}", features);
+            Logger.Debug("Features: {0} ({1})", serverInfo.Features, features);
             this.port = port;
             this.pass = pass;
         }

@@ -29,7 +29,6 @@ namespace ShairportSharp.Raop
         #region Variables
 
         BonjourEmitter bonjour;
-        byte[] macAddress;
         object listenerLock = new object();
         HttpConnectionHandler listener = null;
         object sessionLock = new object();
@@ -39,7 +38,7 @@ namespace ShairportSharp.Raop
 
         #endregion
 
-        #region Constructor
+        #region Ctor
 
         /// <summary>
         /// Create a server using the machine name and no password
@@ -79,6 +78,17 @@ namespace ShairportSharp.Raop
         {
             get { return password; }
             set { password = value; }
+        }
+
+        /// <summary>
+        /// The MAC address used to identify this server. If null or empty the actual MAC address of this computer will be used.
+        /// Set to an alternative value to allow multiple servers on the same computer.
+        /// </summary>
+        byte[] macAddress = null;
+        public byte[] MacAddress
+        {
+            get { return macAddress; }
+            set { macAddress = value; }
         }
 
         int port = DEFAULT_PORT;
@@ -213,13 +223,17 @@ namespace ShairportSharp.Raop
         {
             //We need the mac address as part of the authentication response
             //and it also prefixes the name of the server in bonjour
-            macAddress = Utils.GetMacAddress();
+            if (macAddress == null || macAddress.Length == 0)
+                macAddress = Utils.GetMacAddress();
             if (macAddress == null)
                 return;
 
-            Logger.Info("Server starting: MAC address {0}, port {1}", macAddress.StringFromAddressBytes(), port);
             lock (listenerLock)
             {
+                if (listener != null)
+                    Stop();
+
+                Logger.Info("RAOP Server: Starting - MAC address {0}, port {1}", macAddress.HexStringFromBytes(":"), port);
                 //Start broadcasting the bonjour service
                 publishBonjour();
                 startListener();
@@ -233,7 +247,7 @@ namespace ShairportSharp.Raop
         /// </summary>
         public void Stop()
         {
-            Logger.Info("Server stopping");
+            Logger.Info("RAOP Server: Stopping");
             lock (listenerLock)
             {
                 if (bonjour != null)
@@ -261,7 +275,7 @@ namespace ShairportSharp.Raop
                     currentSession = null;
                 }
             }
-            Logger.Info("Server stopped");
+            Logger.Info("RAOP Server: Stopped");
         }
 
         /// <summary>
@@ -316,8 +330,7 @@ namespace ShairportSharp.Raop
 
         void publishBonjour()
         {
-            Logger.Debug("Starting bonjour service");
-            bonjour = new RaopEmitter(name.ComputerNameIfNullOrEmpty(), macAddress.StringFromAddressBytes(), port, !string.IsNullOrEmpty(password));
+            bonjour = new RaopEmitter(name.ComputerNameIfNullOrEmpty(), macAddress.HexStringFromBytes(), port, !string.IsNullOrEmpty(password));
             bonjour.Publish();
         }
 
@@ -338,13 +351,13 @@ namespace ShairportSharp.Raop
                 {
                     if (AllowSubsequentConnections)
                     {
-                        Logger.Info("Stopping current connection, new connection requested");
+                        Logger.Info("RAOP Server: Stopping current connection, new connection requested");
                         currentSession.Close();
                         currentRemote = null;
                     }
                     else
                     {
-                        Logger.Info("Rejecting new connection, existing connection exists");
+                        Logger.Info("RAOP Server: Rejecting new connection, existing connection exists");
                         return;
                     }
                 }

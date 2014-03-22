@@ -59,25 +59,51 @@ namespace ShairportSharp.Http
         public bool Start()
         {
             //Create a TCPListener on the specified port
+            bool result = false;
             lock (syncRoot)
             {
                 stopListener();
-                try
+                Logger.Debug("Starting TCP Listener");
+                int tries = 0;
+                while (tries < 10 && port < ushort.MaxValue)
                 {
-                    Logger.Debug("Starting TCP Listener");
-                    listener = new TcpListener(ipAddress, port);
-                    listener.Start(1000);
-                    listener.BeginAcceptSocket(acceptSocket, null);
+                    try
+                    {
+                        listener = new TcpListener(ipAddress, port);
+                        listener.Start(1000);
+                    }
+                    catch (SocketException)
+                    {
+                        Logger.Warn("TCP Listener: Failed to start on port {0}, trying next port");
+                        stopListener();
+                        port++;
+                        tries++;
+                        continue;
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error("TCP Listener: Error starting -", ex);
+                        stopListener();
+                        return false;
+                    }
+                    result = true;
+                    break;
                 }
-                catch (Exception ex)
+                if (result)
                 {
-                    //cleanup
-                    Logger.Error("Error starting TCP Listener -", ex);
-                    stopListener();
-                    return false;
+                    try
+                    {
+                        listener.BeginAcceptSocket(acceptSocket, null);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error("TCP Listener: Error starting -", ex);
+                        stopListener();
+                        return false;
+                    }
                 }
             }
-            return true;
+            return result;
         }
 
         public void Stop()
@@ -98,11 +124,13 @@ namespace ShairportSharp.Http
                 {
                     listener.Server.Close();
                 }
-                finally
+                catch { }
+                try
                 {
                     listener.Stop();
                     listener = null;
                 }
+                catch { }
             }
         }
 

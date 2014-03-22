@@ -110,6 +110,7 @@ namespace AirPlayer
 
         bool? tryAddSourceFilter()
         {
+            bool? result = null;
             IBaseFilter sourceFilter = null;
             try
             {
@@ -118,20 +119,25 @@ namespace AirPlayer
             catch (Exception ex)
             {
                 Logger.Instance.Warn("Error adding '{0}' filter to graph: {1}", sourceFilterName, ex.Message);
-                if (sourceFilterName != DEFAULT_SOURCE_FILTER)
-                {
-                    Logger.Instance.Warn("Falling back to default source filter '{0}'", DEFAULT_SOURCE_FILTER);
-                    sourceFilterName = DEFAULT_SOURCE_FILTER;
-                    return tryAddSourceFilter();
-                }
-                return null;
             }
             finally
             {
-                if (sourceFilter != null) DirectShowUtil.ReleaseComObject(sourceFilter, 2000);
+                if (sourceFilter != null)
+                {
+                    DirectShowUtil.ReleaseComObject(sourceFilter, 2000);
+                    result = true;
+                    Logger.Instance.Debug("AirPlayer: Using source filter '{0}'", sourceFilterName);
+                }
             }
-            Logger.Instance.Debug("AirPlayer: Using source filter '{0}'", sourceFilterName);
-            return true;
+
+            if (result == null && sourceFilterName != DEFAULT_SOURCE_FILTER)
+            {
+                Logger.Instance.Warn("Faied to add source filter '{0}', falling back to default source filter '{1}'", sourceFilterName, DEFAULT_SOURCE_FILTER);
+                sourceFilterName = DEFAULT_SOURCE_FILTER;
+                return tryAddSourceFilter();
+            }
+
+            return result;
         }
 
         /// <summary>
@@ -252,11 +258,11 @@ namespace AirPlayer
             {
                 Logger.Instance.Warn(comEx.ToString());
 
-                //if (sourceFilterName == MPUrlSourceFilter.MPUrlSourceFilterDownloader.FilterName &&
-                //    Enum.IsDefined(typeof(MPUrlSourceFilter.MPUrlSourceSplitterError), comEx.ErrorCode))
-                //{
-                //    throw new OnlineVideosException(((MPUrlSourceFilter.MPUrlSourceSplitterError)comEx.ErrorCode).ToString());
-                //}
+                if (sourceFilterName == MPURL_SOURCE_FILTER &&
+                    Enum.IsDefined(typeof(OnlineVideos.MPUrlSourceFilter.MPUrlSourceSplitterError), comEx.ErrorCode))
+                {
+                    throw new Exception(((OnlineVideos.MPUrlSourceFilter.MPUrlSourceSplitterError)comEx.ErrorCode).ToString());
+                }
 
                 string errorText = DirectShowLib.DsError.GetErrorText(comEx.ErrorCode);
                 if (errorText != null) errorText = errorText.Trim();

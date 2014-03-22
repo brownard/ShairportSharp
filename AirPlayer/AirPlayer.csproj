@@ -68,8 +68,9 @@
   <ItemGroup>
     <Compile Include="Cornerstone.MP\AsyncImageResource.cs" />
     <Compile Include="Cornerstone.MP\ImageSwapper.cs" />
-    <Compile Include="IFilterState.cs" />
+    <Compile Include="MPUrlSourceFilter\IFilterState.cs" />
     <Compile Include="GUI\PhotoWindow.cs" />
+    <Compile Include="MPUrlSourceFilter\MPUrlSourceSplitterError.cs" />
     <Compile Include="PlayerFactory.cs" />
     <Compile Include="AirPlayer.cs" />
     <Compile Include="Config\Configuration.cs">
@@ -109,9 +110,7 @@
   <ItemGroup>
     <Content Include="GUI\PhotoWindow.xml" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Helpers\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>xcopy "$(ProjectDir)..\External\merge.bat" "$(TargetDir)" /Y /E /I

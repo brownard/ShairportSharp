@@ -1,10 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 
 namespace ShairportSharp.Airplay
 {
+    public enum PlaybackCategory
+    {
+        Photo,
+        Slideshow,
+        Video
+    }
+
     public enum PlaybackState
     {
         Loading,
@@ -13,16 +21,16 @@ namespace ShairportSharp.Airplay
         Stopped
     }
 
-    class PlaybackStateInfo :IPlistResponse
+    class PlaybackStateInfo : IPlistResponse
     {
-        public string Category { get { return "video"; } }
         public string SessionId { get; set; }
+        public PlaybackCategory Category { get; set; }
         public PlaybackState State { get; set; }
-   
+
         public Dictionary<string, object> GetPlist()
         {
             Dictionary<string, object> plist = new Dictionary<string, object>();
-            plist["category"] = Category;
+            plist["category"] = Category.ToString().ToLowerInvariant();
             plist["sesionID"] = SessionId;
             plist["state"] = State.ToString().ToLowerInvariant();
             return plist;

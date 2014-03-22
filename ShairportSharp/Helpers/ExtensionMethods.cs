@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -14,19 +15,12 @@ namespace ShairportSharp.Helpers
         Digit
     }
 
-    static class ExtensionMethods
+    public static class NetworkAddressExtensionMethods
     {
-        public static string ComputerNameIfNullOrEmpty(this string name)
-        {
-            if (string.IsNullOrEmpty(name))
-                return SystemInformation.ComputerName;
-            return name;
-        }
-
-        public static string StringFromAddressBytes(this byte[] addressBytes, string seperator = null)
+        public static string HexStringFromBytes(this byte[] addressBytes, string seperator = null)
         {
             string addressString = "";
-            if (addressBytes == null || addressBytes.Length < 1)
+            if (addressBytes == null || addressBytes.Length == 0)
                 return addressString;
 
             bool addSeperator = !string.IsNullOrEmpty(seperator);
@@ -38,6 +32,46 @@ namespace ShairportSharp.Helpers
             }
             addressString += addressBytes[addressBytes.Length - 1].ToString("X2");
             return addressString;
+        }
+
+        public static byte[] BytesFromHexString(this string value, string seperator = null)
+        {
+            if (string.IsNullOrEmpty(value))
+                return null;
+
+            if (!string.IsNullOrEmpty(seperator))
+            {
+                value = value.Replace(seperator, "");
+                if(value.Length == 0)
+                    return null;
+            }
+
+            if(value.Length % 2 != 0)
+                return null;
+
+            byte[] bytes;
+            try
+            {
+                int length = value.Length / 2;
+                bytes = new byte[length];
+                for (int x = 0; x < length; x++)
+                    bytes[x] = byte.Parse(value.Substring(x * 2, 2), NumberStyles.HexNumber);
+            }
+            catch
+            {
+                return null;
+            }
+            return bytes;
+        }
+    }
+
+    static class ExtensionMethods
+    {
+        public static string ComputerNameIfNullOrEmpty(this string name)
+        {
+            if (string.IsNullOrEmpty(name))
+                return SystemInformation.ComputerName;
+            return name;
         }
 
         public static uint UIntFromBigEndian(this byte[] buffer, int offset, int count)

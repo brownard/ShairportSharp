@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.nameTextBox = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
@@ -35,37 +36,40 @@
             this.okButton = new System.Windows.Forms.Button();
             this.cancelButton = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.allowVolumeCheckBox = new System.Windows.Forms.CheckBox();
             this.label6 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
             this.audioBufferUpDown = new System.Windows.Forms.NumericUpDown();
             this.sendCommandCheckBox = new System.Windows.Forms.CheckBox();
-            this.allowVolumeCheckBox = new System.Windows.Forms.CheckBox();
             this.udpPortUpDown = new System.Windows.Forms.NumericUpDown();
             this.label4 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.rtspPortUpDown = new System.Windows.Forms.NumericUpDown();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
-            this.label7 = new System.Windows.Forms.Label();
-            this.httpPortUpDown = new System.Windows.Forms.NumericUpDown();
-            this.label8 = new System.Windows.Forms.Label();
-            this.videoBufferUpDown = new System.Windows.Forms.NumericUpDown();
-            this.label9 = new System.Windows.Forms.Label();
             this.allowHDCheckBox = new System.Windows.Forms.CheckBox();
+            this.label9 = new System.Windows.Forms.Label();
+            this.videoBufferUpDown = new System.Windows.Forms.NumericUpDown();
+            this.label8 = new System.Windows.Forms.Label();
+            this.httpPortUpDown = new System.Windows.Forms.NumericUpDown();
+            this.label7 = new System.Windows.Forms.Label();
+            this.toolTip = new System.Windows.Forms.ToolTip(this.components);
+            this.useDummyAddressCheckBox = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.audioBufferUpDown)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.udpPortUpDown)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.rtspPortUpDown)).BeginInit();
             this.groupBox2.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.httpPortUpDown)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.videoBufferUpDown)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.httpPortUpDown)).BeginInit();
             this.SuspendLayout();
             // 
             // nameTextBox
             // 
             this.nameTextBox.Location = new System.Drawing.Point(86, 24);
             this.nameTextBox.Name = "nameTextBox";
-            this.nameTextBox.Size = new System.Drawing.Size(298, 20);
+            this.nameTextBox.Size = new System.Drawing.Size(244, 20);
             this.nameTextBox.TabIndex = 0;
+            this.toolTip.SetToolTip(this.nameTextBox, "The display name of the server.");
             // 
             // label1
             // 
@@ -79,7 +83,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(12, 64);
+            this.label2.Location = new System.Drawing.Point(12, 63);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(53, 13);
             this.label2.TabIndex = 2;
@@ -87,15 +91,16 @@
             // 
             // passwordTextBox
             // 
-            this.passwordTextBox.Location = new System.Drawing.Point(86, 61);
+            this.passwordTextBox.Location = new System.Drawing.Point(86, 60);
             this.passwordTextBox.Name = "passwordTextBox";
-            this.passwordTextBox.Size = new System.Drawing.Size(298, 20);
+            this.passwordTextBox.Size = new System.Drawing.Size(244, 20);
             this.passwordTextBox.TabIndex = 3;
+            this.toolTip.SetToolTip(this.passwordTextBox, "The password required to connect.\r\nLeave empty to not require a password.");
             this.passwordTextBox.UseSystemPasswordChar = true;
             // 
             // okButton
             // 
-            this.okButton.Location = new System.Drawing.Point(231, 341);
+            this.okButton.Location = new System.Drawing.Point(294, 323);
             this.okButton.Name = "okButton";
             this.okButton.Size = new System.Drawing.Size(75, 23);
             this.okButton.TabIndex = 13;
@@ -106,7 +111,7 @@
             // cancelButton
             // 
             this.cancelButton.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.cancelButton.Location = new System.Drawing.Point(312, 341);
+            this.cancelButton.Location = new System.Drawing.Point(375, 323);
             this.cancelButton.Name = "cancelButton";
             this.cancelButton.Size = new System.Drawing.Size(75, 23);
             this.cancelButton.TabIndex = 14;
@@ -116,26 +121,38 @@
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.allowVolumeCheckBox);
             this.groupBox1.Controls.Add(this.label6);
             this.groupBox1.Controls.Add(this.label5);
             this.groupBox1.Controls.Add(this.audioBufferUpDown);
             this.groupBox1.Controls.Add(this.sendCommandCheckBox);
-            this.groupBox1.Controls.Add(this.allowVolumeCheckBox);
             this.groupBox1.Controls.Add(this.udpPortUpDown);
             this.groupBox1.Controls.Add(this.label4);
             this.groupBox1.Controls.Add(this.label3);
             this.groupBox1.Controls.Add(this.rtspPortUpDown);
-            this.groupBox1.Location = new System.Drawing.Point(15, 96);
+            this.groupBox1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.groupBox1.Location = new System.Drawing.Point(15, 128);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(372, 133);
+            this.groupBox1.Size = new System.Drawing.Size(208, 179);
             this.groupBox1.TabIndex = 15;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Audio";
             // 
+            // allowVolumeCheckBox
+            // 
+            this.allowVolumeCheckBox.AutoSize = true;
+            this.allowVolumeCheckBox.Location = new System.Drawing.Point(9, 148);
+            this.allowVolumeCheckBox.Name = "allowVolumeCheckBox";
+            this.allowVolumeCheckBox.Size = new System.Drawing.Size(163, 17);
+            this.allowVolumeCheckBox.TabIndex = 17;
+            this.allowVolumeCheckBox.Text = "Allow client to control volume";
+            this.toolTip.SetToolTip(this.allowVolumeCheckBox, "Whether to allow the client to control the playback volume.");
+            this.allowVolumeCheckBox.UseVisualStyleBackColor = true;
+            // 
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(142, 62);
+            this.label6.Location = new System.Drawing.Point(142, 91);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(47, 13);
             this.label6.TabIndex = 21;
@@ -144,7 +161,7 @@
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(6, 62);
+            this.label5.Location = new System.Drawing.Point(6, 91);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(64, 13);
             this.label5.TabIndex = 20;
@@ -158,10 +175,11 @@
             0,
             0,
             65536});
-            this.audioBufferUpDown.Location = new System.Drawing.Point(80, 60);
+            this.audioBufferUpDown.Location = new System.Drawing.Point(80, 89);
             this.audioBufferUpDown.Name = "audioBufferUpDown";
             this.audioBufferUpDown.Size = new System.Drawing.Size(56, 20);
             this.audioBufferUpDown.TabIndex = 19;
+            this.toolTip.SetToolTip(this.audioBufferUpDown, "The amount of audio to buffer before starting playback.");
             this.audioBufferUpDown.Value = new decimal(new int[] {
             2,
             0,
@@ -171,26 +189,17 @@
             // sendCommandCheckBox
             // 
             this.sendCommandCheckBox.AutoSize = true;
-            this.sendCommandCheckBox.Location = new System.Drawing.Point(9, 96);
+            this.sendCommandCheckBox.Location = new System.Drawing.Point(9, 125);
             this.sendCommandCheckBox.Name = "sendCommandCheckBox";
             this.sendCommandCheckBox.Size = new System.Drawing.Size(191, 17);
             this.sendCommandCheckBox.TabIndex = 18;
             this.sendCommandCheckBox.Text = "Send playback commands to client";
+            this.toolTip.SetToolTip(this.sendCommandCheckBox, "Whether to send Play/Pause/Prev/Next commands to the client.");
             this.sendCommandCheckBox.UseVisualStyleBackColor = true;
-            // 
-            // allowVolumeCheckBox
-            // 
-            this.allowVolumeCheckBox.AutoSize = true;
-            this.allowVolumeCheckBox.Location = new System.Drawing.Point(200, 96);
-            this.allowVolumeCheckBox.Name = "allowVolumeCheckBox";
-            this.allowVolumeCheckBox.Size = new System.Drawing.Size(163, 17);
-            this.allowVolumeCheckBox.TabIndex = 17;
-            this.allowVolumeCheckBox.Text = "Allow client to control volume";
-            this.allowVolumeCheckBox.UseVisualStyleBackColor = true;
             // 
             // udpPortUpDown
             // 
-            this.udpPortUpDown.Location = new System.Drawing.Point(200, 23);
+            this.udpPortUpDown.Location = new System.Drawing.Point(80, 56);
             this.udpPortUpDown.Maximum = new decimal(new int[] {
             65535,
             0,
@@ -204,8 +213,9 @@
             this.udpPortUpDown.Name = "udpPortUpDown";
             this.udpPortUpDown.Size = new System.Drawing.Size(56, 20);
             this.udpPortUpDown.TabIndex = 16;
+            this.toolTip.SetToolTip(this.udpPortUpDown, "The port used to receive audio data.\r\nRequires 3 ports, this and the next 2.");
             this.udpPortUpDown.Value = new decimal(new int[] {
-            6000,
+            50510,
             0,
             0,
             0});
@@ -213,7 +223,7 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(142, 25);
+            this.label4.Location = new System.Drawing.Point(6, 58);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(52, 13);
             this.label4.TabIndex = 15;
@@ -244,8 +254,9 @@
             this.rtspPortUpDown.Name = "rtspPortUpDown";
             this.rtspPortUpDown.Size = new System.Drawing.Size(56, 20);
             this.rtspPortUpDown.TabIndex = 13;
+            this.toolTip.SetToolTip(this.rtspPortUpDown, "The port used to receive RTSP messages (TCP).");
             this.rtspPortUpDown.Value = new decimal(new int[] {
-            5000,
+            50500,
             0,
             0,
             0});
@@ -258,21 +269,56 @@
             this.groupBox2.Controls.Add(this.label8);
             this.groupBox2.Controls.Add(this.httpPortUpDown);
             this.groupBox2.Controls.Add(this.label7);
-            this.groupBox2.Location = new System.Drawing.Point(15, 236);
+            this.groupBox2.Location = new System.Drawing.Point(242, 128);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(372, 88);
+            this.groupBox2.Size = new System.Drawing.Size(208, 179);
             this.groupBox2.TabIndex = 16;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Video/Photo";
             // 
-            // label7
+            // allowHDCheckBox
             // 
-            this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(6, 25);
-            this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(58, 13);
-            this.label7.TabIndex = 0;
-            this.label7.Text = "HTTP Port";
+            this.allowHDCheckBox.AutoSize = true;
+            this.allowHDCheckBox.Location = new System.Drawing.Point(13, 90);
+            this.allowHDCheckBox.Name = "allowHDCheckBox";
+            this.allowHDCheckBox.Size = new System.Drawing.Size(167, 17);
+            this.allowHDCheckBox.TabIndex = 5;
+            this.allowHDCheckBox.Text = "Select HD streams if available";
+            this.toolTip.SetToolTip(this.allowHDCheckBox, "Whether to select HD quality if multiple streams are available.\r\nIf unchecked the" +
+        " best non HD stream will be selected.");
+            this.allowHDCheckBox.UseVisualStyleBackColor = true;
+            // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label9.Location = new System.Drawing.Point(142, 58);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(43, 13);
+            this.label9.TabIndex = 4;
+            this.label9.Text = "percent";
+            // 
+            // videoBufferUpDown
+            // 
+            this.videoBufferUpDown.Location = new System.Drawing.Point(80, 56);
+            this.videoBufferUpDown.Name = "videoBufferUpDown";
+            this.videoBufferUpDown.Size = new System.Drawing.Size(56, 20);
+            this.videoBufferUpDown.TabIndex = 3;
+            this.toolTip.SetToolTip(this.videoBufferUpDown, "The amount of video to buffer before starting playback.");
+            this.videoBufferUpDown.Value = new decimal(new int[] {
+            2,
+            0,
+            0,
+            0});
+            // 
+            // label8
+            // 
+            this.label8.AutoSize = true;
+            this.label8.Location = new System.Drawing.Point(10, 58);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(64, 13);
+            this.label8.TabIndex = 2;
+            this.label8.Text = "Video buffer";
             // 
             // httpPortUpDown
             // 
@@ -290,52 +336,39 @@
             this.httpPortUpDown.Name = "httpPortUpDown";
             this.httpPortUpDown.Size = new System.Drawing.Size(56, 20);
             this.httpPortUpDown.TabIndex = 1;
+            this.toolTip.SetToolTip(this.httpPortUpDown, "The port used to receive HTTP messages (TCP).");
             this.httpPortUpDown.Value = new decimal(new int[] {
-            7000,
+            60500,
             0,
             0,
             0});
             // 
-            // label8
+            // label7
             // 
-            this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(6, 60);
-            this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(64, 13);
-            this.label8.TabIndex = 2;
-            this.label8.Text = "Video buffer";
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(10, 25);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(58, 13);
+            this.label7.TabIndex = 0;
+            this.label7.Text = "HTTP Port";
             // 
-            // videoBufferUpDown
+            // toolTip
             // 
-            this.videoBufferUpDown.Location = new System.Drawing.Point(80, 58);
-            this.videoBufferUpDown.Name = "videoBufferUpDown";
-            this.videoBufferUpDown.Size = new System.Drawing.Size(56, 20);
-            this.videoBufferUpDown.TabIndex = 3;
-            this.videoBufferUpDown.Value = new decimal(new int[] {
-            2,
-            0,
-            0,
-            0});
+            this.toolTip.AutoPopDelay = 10000;
+            this.toolTip.InitialDelay = 500;
+            this.toolTip.ReshowDelay = 100;
             // 
-            // label9
+            // useDummyAddressCheckBox
             // 
-            this.label9.AutoSize = true;
-            this.label9.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label9.Location = new System.Drawing.Point(142, 60);
-            this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(43, 13);
-            this.label9.TabIndex = 4;
-            this.label9.Text = "percent";
-            // 
-            // allowHDCheckBox
-            // 
-            this.allowHDCheckBox.AutoSize = true;
-            this.allowHDCheckBox.Location = new System.Drawing.Point(200, 59);
-            this.allowHDCheckBox.Name = "allowHDCheckBox";
-            this.allowHDCheckBox.Size = new System.Drawing.Size(167, 17);
-            this.allowHDCheckBox.TabIndex = 5;
-            this.allowHDCheckBox.Text = "Select HD streams if available";
-            this.allowHDCheckBox.UseVisualStyleBackColor = true;
+            this.useDummyAddressCheckBox.AutoSize = true;
+            this.useDummyAddressCheckBox.Location = new System.Drawing.Point(86, 96);
+            this.useDummyAddressCheckBox.Name = "useDummyAddressCheckBox";
+            this.useDummyAddressCheckBox.Size = new System.Drawing.Size(212, 17);
+            this.useDummyAddressCheckBox.TabIndex = 17;
+            this.useDummyAddressCheckBox.Text = "Use a dummy MAC address as identifier";
+            this.toolTip.SetToolTip(this.useDummyAddressCheckBox, "Enable this if you are running other airplay servers on this computer\r\n(ensure th" +
+        "at you are also using different ports).");
+            this.useDummyAddressCheckBox.UseVisualStyleBackColor = true;
             // 
             // Configuration
             // 
@@ -343,7 +376,8 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.cancelButton;
-            this.ClientSize = new System.Drawing.Size(402, 376);
+            this.ClientSize = new System.Drawing.Size(467, 357);
+            this.Controls.Add(this.useDummyAddressCheckBox);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.cancelButton);
@@ -362,8 +396,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.rtspPortUpDown)).EndInit();
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.httpPortUpDown)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.videoBufferUpDown)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.httpPortUpDown)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -394,5 +428,7 @@
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.NumericUpDown httpPortUpDown;
         private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.ToolTip toolTip;
+        private System.Windows.Forms.CheckBox useDummyAddressCheckBox;
     }
 }

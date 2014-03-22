@@ -19,8 +19,6 @@ namespace ShairportSharp.Airplay
         #region Variables
 
         object syncRoot = new object();
-        string name;
-        string password;
         AirplayEmitter emitter;
         HttpConnectionHandler listener;
         AirplayServerInfo serverInfo;
@@ -34,28 +32,10 @@ namespace ShairportSharp.Airplay
 
         #endregion
 
-        #region Public Properties
-
-        int port = DEFAULT_PORT;
-        public int Port
-        {
-            get { return port; }
-            set { port = value.CheckValidPortNumber(DEFAULT_PORT); }
-        }
-
-        public AirplayServerInfo ServerInfo
-        {
-            get { return serverInfo; }
-        }
-
-        #endregion
-
         #region Ctor
 
-        public AirplayServer(string name, string password = null)
+        public AirplayServer()
         {
-            this.name = name;
-            this.password = password;
             serverInfo = new AirplayServerInfo()
             {
                 Model = "MediaPortal,1",
@@ -68,9 +48,60 @@ namespace ShairportSharp.Airplay
                 AirplayFeature.VideoHTTPLiveStreams |
                 AirplayFeature.VideoVolumeControl
             };
-            byte[] macAddress = Utils.GetMacAddress();
-            if (macAddress != null)
-                serverInfo.DeviceId = macAddress.StringFromAddressBytes(":");
+        }
+
+        public AirplayServer(string name, string password = null)
+            : this()
+        {
+            this.name = name;
+            this.password = password;
+        }
+
+        #endregion
+
+        #region Public Properties
+
+        string name;
+        /// <summary>
+        // The broadcasted name of the Airplay server. Defaults to the machine name if null or empty.
+        /// </summary>
+        public string Name
+        {
+            get { return name; }
+            set { name = value; }
+        }
+
+        string password;
+        /// <summary>
+        /// The password needed to connect. Set to null or empty to not require a password.
+        /// </summary>
+        public string Password
+        {
+            get { return password; }
+            set { password = value; }
+        }
+
+        /// <summary>
+        /// The MAC address used to identify this server. If null or empty the actual MAC address of this computer will be used.
+        /// Set to an alternative value to allow multiple servers on the same computer.
+        /// </summary>
+        byte[] macAddress = null;
+        public byte[] MacAddress
+        {
+            get { return macAddress; }
+            set { macAddress = value; }
+        }
+
+        int port = DEFAULT_PORT;
+        public int Port
+        {
+            get { return port; }
+            set { port = value.CheckValidPortNumber(DEFAULT_PORT); }
+        }
+
+        public AirplayServerInfo ServerInfo
+        {
+            get { return serverInfo; }
         }
 
         #endregion
@@ -168,11 +199,18 @@ namespace ShairportSharp.Airplay
 
         public void Start()
         {
+            if (macAddress == null || macAddress.Length == 0)
+                macAddress = Utils.GetMacAddress();
+            if (macAddress == null)
+                return;
+
             lock (syncRoot)
             {
                 if (listener != null)
                     Stop();
 
+                serverInfo.DeviceId = macAddress.HexStringFromBytes(":");
+                Logger.Info("Airplay Server: Starting - MAC address {0}, port {1}", serverInfo.DeviceId, port);
                 listener = new HttpConnectionHandler(IPAddress.Any, port);
                 listener.SocketAccepted += listener_SocketAccepted;
                 listener.Start();
@@ -183,6 +221,7 @@ namespace ShairportSharp.Airplay
 
         public void Stop()
         {
+            Logger.Info("Airplay Server: Stopping");
             lock (syncRoot)
             {
                 if (emitter != null)
@@ -201,9 +240,10 @@ namespace ShairportSharp.Airplay
                 while(connections.Count > 0)
                     connections[0].Close();
             }
+            Logger.Info("Airplay Server: Stopped");
         }
 
-        public void SetPlaybackState(string sessionId, PlaybackState state)
+        public void SetPlaybackState(string sessionId, PlaybackCategory category, PlaybackState state)
         {
             System.Threading.ThreadPool.QueueUserWorkItem(o => 
             {
@@ -214,6 +254,7 @@ namespace ShairportSharp.Airplay
                     {
                         PlaybackStateInfo info = new PlaybackStateInfo()
                         {
+                            Category = category,
                             State = state,
                             SessionId = eventConnection.SessionId
                         };
@@ -259,7 +300,7 @@ namespace ShairportSharp.Airplay
         void session_EventConnection(object sender, AirplayEventArgs e)
         {
             if (string.IsNullOrEmpty(e.SessionId))
-                Logger.Warn("Event connection received without session id");
+                Logger.Warn("Airplay Server: Event connection received without session id");
             else
             {
                 Logger.Debug("Airplay Server: Event connection received, '{0}'", e.SessionId);

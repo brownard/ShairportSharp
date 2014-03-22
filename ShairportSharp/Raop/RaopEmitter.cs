@@ -25,6 +25,7 @@ namespace ShairportSharp.Raop
 
         protected override NetService GetNetService()
         {
+            Logger.Debug("RAOPEmitter: {0}, {1}, {2}", name, identifier, port);
             Dictionary<string, object> txtRecord = new Dictionary<string, object>();
             txtRecord.Add("txtvers", "1");
             txtRecord.Add("pw", pass.ToString());

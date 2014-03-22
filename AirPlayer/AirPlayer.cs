@@ -32,7 +32,9 @@ namespace AirPlayer
         #endregion
 
         #region Variables
-        
+
+        string pluginIconPath;
+
         RaopServer airtunesServer;
         AirplayServer airplayServer;
 
@@ -125,6 +127,7 @@ namespace AirPlayer
 
         public void Start()
         {
+            pluginIconPath = MediaPortal.Configuration.Config.GetFile(MediaPortal.Configuration.Config.Dir.Thumbs, "AirPlayer", "airplay-icon.png");
             ShairportSharp.Logger.SetLogger(Logger.Instance);
             GUIWindow window = new PhotoWindow();
             window.Init();
@@ -138,6 +141,7 @@ namespace AirPlayer
             videoBuffer = settings.VideoBuffer;
 
             airtunesServer = new RaopServer(settings.ServerName, settings.Password);
+            airtunesServer.MacAddress = settings.CustomAddress;
             airtunesServer.Port = settings.RtspPort;
             airtunesServer.AudioPort = settings.UdpPort;
             airtunesServer.AudioBufferSize = (int)(settings.AudioBuffer * 1000);
@@ -152,6 +156,7 @@ namespace AirPlayer
             airtunesServer.Start();
 
             airplayServer = new AirplayServer(settings.ServerName, settings.Password);
+            airplayServer.MacAddress = settings.CustomAddress;
             airplayServer.Port = settings.AirplayPort;
             airplayServer.PhotoReceived += airplayServer_PhotoReceived;
             airplayServer.VideoReceived += airplayServer_VideoReceived;
@@ -209,7 +214,8 @@ namespace AirPlayer
         {
             if (!isAudioBuffering)
             {
-                airtunesServer.StopCurrentSession();
+                //airtunesServer.StopCurrentSession();
+                airtunesServer.SendCommand(RemoteCommand.Pause);
                 return;
             }
             isAudioBuffering = false;
@@ -367,7 +373,7 @@ namespace AirPlayer
 
         void airplayServer_VideoReceived(object sender, VideoEventArgs e)
         {
-            airplayServer.SetPlaybackState(e.SessionId, PlaybackState.Loading);
+            airplayServer.SetPlaybackState(e.SessionId, PlaybackCategory.Video, PlaybackState.Loading);
             invoke(delegate()
             {
                 videoReceiveTime = DateTime.Now;
@@ -513,7 +519,7 @@ namespace AirPlayer
                         if (dlg != null)
                         {
                             dlg.Reset();
-                            dlg.SetImage(getPluginIcon());
+                            dlg.SetImage(pluginIconPath);
                             dlg.SetHeading("Airplay Error");
                             dlg.SetText("Unable to play video" + (string.IsNullOrEmpty(error) ? "" : " " + error));
                             dlg.DoModal(GUIWindowManager.ActiveWindow);
@@ -630,8 +636,8 @@ namespace AirPlayer
                 case MediaPortal.GUI.Library.Action.ActionType.ACTION_STOP:
                     if (bufferingPlayer != null)
                         bufferingPlayer.StopBuffering();
-                    else if (sendCommands && isAudioPlaying)
-                        airtunesServer.SendCommand(RemoteCommand.Stop);
+                    //else if (sendCommands && isAudioPlaying)
+                    //    airtunesServer.SendCommand(RemoteCommand.Pause);
                     break;
                 case MediaPortal.GUI.Library.Action.ActionType.ACTION_PREV_CHAPTER:
                 case MediaPortal.GUI.Library.Action.ActionType.ACTION_PREV_ITEM:
@@ -670,13 +676,14 @@ namespace AirPlayer
             isVideoPlaying = false;
             if (currentAudioPlayer != null)
             {
-                currentAudioPlayer = null;
-                airtunesServer.StopCurrentSession();
+                currentAudioPlayer = null; 
+                airtunesServer.SendCommand(RemoteCommand.Pause);
+                //airtunesServer.StopCurrentSession();
                 restoreVolume();
             }
             if (currentVideoPlayer != null)
             {
-                airplayServer.SetPlaybackState(currentVideoPlayer.SessionId, PlaybackState.Stopped);
+                airplayServer.SetPlaybackState(currentVideoPlayer.SessionId, PlaybackCategory.Video, PlaybackState.Stopped);
                 currentVideoPlayer = null;
             }
         }
@@ -788,14 +795,6 @@ namespace AirPlayer
                 Logger.Instance.Error("Failed to save file - {0}", ex.Message);
             }
             return null;
-        }
-
-        string pluginIcon = null;
-        string getPluginIcon()
-        {
-            if (pluginIcon == null)
-                pluginIcon = MediaPortal.Configuration.Config.GetFile(MediaPortal.Configuration.Config.Dir.Thumbs, "AirPlayer", "airplay-icon.png");
-            return pluginIcon;
         }
 
         #endregion

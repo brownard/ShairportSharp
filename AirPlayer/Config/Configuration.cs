@@ -19,6 +19,7 @@ namespace AirPlayer.Config
             pluginSettings = new PluginSettings();
             nameTextBox.Text = pluginSettings.ServerName;
             passwordTextBox.Text = pluginSettings.Password;
+            useDummyAddressCheckBox.Checked = pluginSettings.CustomAddress != null && pluginSettings.CustomAddress.Length > 0;
             //Audio
             rtspPortUpDown.Value = pluginSettings.RtspPort;
             udpPortUpDown.Value = pluginSettings.UdpPort;
@@ -35,6 +36,19 @@ namespace AirPlayer.Config
         {
             pluginSettings.ServerName = nameTextBox.Text;
             pluginSettings.Password = passwordTextBox.Text;
+            if (useDummyAddressCheckBox.Checked)
+            {
+                //keep existing address if we have one so the client knows to use saved credentials 
+                if (pluginSettings.CustomAddress == null || pluginSettings.CustomAddress.Length != 12)
+                {
+                    pluginSettings.CustomAddress = new byte[12];
+                    new Random().NextBytes(pluginSettings.CustomAddress);
+                }
+            }
+            else
+            {
+                pluginSettings.CustomAddress = null;
+            }
             pluginSettings.RtspPort = (int)rtspPortUpDown.Value;
             pluginSettings.UdpPort = (int)udpPortUpDown.Value;
             pluginSettings.AudioBuffer = audioBufferUpDown.Value;

@@ -59,7 +59,7 @@ namespace ShairportSharp_Test
         {
             m_Playback.Stop();
             m_Playback.FileName = e.ContentLocation;
-            server.SetPlaybackState(sessionId, PlaybackState.Loading);
+            server.SetPlaybackState(sessionId, PlaybackCategory.Video, PlaybackState.Loading);
         }
 
         public void GetProgress(GetPlaybackPositionEventArgs e)

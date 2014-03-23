@@ -26,6 +26,14 @@ namespace AirPlayer
 
         public override bool Init()
         {
+            int width = GUIGraphicsContext.SkinSize.Width;
+            Logger.Instance.Debug("PhotoWindow: Skin width '{0}'", width);
+            if (width != 1920 && width != 1280 && width != 960 && width != 720)
+            {
+                Logger.Instance.Warn("PhotoWindow: Unsupported width '{0}', defaulting to 1280", width);
+                width = 1280;
+            }
+            GUIPropertyManager.SetProperty("#AirPlay.skinwidth", width.ToString());
             return Load(GUIGraphicsContext.Skin + "\\" + SKIN_FILE);
         }
 

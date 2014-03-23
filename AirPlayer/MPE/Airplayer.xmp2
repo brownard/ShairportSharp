@@ -17,7 +17,30 @@
               <ZipFileName>Installer{CopyFile}\{b34d176a-c163-4c9b-ad85-5eff1caec788}-AirPlayer.dll</ZipFileName>
               <DestinationFilename>%Plugins%\process\AirPlayer.dll</DestinationFilename>
             </FileItem>
+            <FileItem InstallType="GenericSkinFile" SystemFile="false" Modified="true">
+              <Param1 />
+              <UpdateOption>OverwriteIfOlder</UpdateOption>
+              <LocalFileName>..\GUI\AirplayPhotoWindow.xml</LocalFileName>
+              <ZipFileName>Installer{GenericSkinFile}\{f60e14ad-c602-4cd8-97f2-e5f5f0cb61d4}-AirplayPhotoWindow.xml</ZipFileName>
+              <DestinationFilename>%Skin%\[DEFAULT]\AirplayPhotoWindow.xml</DestinationFilename>
+            </FileItem>
+            <FileItem InstallType="CopyFile" SystemFile="false" Modified="true">
+              <Param1 />
+              <UpdateOption>OverwriteIfOlder</UpdateOption>
+              <LocalFileName>airplay-icon.png</LocalFileName>
+              <ZipFileName>Installer{CopyFile}\{05ff44b9-2a71-4ea0-bcf5-70cd41a8869f}-airplay-icon.png</ZipFileName>
+              <DestinationFilename>%Thumbs%\AirPlayer\airplay-icon.png</DestinationFilename>
+            </FileItem>
           </Items>
+        </Files>
+      </GroupItem>
+      <GroupItem Name="Configure">
+        <ParentGroup />
+        <DisplayName>Configure AirPlayer now</DisplayName>
+        <DefaulChecked>false</DefaulChecked>
+        <Description>Configure</Description>
+        <Files>
+          <Items />
         </Files>
       </GroupItem>
     </Items>
@@ -106,7 +129,7 @@ Click Next to continue or Cancel to exit Setup.</Value>
               <Description />
             </SectionParam>
             <SectionParam Name="Show radio buttons">
-              <Value />
+              <Value>NO</Value>
               <ValueType>Bool</ValueType>
               <Description>Use radiobutton in place of combobox</Description>
             </SectionParam>
@@ -118,9 +141,25 @@ Click Next to continue or Cancel to exit Setup.</Value>
           </Items>
         </Params>
         <Actions>
-          <Items />
+          <Items>
+            <ActionItem Name="ConfigurePlugin" ActionType="ConfigurePlugin" ConditionGroup="Configure">
+              <Params>
+                <Items>
+                  <SectionParam Name="Path to plugin">
+                    <Value>%Plugins%\process\AirPlayer.dll</Value>
+                    <ValueType>Template</ValueType>
+                    <Description>Path to the plugin like 
+ %Plugins%\Windows\plugin.dll</Description>
+                  </SectionParam>
+                </Items>
+              </Params>
+              <ExecuteLocation>AfterPanelHide</ExecuteLocation>
+            </ActionItem>
+          </Items>
         </Actions>
-        <IncludedGroups />
+        <IncludedGroups>
+          <string>Configure</string>
+        </IncludedGroups>
         <PanelName>Setup Complete</PanelName>
         <WizardButtonsEnum>Finish</WizardButtonsEnum>
       </SectionItem>
@@ -173,7 +212,7 @@ Click Next to continue or Cancel to exit Setup.</Value>
     <Id>77ed48aa-972f-4e59-9656-2f2f627b6406</Id>
     <Author>Brownard</Author>
     <HomePage>https://github.com/brownard/ShairportSharp</HomePage>
-    <ForumPage />
+    <ForumPage>http://forum.team-mediaportal.com/threads/airplayer-airport-express-speaker-emulator.124789/</ForumPage>
     <UpdateUrl>http://www.team-mediaportal.com/index.php?option=com_mtree&amp;task=att_download&amp;link_id=308&amp;cf_id=52</UpdateUrl>
     <Version>
       <Major>0</Major>
@@ -193,7 +232,7 @@ Add option to use dummy identifier to allow multiple servers on same machine.
 Other minor fixes.</VersionDescription>
     <DevelopmentStatus>Stable</DevelopmentStatus>
     <OnlineLocation>http://www.team-mediaportal.com/index.php?option=com_mtree&amp;task=att_download&amp;link_id=308&amp;cf_id=24</OnlineLocation>
-    <ReleaseDate>2014-03-22T18:25:54</ReleaseDate>
+    <ReleaseDate>2014-03-23T18:25:54</ReleaseDate>
     <Tags />
     <Location>C:\AirPlayer.mpe1</Location>
     <Params>
@@ -237,12 +276,19 @@ Other minor fixes.</VersionDescription>
         <ZipFileName>Installer{CopyFile}\{b34d176a-c163-4c9b-ad85-5eff1caec788}-AirPlayer.dll</ZipFileName>
         <DestinationFilename>%Plugins%\process\AirPlayer.dll</DestinationFilename>
       </FileItem>
+      <FileItem InstallType="GenericSkinFile" SystemFile="false" Modified="true">
+        <Param1 />
+        <UpdateOption>OverwriteIfOlder</UpdateOption>
+        <LocalFileName>..\GUI\AirplayPhotoWindow.xml</LocalFileName>
+        <ZipFileName>Installer{GenericSkinFile}\{f60e14ad-c602-4cd8-97f2-e5f5f0cb61d4}-AirplayPhotoWindow.xml</ZipFileName>
+        <DestinationFilename>%Skin%\[DEFAULT]\AirplayPhotoWindow.xml</DestinationFilename>
+      </FileItem>
       <FileItem InstallType="CopyFile" SystemFile="true" Modified="true">
         <Param1 />
         <UpdateOption>OverwriteIfOlder</UpdateOption>
         <LocalFileName>airplay-icon.png</LocalFileName>
-        <ZipFileName>Installer{CopyFile}\{e5021350-ac3d-4376-be7c-bbf2ab47f9d9}-airplay-icon.png</ZipFileName>
-        <DestinationFilename />
+        <ZipFileName>Installer{CopyFile}\{05ff44b9-2a71-4ea0-bcf5-70cd41a8869f}-airplay-icon.png</ZipFileName>
+        <DestinationFilename>%Thumbs%\AirPlayer\airplay-icon.png</DestinationFilename>
       </FileItem>
     </Items>
   </UniqueFileList>

@@ -609,7 +609,19 @@ namespace AirPlayer
                     if (savedVolume == null)
                         savedVolume = volumeHandler.Volume;
 
-                    volumeHandler.Volume = (int)(volumeHandler.Maximum * e.Volume);
+                    if (e.Volume == 0)
+                    {
+                        volumeHandler.Volume = volumeHandler.Minimum;
+                    }
+                    else if (e.Volume == 1)
+                    {
+                        volumeHandler.Volume = volumeHandler.Maximum;
+                    }
+                    else
+                    {
+                        double factor = volumeHandler.Maximum / 0.9;
+                        volumeHandler.Volume = (int)(factor - factor / Math.Pow(10, e.Volume));
+                    }
                 }
             }, false);
         }

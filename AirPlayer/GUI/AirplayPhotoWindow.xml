@@ -22,7 +22,8 @@
       <width>1</width>
       <height>1</height>
     </control>
-    
+
+    <!--  1920 x 1080 -->
     <control>
       <description>Photo 1</description>
       <type>image</type>
@@ -38,7 +39,7 @@
       <animation effect="fade" start="0" end="100" time="200">WindowOpen</animation>
       <animation effect="fade" start="0" end="100" time="200">Visible</animation>
       <animation effect="fade" start="100" end="0" time="200" delay="200">Hidden</animation>
-      <visible>control.isvisible(1230)</visible>
+      <visible>string.equals(#AirPlay.skinwidth,1920)+control.isvisible(1230)</visible>
     </control>
 
     <control>
@@ -55,7 +56,115 @@
       <valign>middle</valign>
       <animation effect="fade" start="0" end="100" time="200">Visible</animation>
       <animation effect="fade" start="100" end="0" time="200" delay="200">Hidden</animation>
-      <visible>control.isvisible(1231)</visible>
+      <visible>string.equals(#AirPlay.skinwidth,1920)+control.isvisible(1231)</visible>
+    </control>
+
+    <!-- 1280 x 720 -->
+    <control>
+      <description>Photo 1</description>
+      <type>image</type>
+      <id>0</id>
+      <posX>0</posX>
+      <posY>0</posY>
+      <width>1280</width>
+      <height>720</height>
+      <texture>#AirPlay.Photo1</texture>
+      <keepaspectratio>yes</keepaspectratio>
+      <align>center</align>
+      <valign>middle</valign>
+      <animation effect="fade" start="0" end="100" time="200">WindowOpen</animation>
+      <animation effect="fade" start="0" end="100" time="200">Visible</animation>
+      <animation effect="fade" start="100" end="0" time="200" delay="200">Hidden</animation>
+      <visible>string.equals(#AirPlay.skinwidth,1280)+control.isvisible(1230)</visible>
+    </control>
+
+    <control>
+      <description>Photo 2</description>
+      <type>image</type>
+      <id>0</id>
+      <posX>0</posX>
+      <posY>0</posY>
+      <width>1280</width>
+      <height>720</height>
+      <texture>#AirPlay.Photo2</texture>
+      <keepaspectratio>yes</keepaspectratio>
+      <align>center</align>
+      <valign>middle</valign>
+      <animation effect="fade" start="0" end="100" time="200">Visible</animation>
+      <animation effect="fade" start="100" end="0" time="200" delay="200">Hidden</animation>
+      <visible>string.equals(#AirPlay.skinwidth,1280)+control.isvisible(1231)</visible>
+    </control>
+
+    <!-- 960 x 720 -->
+    <control>
+      <description>Photo 1</description>
+      <type>image</type>
+      <id>0</id>
+      <posX>0</posX>
+      <posY>0</posY>
+      <width>960</width>
+      <height>720</height>
+      <texture>#AirPlay.Photo1</texture>
+      <keepaspectratio>yes</keepaspectratio>
+      <align>center</align>
+      <valign>middle</valign>
+      <animation effect="fade" start="0" end="100" time="200">WindowOpen</animation>
+      <animation effect="fade" start="0" end="100" time="200">Visible</animation>
+      <animation effect="fade" start="100" end="0" time="200" delay="200">Hidden</animation>
+      <visible>string.equals(#AirPlay.skinwidth,960)+control.isvisible(1230)</visible>
+    </control>
+
+    <control>
+      <description>Photo 2</description>
+      <type>image</type>
+      <id>0</id>
+      <posX>0</posX>
+      <posY>0</posY>
+      <width>960</width>
+      <height>720</height>
+      <texture>#AirPlay.Photo2</texture>
+      <keepaspectratio>yes</keepaspectratio>
+      <align>center</align>
+      <valign>middle</valign>
+      <animation effect="fade" start="0" end="100" time="200">Visible</animation>
+      <animation effect="fade" start="100" end="0" time="200" delay="200">Hidden</animation>
+      <visible>string.equals(#AirPlay.skinwidth,960)+control.isvisible(1231)</visible>
+    </control>
+
+    <!-- 720 x 576 -->
+    <control>
+      <description>Photo 1</description>
+      <type>image</type>
+      <id>0</id>
+      <posX>0</posX>
+      <posY>0</posY>
+      <width>720</width>
+      <height>576</height>
+      <texture>#AirPlay.Photo1</texture>
+      <keepaspectratio>yes</keepaspectratio>
+      <align>center</align>
+      <valign>middle</valign>
+      <animation effect="fade" start="0" end="100" time="200">WindowOpen</animation>
+      <animation effect="fade" start="0" end="100" time="200">Visible</animation>
+      <animation effect="fade" start="100" end="0" time="200" delay="200">Hidden</animation>
+      <visible>string.equals(#AirPlay.skinwidth,720)+control.isvisible(1230)</visible>
+    </control>
+
+    <control>
+      <description>Photo 2</description>
+      <type>image</type>
+      <id>0</id>
+      <posX>0</posX>
+      <posY>0</posY>
+      <width>720</width>
+      <height>576</height>
+      <texture>#AirPlay.Photo2</texture>
+      <keepaspectratio>yes</keepaspectratio>
+      <align>center</align>
+      <valign>middle</valign>
+      <animation effect="fade" start="0" end="100" time="200">Visible</animation>
+      <animation effect="fade" start="100" end="0" time="200" delay="200">Hidden</animation>
+      <visible>string.equals(#AirPlay.skinwidth,720)+control.isvisible(1231)</visible>
     </control>
     <!--<import>common.time.xml</import>-->
   </controls>

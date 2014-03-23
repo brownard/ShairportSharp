@@ -10,7 +10,7 @@ namespace AirPlayer
     public class PhotoWindow : GUIWindow
     {
         public const int WINDOW_ID = 9421;
-        const string SKIN_FILE = "PhotoWindow.xml";
+        const string SKIN_FILE = "AirplayPhotoWindow.xml";
         ImageSwapper imageSwapper;
         string filename;
 

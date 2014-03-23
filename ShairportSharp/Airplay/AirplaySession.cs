@@ -12,16 +12,26 @@ namespace ShairportSharp.Airplay
 {
     class AirplaySession : HttpParser
     {
-        #region Variables
+        #region Consts
 
         const string DIGEST_REALM = "AirPlay";
+        public const string EMPTY_SESSION_ID = "00000000-0000-0000-0000-000000000000";
+
+        #endregion
+
+        #region Variables
+
         AirplayServerInfo serverInfo;
 
         #endregion
 
         #region Public Properties
 
-        public string SessionId { get; private set; }
+        string sessionId = EMPTY_SESSION_ID;
+        public string SessionId 
+        {
+            get { return sessionId; }
+        }
 
         #endregion
 
@@ -115,6 +125,13 @@ namespace ShairportSharp.Airplay
                 GetPlaybackPosition(this, e);
         }
 
+        public event EventHandler<VolumeChangedEventArgs> VolumeChanged;
+        protected virtual void OnVolumeChanged(VolumeChangedEventArgs e)
+        {
+            if (VolumeChanged != null)
+                VolumeChanged(this, e);
+        }
+
         #endregion
 
         #region Overrides
@@ -128,15 +145,15 @@ namespace ShairportSharp.Airplay
                 return authResponse;
             }
 
-            string sessionId = request["X-Apple-Session-ID"];
-            if (!string.IsNullOrEmpty(sessionId))
+            string requestSessionId = request["X-Apple-Session-ID"];
+            if (!string.IsNullOrEmpty(requestSessionId))
             {
-                if (!string.IsNullOrEmpty(SessionId) && sessionId != SessionId)
-                    Logger.Warn("Airplay Session: New SessionId received, old '{0}', new '{1}'", SessionId, sessionId);
-                SessionId = sessionId;
+                if (sessionId != EMPTY_SESSION_ID && requestSessionId != SessionId)
+                    Logger.Warn("Airplay Session: New SessionId received, old '{0}', new '{1}'", SessionId, requestSessionId);
+                sessionId = requestSessionId;
             }
 
-            HttpResponse response = null;
+            HttpResponse response;
 
             if (request.Uri == "/reverse")
             {
@@ -192,6 +209,11 @@ namespace ShairportSharp.Airplay
                     response = getPlaybackPosition();
             }
 
+            else if (request.Uri.StartsWith("/volume"))
+            {
+                response = handleVolumeChange(request);
+            }
+
             else if (request.Uri.StartsWith("/getProperty"))
             {
                 //Logger.Debug("Airplay Session: getProperty\r\n{0}", request);
@@ -227,6 +249,7 @@ namespace ShairportSharp.Airplay
                     if (tryGetPlist(request, out plist))
                         Logger.Debug("Request plist - " + Plist.writeXml(plist));
                 }
+                response = getEmptyResponse();
             }
             return response;
         }
@@ -351,41 +374,35 @@ namespace ShairportSharp.Airplay
 
         HttpResponse setPlaybackRate(HttpRequest request)
         {
-            bool parsed = false;
             Dictionary<string, string> queryString = request.Uri.GetQueryStringParameters();
             string rateStr;
-            if (queryString.TryGetValue("value", out rateStr))
+            double rate;
+            if (queryString.TryGetValue("value", out rateStr) && tryParseDouble(rateStr, out rate))
             {
-                double rate;
-                if (double.TryParse(rateStr, out rate))
-                {
-                    Logger.Debug("Airplay Session: Received playback rate - '{0}'", rate);
-                    parsed = true;
-                    OnPlaybackRateChanged(new PlaybackRateEventArgs(rate, SessionId));
-                }
+                Logger.Debug("Airplay Session: Received playback rate - '{0}'", rate);
+                OnPlaybackRateChanged(new PlaybackRateEventArgs(rate, SessionId));
             }
-            if (!parsed)
+            else
+            {
                 Logger.Debug("Airplay Session: Failed to determine playback rate\r\n{0}", request);
+            }
             return getEmptyResponse();
         }
 
         HttpResponse setPlaybackPosition(HttpRequest request)
         {
-            bool parsed = false;
             Dictionary<string, string> queryString = request.Uri.GetQueryStringParameters();
             string positionStr;
-            if (queryString.TryGetValue("position", out positionStr))
+            double position;
+            if (queryString.TryGetValue("position", out positionStr) && tryParseDouble(positionStr, out position))
             {
-                double position;
-                if (double.TryParse(positionStr, out position))
-                {
-                    Logger.Debug("Airplay Session: Received scrub position - '{0}'", position);
-                    parsed = true;
-                    OnPlaybackPositionChanged(new PlaybackPositionEventArgs(position, SessionId));
-                }
+                Logger.Debug("Airplay Session: Received scrub position - '{0}'", position);
+                OnPlaybackPositionChanged(new PlaybackPositionEventArgs(position, SessionId));
             }
-            if (!parsed)
+            else
+            {
                 Logger.Debug("Airplay Session: Failed to determine scrub position\r\n{0}", request);
+            }
             return getEmptyResponse();
         }
 
@@ -404,6 +421,51 @@ namespace ShairportSharp.Airplay
             return response;
         }
 
+        HttpResponse handleVolumeChange(HttpRequest request)
+        {
+            Dictionary<string, string> queryString = request.Uri.GetQueryStringParameters();
+            string volumeStr;
+            double volume;
+            if (queryString.TryGetValue("volume", out volumeStr) && tryParseDouble(volumeStr, out volume))
+            {
+                Logger.Debug("Airplay Session: Received volume - '{0}'", volume);
+                OnVolumeChanged(new VolumeChangedEventArgs(volume, SessionId));
+            }
+            else
+            {
+                Logger.Debug("Airplay Session: Failed to determine volume\r\n{0}", request);
+            }
+            return getEmptyResponse();
+        }
+
+        #endregion
+
+        #region Static Methods
+
+        static bool tryParseDouble(string s, out double result)
+        {
+            return double.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out result);
+        }
+
+        static bool tryGetPlist(HttpMessage message, out Dictionary<string, object> plist)
+        {
+            plist = null;
+            if (message.ContentLength > 0)
+            {
+                try
+                {
+                    plist = (Dictionary<string, object>)Plist.readPlist(message.Content);
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Exception parsing plist - {0}", ex);
+                    Logger.Error("Exception message\r\n{0}", message);
+                }
+            }
+            return false;
+        }
+
         static HttpResponse getEmptyResponse(string status = "200 OK", bool noContent = true)
         {
             HttpResponse response = new HttpResponse("HTTP/1.1");
@@ -412,26 +474,6 @@ namespace ShairportSharp.Airplay
             if (noContent)
                 response["Content-Length"] = "0";
             return response;
-        }
-
-        #endregion
-
-        #region Static Methods
-
-        static bool tryGetPlist(HttpMessage message, out Dictionary<string, object> plist)
-        {
-            try
-            {
-                plist = (Dictionary<string, object>)Plist.readPlist(message.Content);
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Logger.Error("Exception parsing plist - {0}", ex);
-                Logger.Error("Exception message\r\n{0}", message);
-                plist = null;
-            }
-            return false;
         }
 
         static HttpResponse getPlistResponse(IPlistResponse plist)

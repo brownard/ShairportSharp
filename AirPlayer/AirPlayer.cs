@@ -164,6 +164,8 @@ namespace AirPlayer
             airplayServer.GetPlaybackPosition += airplayServer_GetPlaybackPosition;
             airplayServer.PlaybackPositionChanged += airplayServer_PlaybackPositionChanged;
             airplayServer.PlaybackRateChanged += airplayServer_PlaybackRateChanged;
+            if (allowVolumeControl)
+                airplayServer.VolumeChanged += airplayServer_VolumeChanged;
             airplayServer.SessionStopped += airplayServer_SessionStopped;
             airplayServer.SessionClosed += airplayServer_SessionClosed;
             airplayServer.Start();
@@ -294,7 +296,7 @@ namespace AirPlayer
                 GUIPropertyManager.SetProperty("#Play.Current.Thumb", cover);
         }
 
-        void airtunesServer_VolumeChanged(object sender, VolumeChangedEventArgs e)
+        void airtunesServer_VolumeChanged(object sender, ShairportSharp.Raop.VolumeChangedEventArgs e)
         {
             invoke(delegate()
             {
@@ -540,7 +542,7 @@ namespace AirPlayer
         {
             invoke(delegate()
             {
-                if (isVideoPlaying && currentVideoPlayer.Duration > 0)
+                if (isVideoPlaying)
                 {
                     PlaybackInfo playbackInfo = e.PlaybackInfo;
                     playbackInfo.ReadyToPlay = true;
@@ -597,6 +599,21 @@ namespace AirPlayer
             }, false);
         }
 
+        void airplayServer_VolumeChanged(object sender, ShairportSharp.Airplay.VolumeChangedEventArgs e)
+        {
+            invoke(delegate()
+            {
+                if (isVideoPlaying)
+                {
+                    VolumeHandler volumeHandler = VolumeHandler.Instance;
+                    if (savedVolume == null)
+                        savedVolume = volumeHandler.Volume;
+
+                    volumeHandler.Volume = (int)(volumeHandler.Maximum * e.Volume);
+                }
+            }, false);
+        }
+
         void airplayServer_SessionStopped(object sender, AirplayEventArgs e)
         {
             airplayServer_SessionClosed(sender, e);
@@ -633,11 +650,15 @@ namespace AirPlayer
                 case MediaPortal.GUI.Library.Action.ActionType.ACTION_PLAY:
                     if (bufferingPlayer != null)
                         bufferingPlayer.SkipBuffering();
-                    else if (sendCommands && isAudioPlaying)
+                    else if (isVideoPlaying && currentVideoPlayer != null)
+                        airplayServer.SetPlaybackState(currentVideoPlayer.SessionId, PlaybackCategory.Video, PlaybackState.Playing);
+                    else if (isAudioPlaying)
                         airtunesServer.SendCommand(RemoteCommand.Play);
                     break;
                 case MediaPortal.GUI.Library.Action.ActionType.ACTION_PAUSE:
-                    if (sendCommands && isAudioPlaying)
+                    if (isVideoPlaying && currentVideoPlayer != null)
+                        airplayServer.SetPlaybackState(currentVideoPlayer.SessionId, PlaybackCategory.Video, PlaybackState.Paused);
+                    if (isAudioPlaying)
                         airtunesServer.SendCommand(RemoteCommand.Pause);
                     break;
                 case MediaPortal.GUI.Library.Action.ActionType.ACTION_STOP:
@@ -681,12 +702,12 @@ namespace AirPlayer
         {
             isAudioPlaying = false;
             isVideoPlaying = false;
+            restoreVolume();
             if (currentAudioPlayer != null)
             {
                 currentAudioPlayer = null; 
                 airtunesServer.SendCommand(RemoteCommand.Pause);
                 //airtunesServer.StopCurrentSession();
-                restoreVolume();
             }
             if (currentVideoPlayer != null)
             {
@@ -734,6 +755,7 @@ namespace AirPlayer
                 GUIWaitCursor.Hide();
                 hlsParser = null;
             }
+            restoreVolume();
             currentVideoPlayer = null;
             videoSessionId = null;
         }
@@ -770,7 +792,11 @@ namespace AirPlayer
         void stopCurrentItem()
         {
             if (g_Player.Playing)
+            {
+                if (GUIWindowManager.ActiveWindow == (int)GUIWindow.Window.WINDOW_TVFULLSCREEN)
+                    GUIWindowManager.ShowPreviousWindow();
                 g_Player.Stop();
+            }
         }
 
         string saveCover(byte[] buffer, string contentType)

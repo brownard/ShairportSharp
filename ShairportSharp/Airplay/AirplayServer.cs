@@ -193,6 +193,13 @@ namespace ShairportSharp.Airplay
                 GetPlaybackPosition(this, e);
         }
 
+        public event EventHandler<VolumeChangedEventArgs> VolumeChanged;
+        protected virtual void OnVolumeChanged(VolumeChangedEventArgs e)
+        {
+            if (VolumeChanged != null)
+                VolumeChanged(this, e);
+        }
+
         #endregion
 
         #region Public Methods
@@ -299,6 +306,7 @@ namespace ShairportSharp.Airplay
             session.PlaybackRateChanged += session_PlaybackRateChanged;
             session.PlaybackPositionChanged += session_PlaybackPositionChanged;
             session.GetPlaybackPosition += session_GetPlaybackPosition;
+            session.VolumeChanged += session_VolumeChanged;
             session.Stopped += session_Stopped;
             session.Closed += session_Closed;
             lock (connectionSync)
@@ -308,14 +316,9 @@ namespace ShairportSharp.Airplay
 
         void session_EventConnection(object sender, AirplayEventArgs e)
         {
-            if (string.IsNullOrEmpty(e.SessionId))
-                Logger.Warn("Airplay Server: Event connection received without session id");
-            else
-            {
-                Logger.Debug("Airplay Server: Event connection received, '{0}'", e.SessionId);
-                lock (connectionSync)
-                    eventConnections[e.SessionId] = (AirplaySession)sender;
-            }
+            Logger.Debug("Airplay Server: Event connection received, '{0}'", e.SessionId);
+            lock (connectionSync)
+                eventConnections[e.SessionId] = (AirplaySession)sender;
         }
 
         void session_PhotoReceived(object sender, PhotoReceivedEventArgs e)
@@ -382,6 +385,11 @@ namespace ShairportSharp.Airplay
         void session_GetPlaybackPosition(object sender, GetPlaybackPositionEventArgs e)
         {
             OnGetPlaybackPosition(e);
+        }
+
+        void session_VolumeChanged(object sender, VolumeChangedEventArgs e)
+        {
+            OnVolumeChanged(e);
         }
 
         void cachePhoto(string sessionId, string key, byte[] value)

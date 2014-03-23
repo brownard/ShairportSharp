@@ -153,4 +153,15 @@ namespace ShairportSharp.Airplay
         public double Duration { get; set; }
         public double Position { get; set; }
     }
+
+    public class VolumeChangedEventArgs : AirplayEventArgs
+    {
+        public VolumeChangedEventArgs(double volume, string sessionId)
+            : base(sessionId)
+        {
+            Volume = volume;
+        }
+
+        public double Volume { get; protected set; }
+    }
 }

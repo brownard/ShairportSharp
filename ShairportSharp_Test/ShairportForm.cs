@@ -302,7 +302,7 @@ namespace ShairportSharp_Test
                 playerForm.SetArtwork(e);
         }
 
-        void server_VolumeChange(object sender, VolumeChangedEventArgs e)
+        void server_VolumeChange(object sender, ShairportSharp.Raop.VolumeChangedEventArgs e)
         {
             if (InvokeRequired)
             {

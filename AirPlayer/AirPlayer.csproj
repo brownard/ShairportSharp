@@ -108,7 +108,7 @@
     <EmbeddedResource Include="MPE\airplay-icon-faded.png" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="GUI\PhotoWindow.xml" />
+    <Content Include="GUI\AirplayPhotoWindow.xml" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -39,9 +39,9 @@ namespace AirPlayer.Config
             if (useDummyAddressCheckBox.Checked)
             {
                 //keep existing address if we have one so the client knows to use saved credentials 
-                if (pluginSettings.CustomAddress == null || pluginSettings.CustomAddress.Length != 12)
+                if (pluginSettings.CustomAddress == null || pluginSettings.CustomAddress.Length != 6)
                 {
-                    pluginSettings.CustomAddress = new byte[12];
+                    pluginSettings.CustomAddress = new byte[6];
                     new Random().NextBytes(pluginSettings.CustomAddress);
                 }
             }

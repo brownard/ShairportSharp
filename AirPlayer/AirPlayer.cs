@@ -815,6 +815,7 @@ namespace AirPlayer
         {
             lock (coverLock)
             {
+                coverNumber++;
                 coverNumber = coverNumber % 3;
                 string filename = "AirPlay_Thumb_" + coverNumber;
                 string extension = "." + contentType.Replace("image/", "");

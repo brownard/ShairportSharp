@@ -233,6 +233,19 @@ namespace ShairportSharp.Airplay
 
             #endregion
 
+            else if (request.Uri == "/action")
+            {
+                Dictionary<string, object> plist;
+                object action;
+                if (tryGetPlist(request, out plist) && plist.TryGetValue("type", out action))
+                {
+                    Logger.Debug("Action plist - " + Plist.writeXml(plist));
+                    if ((string)action == "playlistRemove")
+                        OnStopped(new AirplayEventArgs(sessionId));
+                }
+                response = getPlistResponse(new Dictionary<string, object>(), true);
+            }
+
             else if (request.Uri == "/stop")
             {
                 Logger.Debug("Airplay Session: Stop");
@@ -476,20 +489,28 @@ namespace ShairportSharp.Airplay
             return response;
         }
 
-        static HttpResponse getPlistResponse(IPlistResponse plist)
+        static HttpResponse getPlistResponse(IPlistResponse plist, bool binary = false)
         {
-            return getPlistResponse(plist.GetPlist());
+            return getPlistResponse(plist.GetPlist(), binary);
         }
 
-        static HttpResponse getPlistResponse(Dictionary<string, object> plist)
+        static HttpResponse getPlistResponse(Dictionary<string, object> plist, bool binary = false)
         {
             HttpResponse response = new HttpResponse("HTTP/1.1");
             response.Status = "200 OK";
             response["Date"] = rfcTimeNow();
-            response["Content-Type"] = "text/x-apple-plist+xml";
-            string plistXml = Plist.writeXml(plist);
-            //Logger.Debug("Created plist xml - '{0}'", plistXml);
-            response.SetContent(plistXml);
+            if (binary)
+            {
+                response["Content-Type"] = "application/x-apple-binary-plist";
+                response.SetContent(Plist.writeBinary(plist));
+            }
+            else
+            {
+                response["Content-Type"] = "text/x-apple-plist+xml";
+                string plistXml = Plist.writeXml(plist);
+                //Logger.Debug("Created plist xml - '{0}'", plistXml);
+                response.SetContent(plistXml);
+            }
             return response;
         }
 

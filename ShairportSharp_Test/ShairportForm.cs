@@ -193,7 +193,7 @@ namespace ShairportSharp_Test
 
         void airplay_SessionStopped(object sender, AirplayEventArgs e)
         {
-            airplay.CloseSession(e.SessionId);
+            airplay_SessionClosed(sender, e);
         }
 
         void airplay_SessionClosed(object sender, AirplayEventArgs e)

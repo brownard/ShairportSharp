@@ -23,7 +23,6 @@ namespace ShairportSharp.Airplay
 
     class PlaybackStateInfo : IPlistResponse
     {
-        public string SessionId { get; set; }
         public PlaybackCategory Category { get; set; }
         public PlaybackState State { get; set; }
 
@@ -31,7 +30,9 @@ namespace ShairportSharp.Airplay
         {
             Dictionary<string, object> plist = new Dictionary<string, object>();
             plist["category"] = Category.ToString().ToLowerInvariant();
-            plist["sesionID"] = SessionId;
+            if (State == PlaybackState.Stopped)
+                plist["reason"] = "ended";
+            plist["sesionID"] = 1;
             plist["state"] = State.ToString().ToLowerInvariant();
             return plist;
         }

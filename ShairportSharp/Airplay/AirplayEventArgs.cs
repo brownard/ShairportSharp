@@ -113,10 +113,7 @@ namespace ShairportSharp.Airplay
         public PlaybackInfoEventArgs(string sessionId)
             : base(sessionId)
         {
-            PlaybackInfo = new PlaybackInfo()
-            {
-                PlaybackBufferEmpty = true
-            };
+            PlaybackInfo = new PlaybackInfo();
         }
 
         public PlaybackInfo PlaybackInfo { get; protected set; }

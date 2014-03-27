@@ -25,7 +25,11 @@ namespace ShairportSharp_Test
         {
             if (_rot != null)
             {
-                _rot.Dispose();
+                try
+                {
+                    _rot.Dispose();
+                }
+                catch { }
                 _rot = null;
             }
             base.Dispose();
@@ -37,11 +41,13 @@ namespace ShairportSharp_Test
         AirplayServer server;
         string sessionId;
         rotPlayer m_Playback = null;
+        bool hasStarted = false;
+        bool hasFinished = false;
+
         public VideoForm(AirplayServer server, string sessionId)
         {
             InitializeComponent();
             this.server = server;
-            this.sessionId = sessionId;
             m_Playback = new rotPlayer();
             m_Playback.VideoControl = this.videoControl;
             m_Playback.OnPlaybackStart += Playback_OnPlaybackStart;
@@ -50,16 +56,14 @@ namespace ShairportSharp_Test
             m_Playback.OnPlaybackPause += Playback_OnPlaybackPause;
         }
 
-        void Playback_OnPlaybackPause(object sender, EventArgs e)
-        {
-            
-        }
-
         public void LoadVideo(VideoEventArgs e)
         {
+            hasStarted = false;
+            hasFinished = false;
+            sessionId = e.SessionId;
+            server.SetPlaybackState(sessionId, PlaybackCategory.Video, PlaybackState.Loading);
             m_Playback.Stop();
             m_Playback.FileName = e.ContentLocation;
-            server.SetPlaybackState(sessionId, PlaybackCategory.Video, PlaybackState.Loading);
         }
 
         public void GetProgress(GetPlaybackPositionEventArgs e)
@@ -79,52 +83,57 @@ namespace ShairportSharp_Test
 
         public void GetPlaybackInfo(PlaybackInfo playbackInfo)
         {
-            playbackInfo.ReadyToPlay = true;
-            playbackInfo.Duration = m_Playback.Duration / (double)COMHelper.UNITS;
-            playbackInfo.Position = m_Playback.Position / (double)COMHelper.UNITS;
-            playbackInfo.PlaybackBufferEmpty = false;
-            playbackInfo.PlaybackBufferFull = true;
-            playbackInfo.PlaybackLikelyToKeepUp = true;
-
-            PlaybackTimeRange timeRange = new PlaybackTimeRange() { Duration = playbackInfo.Duration };
-            playbackInfo.LoadedTimeRanges.Add(timeRange);
-            playbackInfo.SeekableTimeRanges.Add(timeRange);
-            playbackInfo.Rate = m_Playback.IsPaused ? 0 : 1;
+            if (hasStarted && m_Playback.Duration > 0)
+            {
+                playbackInfo.Duration = m_Playback.Duration / (double)COMHelper.UNITS;
+                playbackInfo.Position = m_Playback.Position / (double)COMHelper.UNITS;
+                playbackInfo.PlaybackLikelyToKeepUp = true;
+                PlaybackTimeRange timeRange = new PlaybackTimeRange() { Duration = playbackInfo.Duration };
+                playbackInfo.LoadedTimeRanges.Add(timeRange);
+                playbackInfo.SeekableTimeRanges.Add(timeRange);
+                playbackInfo.Rate = m_Playback.IsPaused || hasFinished ? 0 : 1;
+            }
         }
 
-        bool ignoreRate = true;
         public void SetPlaybackRate(PlaybackRateEventArgs e)
         {
-            if (ignoreRate)
+            if (hasStarted && m_Playback.Duration > 0)
             {
-                ignoreRate = false;
-                return;
-            }
-
-            if (e.Rate == 0)
-            {
-                if (!m_Playback.IsPaused)
+                if (e.Rate == 0)
                 {
-                    m_Playback.Pause();
+                    if (!m_Playback.IsPaused)
+                    {
+                        m_Playback.Pause();
+                    }
                 }
-            }
-            else if (e.Rate == 1)
-            {
-                if (m_Playback.IsPaused)
+                else if (e.Rate == 1)
                 {
-                    m_Playback.Pause();
+                    if (m_Playback.IsPaused)
+                    {
+                        m_Playback.Pause();
+                    }
                 }
             }
         }
 
         private void Playback_OnPlaybackStart(object sender, EventArgs e)
         {
-            
+            hasStarted = true;
+            server.SetPlaybackState(sessionId, PlaybackCategory.Video, PlaybackState.Playing);
+        }
+
+        void Playback_OnPlaybackPause(object sender, EventArgs e)
+        {
+            server.SetPlaybackState(sessionId, PlaybackCategory.Video, PlaybackState.Paused);
         }
 
         private void Playback_OnPlaybackStop(object sender, EventArgs e)
         {
-            
+            if (hasStarted && !hasFinished)
+            {
+                server.SetPlaybackState(sessionId, PlaybackCategory.Video, PlaybackState.Stopped);
+                hasFinished = true;
+            }
         }
 
         private void Playback_OnPlaybackReady(object sender, EventArgs e)

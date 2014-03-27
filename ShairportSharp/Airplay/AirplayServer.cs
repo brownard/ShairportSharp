@@ -262,8 +262,7 @@ namespace ShairportSharp.Airplay
                         PlaybackStateInfo info = new PlaybackStateInfo()
                         {
                             Category = category,
-                            State = state,
-                            SessionId = eventConnection.SessionId
+                            State = state
                         };
 
                         HttpRequest request = new HttpRequest("POST", "/event", "HTTP/1.1");

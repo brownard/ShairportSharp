@@ -9,6 +9,9 @@ namespace ShairportSharp.Airplay
     {
         public PlaybackInfo()
         {
+            ReadyToPlay = true;
+            PlaybackBufferEmpty = true;
+            Rate = 1;
             LoadedTimeRanges = new List<PlaybackTimeRange>();
             SeekableTimeRanges = new List<PlaybackTimeRange>();
         }
@@ -26,24 +29,24 @@ namespace ShairportSharp.Airplay
         public Dictionary<string, object> GetPlist()
         {
             Dictionary<string, object> plist = new Dictionary<string, object>();
-            plist["duration"] = Duration;
-            plist["position"] = Position;
-            plist["rate"] = Rate;
-            plist["readyToPlay"] = ReadyToPlay;
-            plist["playbackBufferEmpty"] = PlaybackBufferEmpty;
-            plist["playbackBufferFull"] = PlaybackBufferFull;
-            plist["playbackLikelyToKeepUp"] = PlaybackLikelyToKeepUp;
 
             List<object> loadedList = new List<object>();
             foreach (PlaybackTimeRange range in LoadedTimeRanges)
                 loadedList.Add(range.GetPlist());
-            plist["loadedTimeRanges"] = loadedList;
 
             List<object> seekableList = new List<object>();
             foreach (PlaybackTimeRange range in SeekableTimeRanges)
                 seekableList.Add(range.GetPlist());
-            plist["seekableTimeRanges"] = seekableList;
 
+            plist["duration"] = Duration;
+            plist["loadedTimeRanges"] = loadedList;
+            plist["playbackBufferEmpty"] = PlaybackBufferEmpty;
+            plist["playbackBufferFull"] = PlaybackBufferFull;
+            plist["playbackLikelyToKeepUp"] = PlaybackLikelyToKeepUp;
+            plist["position"] = Position;
+            plist["rate"] = Rate;
+            plist["readyToPlay"] = ReadyToPlay;
+            plist["seekableTimeRanges"] = seekableList;
             return plist;
         }
     }
@@ -56,8 +59,8 @@ namespace ShairportSharp.Airplay
         public Dictionary<string, object> GetPlist()
         {
             Dictionary<string, object> plist = new Dictionary<string, object>();
-            plist["start"] = Start;
             plist["duration"] = Duration;
+            plist["start"] = Start;
             return plist;
         }
     }

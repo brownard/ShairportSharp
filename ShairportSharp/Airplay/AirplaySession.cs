@@ -217,7 +217,15 @@ namespace ShairportSharp.Airplay
             else if (request.Uri.StartsWith("/getProperty"))
             {
                 //Logger.Debug("Airplay Session: getProperty\r\n{0}", request);
-                response = getEmptyResponse("404 Not Found");
+                if (request.Uri.EndsWith("?playbackAccessLog") || request.Uri.EndsWith("?playbackAccessLog"))
+                {
+                    response = getEmptyResponse();
+                    response["Content-Type"] = "application/x-apple-binary-plist";
+                }
+                else
+                {
+                    response = getEmptyResponse("404 Not Found");
+                }
             }
 
             else if (request.Uri.StartsWith("/setProperty"))
@@ -228,7 +236,7 @@ namespace ShairportSharp.Airplay
                 //    Dictionary<string, object> pList = (Dictionary<string, object>)Plist.readPlist(request.Content);
                 //    Logger.Debug("Request plist - " + Plist.writeXml(pList));
                 //}
-                response = getEmptyResponse("404 Not Found");
+                response = getPlistResponse(new Dictionary<string, object>() { { "errorCode", 0 } }); //getEmptyResponse("404 Not Found");
             }
 
             #endregion

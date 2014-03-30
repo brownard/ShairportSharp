@@ -14,9 +14,9 @@ namespace ShairportSharp.Airplay
             SeekableTimeRanges = new List<PlaybackTimeRange>();
         }
 
-        public float Duration { get; set; }
-        public float Position { get; set; }
-        public float Rate { get; set; }
+        public double Duration { get; set; }
+        public double Position { get; set; }
+        public double Rate { get; set; }
         public bool ReadyToPlay { get; set; }
         public bool PlaybackBufferEmpty { get; set; }
         public bool PlaybackBufferFull { get; set; }

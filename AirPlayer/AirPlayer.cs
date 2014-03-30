@@ -380,7 +380,7 @@ namespace AirPlayer
 
         void airplayServer_VideoReceived(object sender, VideoEventArgs e)
         {
-            airplayServer.SetPlaybackState(e.SessionId, PlaybackCategory.Video, PlaybackState.Loading);
+            //airplayServer.SetPlaybackState(e.SessionId, PlaybackCategory.Video, PlaybackState.Loading);
             invoke(delegate()
             {
                 //YouTube sometimes sends play video twice?? Ignore but make sure we resend playing state if necessary
@@ -560,19 +560,36 @@ namespace AirPlayer
         {
             invoke(delegate()
             {
+                PlaybackState? playbackState = null;
                 if (isVideoPlaying)
                 {
                     PlaybackInfo playbackInfo = e.PlaybackInfo;
-                    playbackInfo.Duration = currentVideoPlayer.FloatDuration;
-                    playbackInfo.Position = currentVideoPlayer.FloatPosition;
-                    playbackInfo.Rate = currentVideoPlayer.Paused ? 0 : 1;
+                    playbackInfo.Duration = currentVideoPlayer.Duration;
+                    playbackInfo.Position = currentVideoPlayer.CurrentPosition;
                     playbackInfo.PlaybackLikelyToKeepUp = true;
                     playbackInfo.ReadyToPlay = true;
                     PlaybackTimeRange timeRange = new PlaybackTimeRange();
                     timeRange.Duration = playbackInfo.Duration;
                     playbackInfo.LoadedTimeRanges.Add(timeRange);
                     playbackInfo.SeekableTimeRanges.Add(timeRange);
+                    if (currentVideoPlayer.Paused)
+                    {
+                        playbackInfo.Rate = 0;
+                        playbackState = PlaybackState.Paused;
+                    }
+                    else
+                    {
+                        playbackInfo.Rate = 1;
+                        playbackState = PlaybackState.Playing;
+                    }
                 }
+                else if (currentVideoUrl != null)
+                {
+                    playbackState = PlaybackState.Loading;
+                }
+
+                if (playbackState != null)
+                    airplayServer.SetPlaybackState(e.SessionId, PlaybackCategory.Video, playbackState.Value);
             });
         }
 

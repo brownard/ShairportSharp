@@ -535,36 +535,6 @@ namespace AirPlayer
             }
         }
 
-        public float FloatPosition
-        {
-            get
-            {                
-                if (mediaSeek != null)
-                {
-                    long currentPosition;
-                    int hr = mediaSeek.GetCurrentPosition(out currentPosition);
-                    if (hr == 0)
-                        return currentPosition / (float)DirectShow.Helper.COMHelper.UNITS;
-                }
-                return -1;
-            }
-        }
-
-        public float FloatDuration
-        {
-            get
-            {
-                if (mediaSeek != null)
-                {
-                    long duration;
-                    int hr = mediaSeek.GetDuration(out duration);
-                    if (hr == 0)
-                        return duration / (float)DirectShow.Helper.COMHelper.UNITS;
-                }
-                return -1;
-            }
-        }
-
         public override void Dispose()
         {
             base.Dispose();

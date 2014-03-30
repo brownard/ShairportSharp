@@ -126,7 +126,7 @@ namespace AirPlayer
                 {
                     DirectShowUtil.ReleaseComObject(sourceFilter, 2000);
                     result = true;
-                    Logger.Instance.Debug("AirPlayer: Using source filter '{0}'", sourceFilterName);
+                    Logger.Instance.Debug("AirPlayerVideo: Using source filter '{0}'", sourceFilterName);
                 }
             }
 
@@ -226,7 +226,7 @@ namespace AirPlayer
                         else if (percentageBuffered < 1f) formatString = ".00";
                         else if (percentageBuffered < 10f) formatString = "0.0";
                         else if (percentageBuffered < 100f) formatString = "##";
-                        GUIPropertyManager.SetProperty("#Airplayer.buffered", percentageBuffered.ToString(formatString, System.Globalization.CultureInfo.InvariantCulture));
+                        GUIPropertyManager.SetProperty("#AirPlayerVideo.buffered", percentageBuffered.ToString(formatString, System.Globalization.CultureInfo.InvariantCulture));
                         Thread.Sleep(50); // no need to do this more often than 20 times per second
                     }
                     while (!PlaybackReady && graphBuilder != null && !BufferingStopped);
@@ -316,7 +316,7 @@ namespace AirPlayer
 
                 if (Vmr9 == null || !Vmr9.IsVMR9Connected)
                 {
-                    Logger.Instance.Warn("AirPlayer: Failed to render file -> No video renderer connected");
+                    Logger.Instance.Warn("AirPlayerVideo: Failed to render file -> No video renderer connected");
                     mediaCtrl = null;
                     Cleanup();
                     return false;
@@ -361,7 +361,7 @@ namespace AirPlayer
             catch (Exception ex)
             {
                 Error.SetError("Unable to play movie", "Unable build graph for VMR9");
-                Logger.Instance.Error("AirPlayer:exception while creating DShow graph {0} {1}", ex.Message, ex.StackTrace);
+                Logger.Instance.Error("AirPlayerVideo:exception while creating DShow graph {0} {1}", ex.Message, ex.StackTrace);
                 return false;
             }
         }
@@ -378,7 +378,7 @@ namespace AirPlayer
             m_ar = GUIGraphicsContext.ARType;
             VideoRendererStatistics.VideoState = VideoRendererStatistics.State.VideoPresent;
             _updateNeeded = true;
-            Logger.Instance.Info("AirPlayer: Play '{0}'", m_strCurrentFile);
+            Logger.Instance.Info("AirPlayerVideo: Play '{0}'", m_strCurrentFile);
 
             m_bStarted = false;
             if (!GetInterfaces())
@@ -468,7 +468,7 @@ namespace AirPlayer
             }
             catch (Exception error)
             {
-                Logger.Instance.Warn("AirPlayer: Unable to play with reason: {0}", error.Message);
+                Logger.Instance.Warn("AirPlayerVideo: Unable to play with reason: {0}", error.Message);
             }
             if (hr != 0) // S_OK
             {
@@ -491,18 +491,78 @@ namespace AirPlayer
             _updateNeeded = true;
             SetVideoWindow();
             mediaPos.get_Duration(out m_dDuration);
-            Logger.Instance.Info("AirPlayer: Duration {0} sec", m_dDuration.ToString("F"));
+            Logger.Instance.Info("AirPlayerVideo: Duration {0} sec", m_dDuration.ToString("F"));
 
             return true;
         }
 
         public override void Stop()
         {
-            Logger.Instance.Info("AirPlayer: Stop");
+            Logger.Instance.Info("AirPlayerVideo: Stop");
             m_strCurrentFile = "";
             CloseInterfaces();
             m_state = PlayState.Init;
             GUIGraphicsContext.IsPlaying = false;
+        }
+
+        public override double CurrentPosition
+        {
+            get
+            {
+                if (mediaSeek != null)
+                {
+                    long currentPosition;
+                    int hr = mediaSeek.GetCurrentPosition(out currentPosition);
+                    if (hr == 0)
+                        return currentPosition / (double)DirectShow.Helper.COMHelper.UNITS;
+                }
+                return -1;
+            }
+        }
+
+        public override double Duration
+        {
+            get
+            {
+                if (mediaSeek != null)
+                {
+                    long duration;
+                    int hr = mediaSeek.GetDuration(out duration);
+                    if (hr == 0)
+                        return duration / (double)DirectShow.Helper.COMHelper.UNITS;
+                }
+                return -1;
+            }
+        }
+
+        public float FloatPosition
+        {
+            get
+            {                
+                if (mediaSeek != null)
+                {
+                    long currentPosition;
+                    int hr = mediaSeek.GetCurrentPosition(out currentPosition);
+                    if (hr == 0)
+                        return currentPosition / (float)DirectShow.Helper.COMHelper.UNITS;
+                }
+                return -1;
+            }
+        }
+
+        public float FloatDuration
+        {
+            get
+            {
+                if (mediaSeek != null)
+                {
+                    long duration;
+                    int hr = mediaSeek.GetDuration(out duration);
+                    if (hr == 0)
+                        return duration / (float)DirectShow.Helper.COMHelper.UNITS;
+                }
+                return -1;
+            }
         }
 
         public override void Dispose()

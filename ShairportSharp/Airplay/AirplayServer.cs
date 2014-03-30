@@ -252,29 +252,14 @@ namespace ShairportSharp.Airplay
 
         public void SetPlaybackState(string sessionId, PlaybackCategory category, PlaybackState state)
         {
-            System.Threading.ThreadPool.QueueUserWorkItem(o => 
+            lock (connectionSync)
             {
-                lock (connectionSync)
+                AirplaySession eventConnection;
+                if (eventConnections.TryGetValue(sessionId, out eventConnection))
                 {
-                    AirplaySession eventConnection;
-                    if (eventConnections.TryGetValue(sessionId, out eventConnection))
-                    {
-                        PlaybackStateInfo info = new PlaybackStateInfo()
-                        {
-                            Category = category,
-                            State = state
-                        };
-
-                        HttpRequest request = new HttpRequest("POST", "/event", "HTTP/1.1");
-                        request["Content-Type"] = "text/x-apple-plist";
-                        request["X-Apple-Session-ID"] = eventConnection.SessionId;
-                        string plistXml = PlistCS.Plist.writeXml(info.GetPlist());
-                        //Logger.Debug("Created plist xml - '{0}'", plistXml);
-                        request.SetContent(plistXml);
-                        eventConnection.Send(request);
-                    }
+                    eventConnection.SendPlaybackState(category, state);
                 }
-            });
+            }
         }
 
         public void CloseSession(string sessionId)

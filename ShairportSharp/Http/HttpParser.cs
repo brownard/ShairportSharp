@@ -88,7 +88,7 @@ namespace ShairportSharp.Http
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("HttpServer: Failed to start -", ex);
+                    Logger.Error("HttpParser: Failed to start -", ex);
                     inputStream.Close();
                     outputStream.Close();
                     socket.Close();
@@ -97,7 +97,7 @@ namespace ShairportSharp.Http
             }
         }
 
-        public void Send(HttpMessage message)
+        public void Send(HttpMessage message, bool async = false)
         {
             lock (socketLock)
             {
@@ -106,13 +106,38 @@ namespace ShairportSharp.Http
                     try
                     {
                         byte[] txtBytes = message.GetBytes();
-                        outputStream.Write(txtBytes, 0, txtBytes.Length);
+                        if (async)
+                        {
+                            outputStream.BeginWrite(txtBytes, 0, txtBytes.Length, onSendComplete, null);
+                        }
+                        else
+                        {
+                            outputStream.Write(txtBytes, 0, txtBytes.Length);
+                        }
                     }
                     catch (Exception ex)
                     {
-                        Logger.Debug("HttpServer: Error sending message -", ex);
+                        Logger.Debug("HttpParser: Error sending message -", ex);
                     }
                 }
+            }
+        }
+
+        void onSendComplete(IAsyncResult result)
+        {
+            try
+            {
+                lock (socketLock)
+                {
+                    if (socket != null)
+                    {
+                        outputStream.EndWrite(result);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Debug("HttpParser: Error ending send message -", ex);
             }
         }
 
@@ -152,8 +177,8 @@ namespace ShairportSharp.Http
                     }
                     catch (Exception ex)
                     {
-                        Logger.Error("HttpServer: Exception handling message -", ex);
-                        Logger.Error("HttpServer: Exception request\r\n{0}", parsedMessage);
+                        Logger.Error("HttpParser: Exception handling message -", ex);
+                        Logger.Error("HttpParser: Exception request\r\n{0}", parsedMessage);
                     }
 
                     if (response != null)
@@ -177,12 +202,12 @@ namespace ShairportSharp.Http
             }
             catch (IOException)
             {
-                Logger.Debug("HttpServer: IO Exception, socket probably closed");
+                Logger.Debug("HttpParser: IO Exception, socket probably closed");
                 Close();
             }
             catch (Exception ex)
             {
-                Logger.Error("HttpServer: Error receiving requests -", ex);
+                Logger.Error("HttpParser: Error receiving requests -", ex);
                 Close();
             }
         }
@@ -241,7 +266,7 @@ namespace ShairportSharp.Http
                     socket.Close();
                     socket = null;
                     closed = true;
-                    Logger.Debug("HttpServer: Closed socket");
+                    Logger.Debug("HttpParser: Closed socket", Environment.StackTrace);
                 }
             }
             if (closed)

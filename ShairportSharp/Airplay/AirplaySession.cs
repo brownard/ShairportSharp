@@ -22,16 +22,8 @@ namespace ShairportSharp.Airplay
         #region Variables
 
         AirplayServerInfo serverInfo;
-
-        #endregion
-
-        #region Public Properties
-
         string sessionId = EMPTY_SESSION_ID;
-        public string SessionId 
-        {
-            get { return sessionId; }
-        }
+        PlaybackState? lastPlaybackState = null;
 
         #endregion
 
@@ -41,6 +33,44 @@ namespace ShairportSharp.Airplay
             : base(socket, password, DIGEST_REALM) 
         {
             this.serverInfo = serverInfo;
+        }
+
+        #endregion
+
+        #region Public Properties
+
+        public string SessionId
+        {
+            get { return sessionId; }
+        }
+
+        public PlaybackState? LastPlaybackState
+        {
+            get { return lastPlaybackState; }
+        }
+
+        #endregion
+
+        #region Public Methods
+
+        public void SendPlaybackState(PlaybackCategory category, PlaybackState state)
+        {
+            if (state == lastPlaybackState)
+                return;
+            lastPlaybackState = state;
+            PlaybackStateInfo info = new PlaybackStateInfo()
+            {
+                Category = category,
+                State = state
+            };
+            HttpRequest request = new HttpRequest("POST", "/event", "HTTP/1.1");
+            request["Content-Type"] = "text/x-apple-plist+xml";
+            request["X-Apple-Session-ID"] = sessionId;
+            string plistXml = PlistCS.Plist.writeXml(info.GetPlist());
+            //Logger.Debug("Created plist xml - '{0}'", plistXml);
+            request.SetContent(plistXml);
+            Logger.Debug("AirplaySession: Sending playback state '{0}' - '{1}'", category, state);
+            Send(request, true);
         }
 
         #endregion
@@ -247,7 +277,7 @@ namespace ShairportSharp.Airplay
                 object action;
                 if (tryGetPlist(request, out plist) && plist.TryGetValue("type", out action))
                 {
-                    Logger.Debug("Action plist - " + Plist.writeXml(plist));
+                    //Logger.Debug("Action plist - " + Plist.writeXml(plist));
                     if ((string)action == "playlistRemove")
                         OnStopped(new AirplayEventArgs(sessionId));
                 }
@@ -390,6 +420,7 @@ namespace ShairportSharp.Airplay
             Logger.Debug("Airplay Session: Playback info requested");
             PlaybackInfoEventArgs e = new PlaybackInfoEventArgs(SessionId);
             OnPlaybackInfoRequested(e);
+            Logger.Debug("Airplay Session: Playback Info\r\n'{0}'", Plist.writeXml(e.PlaybackInfo.GetPlist()));
             return getPlistResponse(e.PlaybackInfo);
         }
 

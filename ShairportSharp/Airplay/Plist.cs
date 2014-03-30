@@ -374,7 +374,11 @@ namespace PlistCS
             {
                 writer.WriteElementString("data", Convert.ToBase64String((Byte[])value));
             }
-            else if (value is float || value is double)
+            else if (value is float)
+            {
+                writer.WriteElementString("real", ((float)value).ToString(System.Globalization.NumberFormatInfo.InvariantInfo));
+            }
+            else if (value is double)
             {
                 writer.WriteElementString("real", ((double)value).ToString(System.Globalization.NumberFormatInfo.InvariantInfo));
             }

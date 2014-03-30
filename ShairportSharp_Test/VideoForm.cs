@@ -85,8 +85,8 @@ namespace ShairportSharp_Test
         {
             if (hasStarted && m_Playback.Duration > 0)
             {
-                playbackInfo.Duration = m_Playback.Duration / (double)COMHelper.UNITS;
-                playbackInfo.Position = m_Playback.Position / (double)COMHelper.UNITS;
+                playbackInfo.Duration = m_Playback.Duration / (float)COMHelper.UNITS;
+                playbackInfo.Position = m_Playback.Position / (float)COMHelper.UNITS;
                 playbackInfo.PlaybackLikelyToKeepUp = true;
                 PlaybackTimeRange timeRange = new PlaybackTimeRange() { Duration = playbackInfo.Duration };
                 playbackInfo.LoadedTimeRanges.Add(timeRange);

@@ -66,10 +66,16 @@ namespace DirectShow
 
         public override PacketData GetNextPacket()
         {
-            PacketData packetData = new PacketData();
-            packetData.Buffer = new byte[BUFFER_SIZE];
-            packetData.Size = stream.Read(packetData.Buffer, 0, packetData.Buffer.Length);
-            return packetData;
+            byte[] buffer = new byte[BUFFER_SIZE];
+            int read = stream.Read(buffer, 0, buffer.Length);
+            if (read > 0)
+            {
+                PacketData packetData = new PacketData();
+                packetData.Buffer = buffer;
+                packetData.Size = read;
+                return packetData;
+            }
+            return null;
         }
     }
 }

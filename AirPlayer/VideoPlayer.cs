@@ -388,28 +388,6 @@ namespace AirPlayer
                 return false;
             }
 
-            // if we are playing a local file set the cache file so refresh rate adaption can happen
-            //Uri uri = new Uri(m_strCurrentFile);
-            //string protocol = uri.Scheme.Substring(0, Math.Min(uri.Scheme.Length, 4));
-            //if (protocol == "file") cacheFile = m_strCurrentFile;
-
-            //AdaptRefreshRateFromCacheFile();
-
-            //ISubEngine engine = SubEngine.GetInstance(true);
-            //if (!engine.LoadSubtitles(graphBuilder, string.IsNullOrEmpty(SubtitleFile) ? m_strCurrentFile : SubtitleFile))
-            //{
-            //    SubEngine.engine = new SubEngine.DummyEngine();
-            //}
-            //else
-            //{
-            //    engine.Enable = true;
-            //}
-
-            //IPostProcessingEngine postengine = PostProcessingEngine.GetInstance(true);
-            //if (!postengine.LoadPostProcessing(graphBuilder))
-            //{
-            //    PostProcessingEngine.engine = new PostProcessingEngine.DummyEngine();
-            //}
             AnalyseStreams();
             SelectSubtitles();
             SelectAudioLanguage();

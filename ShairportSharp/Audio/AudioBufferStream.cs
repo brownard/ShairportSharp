@@ -8,8 +8,8 @@ namespace ShairportSharp.Audio
 {
     public enum StreamType
     {
-        Wave,
-        Raw
+        Alac,
+        Wave
     }
 
     public class AudioBufferStream : Stream
@@ -56,11 +56,10 @@ namespace ShairportSharp.Audio
                 uint timeStamp = 0, timeStampTemp;
                 while (true)
                 {
-                    bool? result = audioBuffer.GetNextFrame(out currentData, out timeStampTemp);//GetNextPacket(out currentData, out currentDataLength, out timeStampTemp);
+                    bool? result = audioBuffer.GetNextFrame(out currentData, out timeStampTemp);
                     if (result == null)
                         break;
-
-                    if (timeStampTemp != 0)
+                    else if (result == true)
                         timeStamp = timeStampTemp;
 
                     currentData = ProcessPacket(currentData, out currentDataLength);
@@ -85,8 +84,8 @@ namespace ShairportSharp.Audio
 
         protected virtual byte[] ProcessPacket(byte[] packet, out int packetLength)
         {
-            if (packet != null)
-                packetLength = packet.Length;
+            if (packet != null && packet.Length > AlacDecoder.Consts.EXTRA_BUFFER_SPACE)
+                packetLength = packet.Length - AlacDecoder.Consts.EXTRA_BUFFER_SPACE;
             else
                 packetLength = 0;
             return packet;

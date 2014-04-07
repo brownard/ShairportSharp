@@ -20,7 +20,7 @@ namespace ShairportSharp.Audio
             createAESCipher();
         }
 
-        protected override byte[] ProcessNewPacket(byte[] packet)
+        protected override byte[] ProcessNextPacket(byte[] packet)
         {
             return decryptPacket(packet);
         }
@@ -43,7 +43,7 @@ namespace ShairportSharp.Audio
         byte[] decryptPacket(byte[] buffer)
         {
             cipher.Reset();
-            byte[] outBuffer = new byte[buffer.Length + 2];
+            byte[] outBuffer = new byte[buffer.Length + AlacDecoder.Consts.EXTRA_BUFFER_SPACE];
             int remainder = buffer.Length % 16;
             int offset = buffer.Length - remainder;
             cipher.DoFinal(buffer, 0, offset, outBuffer, 0);

@@ -127,7 +127,7 @@ namespace ShairportSharp.Audio
                 if (seqno == writeIndex) 
                 {
                     //Packet we expected
-                    buffer.Data = ProcessNewPacket(data);
+                    buffer.Data = data;
                     buffer.TimeStamp = timestamp;
                     buffer.Ready = true;
                     writeIndex++;
@@ -137,7 +137,7 @@ namespace ShairportSharp.Audio
                     //Too early, missed packets between writeIndex and seqno
                     //Logger.Debug("Audio Buffer: Received packet early. Expected: {0}, Received: {1}", writeIndex, seqno);
                     OnMissingPackets(new MissingPacketEventArgs(writeIndex, seqno)); //ask to resend
-                    buffer.Data = ProcessNewPacket(data);
+                    buffer.Data = data;
                     buffer.TimeStamp = timestamp;
                     buffer.Ready = true;
                     //jump to new seq no.
@@ -147,14 +147,14 @@ namespace ShairportSharp.Audio
                 {
                     //Less than write index but greater than read so not yet played, insert
                     //Logger.Debug("Audio Buffer: Received packet late but still in time to play. Expected: {0}, Received: {1}", writeIndex, seqno);
-                    buffer.Data = ProcessNewPacket(data);
+                    buffer.Data = data;
                     buffer.TimeStamp = timestamp;
                     buffer.Ready = true;
                 }
                 else
                 {
                     //Already played 
-                    //Logger.Warn("Audio Buffer: Received packet late. Expected: {0}, Received: {1}", writeIndex, seqno);
+                    Logger.Warn("Audio Buffer: Received packet late. Expected: {0}, Received: {1}", writeIndex, seqno);
                 }
 
                 // The number of packets in buffer
@@ -225,7 +225,7 @@ namespace ShairportSharp.Audio
                 if (ready)
                 {
                     timeStamp = buffer.TimeStamp;
-                    frame = buffer.Data;
+                    frame = ProcessNextPacket(buffer.Data);
                     buffer.Ready = false;
                 }
                 else
@@ -278,7 +278,7 @@ namespace ShairportSharp.Audio
             Logger.Debug("Audio Buffer: Stopped");
         }
 
-        protected virtual byte[] ProcessNewPacket(byte[] packet)
+        protected virtual byte[] ProcessNextPacket(byte[] packet)
         {
             return packet;
         }

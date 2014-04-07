@@ -26,7 +26,6 @@ namespace AirPlayer
         #region Consts
 
         const string PLUGIN_NAME = "AirPlayer";
-        const string AIRPLAY_DUMMY_FILE = "AirPlayer_Audio_Stream.wav";
         const int SKIN_PROPERTIES_UPDATE_DELAY = 2000;
 
         #endregion
@@ -228,12 +227,12 @@ namespace AirPlayer
             isAudioBuffering = false;
             GUIWaitCursor.Hide();
             stopCurrentItem();
-            isAudioPlaying = true;
             IPlayerFactory savedFactory = g_Player.Factory;
             currentAudioPlayer = new AudioPlayer(new PlayerSettings(stream));
             g_Player.Factory = new PlayerFactory(currentAudioPlayer);
-            g_Player.Play(AIRPLAY_DUMMY_FILE, g_Player.MediaType.Music);
+            g_Player.Play(AudioPlayer.AIRPLAY_DUMMY_FILE, g_Player.MediaType.Music);
             g_Player.Factory = savedFactory;
+            isAudioPlaying = true;
 
             //Mediaportal sets the metadata skin properties internally, we overwrite them after a small delay
             ThreadPool.QueueUserWorkItem((o) =>
@@ -380,14 +379,12 @@ namespace AirPlayer
 
         void airplayServer_VideoReceived(object sender, VideoEventArgs e)
         {
-            //airplayServer.SetPlaybackState(e.SessionId, PlaybackCategory.Video, PlaybackState.Loading);
+            airplayServer.SetPlaybackState(e.SessionId, PlaybackCategory.Video, PlaybackState.Loading);
             invoke(delegate()
             {
                 //YouTube sometimes sends play video twice?? Ignore but make sure we resend playing state if necessary
                 if (e.SessionId == currentVideoSessionId && e.ContentLocation == currentVideoUrl)
                 {
-                    if (isVideoPlaying)
-                        airplayServer.SetPlaybackState(e.SessionId, PlaybackCategory.Video, PlaybackState.Playing);
                     Logger.Instance.Debug("Airplayer: Ignoring duplicate playback request");
                     return;
                 }
@@ -462,7 +459,7 @@ namespace AirPlayer
 
         void startVideoLoading(string url, string sessionId, bool useMPSourceFilter = false)
         {
-            stopCurrentItem();           
+            stopCurrentItem();
             string sourceFilter = useMPSourceFilter ? VideoPlayer.MPURL_SOURCE_FILTER : VideoPlayer.DEFAULT_SOURCE_FILTER;
             currentVideoPlayer = new VideoPlayer(url, sessionId, sourceFilter) { BufferPercent = videoBuffer };
             bool? prepareResult;
@@ -547,12 +544,11 @@ namespace AirPlayer
                     return;
                 }
 
-                isVideoPlaying = true;
-                //airplayServer.SetPlaybackState(currentVideoSessionId, PlaybackCategory.Video, PlaybackState.Playing);
                 IPlayerFactory savedFactory = g_Player.Factory;
                 g_Player.Factory = new PlayerFactory(currentVideoPlayer);
                 g_Player.Play(VideoPlayer.DUMMY_URL, g_Player.MediaType.Video);
                 g_Player.Factory = savedFactory;
+                isVideoPlaying = true;
             }
         }
 
@@ -575,17 +571,17 @@ namespace AirPlayer
                     if (currentVideoPlayer.Paused)
                     {
                         playbackInfo.Rate = 0;
-                        playbackState = PlaybackState.Paused;
+                        //playbackState = PlaybackState.Paused;
                     }
                     else
                     {
                         playbackInfo.Rate = 1;
-                        playbackState = PlaybackState.Playing;
+                        //playbackState = PlaybackState.Playing;
                     }
                 }
                 else if (currentVideoUrl != null)
                 {
-                    playbackState = PlaybackState.Loading;
+                    //playbackState = PlaybackState.Loading;
                 }
 
                 if (playbackState != null)
@@ -759,7 +755,6 @@ namespace AirPlayer
             {
                 airtunesServer.SendCommand(RemoteCommand.Pause);
                 cleanupPendingAudio();
-                //airtunesServer.StopCurrentSession();
             }
             if (currentVideoPlayer != null)
             {

@@ -25,6 +25,7 @@ namespace AirPlayer
             Ended
         }
 
+        public const string AIRPLAY_DUMMY_FILE = "http://localhost/AirPlayerAudio.wav";
         private string m_strCurrentFile = "";
         private PlayState m_state = PlayState.Init;
         private int m_iVolume = 100;
@@ -33,8 +34,6 @@ namespace AirPlayer
         object positionLock = new object();
         uint startStamp;
         uint stopStamp;
-        uint nextStartStamp;
-        uint nextStopStamp;
         double duration;
 
         private IGraphBuilder graphBuilder;
@@ -76,40 +75,37 @@ namespace AirPlayer
             m_bNotifyPlaying = true;
             m_state = PlayState.Init;
             m_strCurrentFile = strFile;
-
+            
             VideoRendererStatistics.VideoState = VideoRendererStatistics.State.VideoPresent;
-            Logger.Instance.Info("ShairportPlayer.play {0}", strFile);
+            Logger.Instance.Debug("AirplayerAudioPlayer: Play");
 
-            lock (typeof(AudioPlayer))
+            CloseInterfaces();
+            if (!GetInterfaces())
             {
-                CloseInterfaces();
-                if (!GetInterfaces())
-                {
-                    m_strCurrentFile = "";
-                    return false;
-                }
-                int hr = mediaEvt.SetNotifyWindow(GUIGraphicsContext.ActiveForm, WM_GRAPHNOTIFY, IntPtr.Zero);
-                if (hr < 0)
-                {
-                    m_strCurrentFile = "";
-                    CloseInterfaces();
-                    return false;
-                }
-                
-                _rotEntry = new DsROTEntry((IFilterGraph)graphBuilder);
-
-                hr = mediaCtrl.Run();
-                if (hr < 0)
-                {
-                    m_strCurrentFile = "";
-                    CloseInterfaces();
-                    return false;
-                }
-                //        mediaPos.put_CurrentPosition(4*60);
-                GUIMessage msg = new GUIMessage(GUIMessage.MessageType.GUI_MSG_PLAYBACK_STARTED, 0, 0, 0, 0, 0, null);
-                msg.Label = strFile;
-                GUIWindowManager.SendThreadMessage(msg);
+                m_strCurrentFile = "";
+                return false;
             }
+            int hr = mediaEvt.SetNotifyWindow(GUIGraphicsContext.ActiveForm, WM_GRAPHNOTIFY, IntPtr.Zero);
+            if (hr < 0)
+            {
+                m_strCurrentFile = "";
+                CloseInterfaces();
+                return false;
+            }
+
+            _rotEntry = new DsROTEntry((IFilterGraph)graphBuilder);
+
+            hr = mediaCtrl.Run();
+            if (hr < 0)
+            {
+                m_strCurrentFile = "";
+                CloseInterfaces();
+                return false;
+            }
+
+            GUIMessage msg = new GUIMessage(GUIMessage.MessageType.GUI_MSG_PLAYBACK_STARTED, 0, 0, 0, 0, 0, null);
+            msg.Label = strFile;
+            GUIWindowManager.SendThreadMessage(msg);
             m_state = PlayState.Playing;
             return true;
         }
@@ -121,7 +117,7 @@ namespace AirPlayer
             // ifso, stop the movie which will trigger MovieStopped
             if (null != mediaCtrl)
             {
-                Logger.Instance.Info("ShairportPlayer.ended {0}", m_strCurrentFile);
+                Logger.Instance.Info("AirplayerAudioPlayer: Ended");
                 m_strCurrentFile = "";
                 if (!bManualStop)
                 {
@@ -170,13 +166,11 @@ namespace AirPlayer
         {
             if (m_state == PlayState.Paused)
             {
-                //settings.SendCommand(RemoteCommand.Play);
                 mediaCtrl.Run();
                 m_state = PlayState.Playing;
             }
             else if (m_state == PlayState.Playing)
             {
-                //settings.SendCommand(RemoteCommand.Pause);
                 m_state = PlayState.Paused;
                 mediaCtrl.Pause();
             }
@@ -206,7 +200,7 @@ namespace AirPlayer
         {
             if (m_state != PlayState.Init)
             {
-                //settings.SendCommand(RemoteCommand.Stop);
+                Logger.Instance.Debug("AirplayerAudioPlayer: Stop");
                 mediaCtrl.StopWhenReady();
                 MovieEnded(true);
             }
@@ -242,22 +236,22 @@ namespace AirPlayer
         /// <summary> create the used COM components and get the interfaces. </summary>
         private bool GetInterfaces()
         {
+            Logger.Instance.Debug("AirplayerAudioPlayer: Get interfaces");
             int iStage = 1;
             string audioDevice;
             using (Settings xmlreader = new MPSettings())
-            {
-                audioDevice = xmlreader.GetValueAsString("audioplayer", "sounddevice", "Default DirectSound Device");
-            }
-            if (audioDevice == "Default Sound Device")
-                audioDevice = "Default DirectSound Device";
+                audioDevice = xmlreader.GetValueAsString("movieplayer", "audiorenderer", "Default DirectSound Device");
 
+            //if (audioDevice == "Default Sound Device")
+            //    audioDevice = "Default DirectSound Device";
+            Logger.Instance.Debug("AirplayerAudioPlayer: Using audio device '{0}'", audioDevice);
+                  
             int hr;
             try
             {
                 graphBuilder = (IGraphBuilder)new FilterGraph();
                 iStage = 5;
                 DirectShow.Helper.Utils.AddFilterByName(graphBuilder, DirectShow.FilterCategory.AudioRendererCategory, audioDevice);
-
                 var sourceFilter = new GenericPushSourceFilter(settings.Source, settings.GetMediaType());
                 hr = graphBuilder.AddFilter(sourceFilter, sourceFilter.Name);
                 new HRESULT(hr).Throw();
@@ -272,7 +266,6 @@ namespace AirPlayer
                 }
                 iStage = 6;
                 mediaCtrl = (IMediaControl)graphBuilder;
-
                 iStage = 7;
                 mediaEvt = (IMediaEventEx)graphBuilder;
                 iStage = 8;
@@ -282,6 +275,7 @@ namespace AirPlayer
                 iStage = 10;
                 basicAudio = graphBuilder as IBasicAudio;
                 iStage = 11;
+                Logger.Instance.Debug("AirplayerAudioPlayer: Interfaces created");
                 return true;
             }
             catch (Exception ex)
@@ -297,6 +291,10 @@ namespace AirPlayer
         /// <summary> do cleanup and release DirectShow. </summary>
         private void CloseInterfaces()
         {
+            if (graphBuilder == null)
+                return;
+
+            Logger.Instance.Debug("AirplayerAudioPlayer: Close interfaces");
             int hr;
             try
             {
@@ -347,8 +345,12 @@ namespace AirPlayer
                 }
 
                 m_state = PlayState.Init;
+                Logger.Instance.Debug("AirplayerAudioPlayer: Interfaces closed");
             }
-            catch (Exception) { }
+            catch (Exception ex)
+            {
+                Logger.Instance.Debug("AirplayerAudioPlayer: Exception closing interfaces '{0}'\r\n{1}", ex.Message, ex.StackTrace);
+            }
         }
 
         public override void WndProc(ref Message m)

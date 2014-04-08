@@ -456,7 +456,7 @@ namespace AirPlayer
                 return false;
             }
 
-            GUIWindowManager.ActivateWindow((int)GUIWindow.Window.WINDOW_FULLSCREEN_VIDEO);
+            //GUIWindowManager.ActivateWindow((int)GUIWindow.Window.WINDOW_FULLSCREEN_VIDEO);
             GUIMessage msg = new GUIMessage(GUIMessage.MessageType.GUI_MSG_PLAYBACK_STARTED, 0, 0, 0, 0, 0, null);
             msg.Label = CurrentFile;
             GUIWindowManager.SendThreadMessage(msg);
@@ -470,7 +470,7 @@ namespace AirPlayer
             SetVideoWindow();
             mediaPos.get_Duration(out m_dDuration);
             Logger.Instance.Info("AirPlayerVideo: Duration {0} sec", m_dDuration.ToString("F"));
-
+            g_Player.ShowFullScreenWindow();
             return true;
         }
 

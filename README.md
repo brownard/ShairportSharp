@@ -1,7 +1,7 @@
 ShairportSharp
 ==============
 
-An Airport Express emulator in C#. Includes a plugin for the open source media centre MediaPortal (http://www.team-mediaportal.com).
+An Airplay target in C#. Supports photos, videos and audio and includes a plugin for the open source media centre MediaPortal (http://www.team-mediaportal.com).
 
 Requirements
 ============
@@ -13,6 +13,6 @@ The RSA key is not included in the source, if you want to compile the project yo
 Credits
 =======
 
-The source is based on the original Shairport code by James Laird which can be found at http://github.com/abrasive/shairport.
+The Airtunes source is based on the original Shairport code by James Laird which can be found at http://github.com/abrasive/shairport.
 
 The ALAC decoder is based on David Hammerton's implementation.

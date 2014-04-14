@@ -565,7 +565,7 @@ namespace AirPlayer
                     playbackInfo.PlaybackLikelyToKeepUp = true;
                     playbackInfo.ReadyToPlay = true;
                     PlaybackTimeRange timeRange = new PlaybackTimeRange();
-                    timeRange.Duration = playbackInfo.Duration;
+                    timeRange.Duration = currentVideoPlayer.BufferedDuration;
                     playbackInfo.LoadedTimeRanges.Add(timeRange);
                     playbackInfo.SeekableTimeRanges.Add(timeRange);
                     if (currentVideoPlayer.Paused)

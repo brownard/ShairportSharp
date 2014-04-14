@@ -21,6 +21,9 @@ namespace AirPlayer
         string sourceFilterName;
         float percentageBuffered;
         DateTime lastProgressCheck = DateTime.MinValue;
+        IBaseFilter sourceFilter;
+        IAMOpenProgress openProgress;
+        IBaseFilter lavSplitter;
 
         int bufferPercent = 2;
         public int BufferPercent
@@ -115,6 +118,12 @@ namespace AirPlayer
             try
             {
                 sourceFilter = DirectShowUtil.AddFilterToGraph(graphBuilder, sourceFilterName);
+                if (sourceFilter != null)
+                {
+                    //openProgress = sourceFilter as IAMOpenProgress;
+                    result = true;
+                    Logger.Instance.Debug("AirPlayerVideo: Using source filter '{0}'", sourceFilterName);
+                }
             }
             catch (Exception ex)
             {
@@ -122,17 +131,12 @@ namespace AirPlayer
             }
             finally
             {
-                if (sourceFilter != null)
-                {
-                    DirectShowUtil.ReleaseComObject(sourceFilter, 2000);
-                    result = true;
-                    Logger.Instance.Debug("AirPlayerVideo: Using source filter '{0}'", sourceFilterName);
-                }
+                if (sourceFilter != null) DirectShowUtil.ReleaseComObject(sourceFilter);
             }
 
             if (result == null && sourceFilterName != DEFAULT_SOURCE_FILTER)
             {
-                Logger.Instance.Warn("Faied to add source filter '{0}', falling back to default source filter '{1}'", sourceFilterName, DEFAULT_SOURCE_FILTER);
+                Logger.Instance.Warn("Failed to add source filter '{0}', falling back to default source filter '{1}'", sourceFilterName, DEFAULT_SOURCE_FILTER);
                 sourceFilterName = DEFAULT_SOURCE_FILTER;
                 return tryAddSourceFilter();
             }
@@ -166,8 +170,8 @@ namespace AirPlayer
                 Marshal.ThrowExceptionForHR(((IFileSourceFilter)sourceFilter).Load(m_strCurrentFile, null));
 
                 OnlineVideos.MPUrlSourceFilter.IFilterState filterState = sourceFilter as OnlineVideos.MPUrlSourceFilter.IFilterState;
-
-                if (sourceFilter is IAMOpenProgress && !m_strCurrentFile.Contains("live=true") && !m_strCurrentFile.Contains("RtmpLive=1"))
+                IAMOpenProgress openProgress = sourceFilter as IAMOpenProgress;
+                if (openProgress != null)
                 {
                     // buffer before starting playback
                     bool filterConnected = false;
@@ -175,13 +179,13 @@ namespace AirPlayer
                     long total = 0, current = 0, last = 0;
                     do
                     {
-                        result = ((IAMOpenProgress)sourceFilter).QueryProgress(out total, out current);
+                        result = openProgress.QueryProgress(out total, out current);
                         Marshal.ThrowExceptionForHR(result);
 
                         percentageBuffered = (float)current / (float)total * 100.0f;
                         // after configured percentage has been buffered, connect the graph
-						if (!filterConnected && (percentageBuffered >= bufferPercent || skipBuffering))
-						{
+                        if (!filterConnected && (percentageBuffered >= bufferPercent || skipBuffering))
+                        {
                             if (((filterState != null) && (filterState.IsFilterReadyToConnectPins())) ||
                                 (filterState == null))
                             {
@@ -290,13 +294,14 @@ namespace AirPlayer
                     if (!PlaybackReady)
                     {
                         Logger.Instance.Info("Buffering was aborted.");
-                        if (sourceFilter is IAMOpenProgress) ((IAMOpenProgress)sourceFilter).AbortOperation();
+                        if (openProgress != null) openProgress.AbortOperation();
                         Thread.Sleep(100); // give it some time
                         int result = graphBuilder.RemoveFilter(sourceFilter); // remove the filter from the graph to prevent lockup later in Dispose
                     }
 
                     // release the COM pointer that we created
                     DirectShowUtil.ReleaseComObject(sourceFilter);
+                    
                 }
             }
 
@@ -456,7 +461,6 @@ namespace AirPlayer
                 return false;
             }
 
-            //GUIWindowManager.ActivateWindow((int)GUIWindow.Window.WINDOW_FULLSCREEN_VIDEO);
             GUIMessage msg = new GUIMessage(GUIMessage.MessageType.GUI_MSG_PLAYBACK_STARTED, 0, 0, 0, 0, 0, null);
             msg.Label = CurrentFile;
             GUIWindowManager.SendThreadMessage(msg);
@@ -481,6 +485,29 @@ namespace AirPlayer
             CloseInterfaces();
             m_state = PlayState.Init;
             GUIGraphicsContext.IsPlaying = false;
+        }
+
+        public double BufferedDuration
+        {
+            get
+            {
+                if (openProgress != null)
+                {
+                    try
+                    {
+                        long current, total;
+                        int hr = openProgress.QueryProgress(out total, out current);
+                        Marshal.ThrowExceptionForHR(hr);
+                        return Duration * ((double)current / total);
+                    }
+                    catch(Exception ex)
+                    {
+                        Logger.Instance.Warn("AirPlayerVideoPlayer: Exception getting buffered duration - {0}\r\n{1}", ex.Message, ex.StackTrace);
+                        openProgress = null;
+                    }
+                }
+                return Duration;
+            }
         }
 
         public override double CurrentPosition
@@ -513,10 +540,63 @@ namespace AirPlayer
             }
         }
 
+        protected override void CloseInterfaces()
+        {
+            try
+            {
+                if (sourceFilter != null)
+                {
+                    DirectShowUtil.ReleaseComObject(sourceFilter);
+                    sourceFilter = null;
+                    openProgress = null;
+                }
+                if (lavSplitter != null)
+                {
+                    DirectShowUtil.ReleaseComObject(lavSplitter);
+                    lavSplitter = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Instance.Error("AirPlayerVideoPlayer: Exception releasing filters - {0}\r\n{1}", ex.Message, ex.StackTrace);
+            }
+            base.CloseInterfaces();
+        }
+
         public override void Dispose()
         {
             base.Dispose();
             GUIPropertyManager.SetProperty("#TV.Record.percent3", 0.0f.ToString());
+        }
+
+        void addLAVSplitter(IGraphBuilder graphBuilder, IBaseFilter sourceFilter)
+        {
+            lavSplitter = new LAVSplitter() as IBaseFilter;
+            if (lavSplitter != null)
+            {
+                graphBuilder.AddFilter(lavSplitter, "LAV Splitter");
+                bool result = false;
+                IPin sourcePin = null;
+                IPin splitterPin = null;
+                try
+                {
+                    sourcePin = DsFindPin.ByDirection(sourceFilter, PinDirection.Output, 0);
+                    splitterPin = DsFindPin.ByDirection(lavSplitter, PinDirection.Input, 0);
+                    if (sourcePin != null && splitterPin != null)
+                        result = graphBuilder.Connect(sourcePin, splitterPin) == 0;
+                }
+                finally
+                {
+                    if (sourcePin != null) DirectShowUtil.ReleaseComObject(sourcePin);
+                    if (splitterPin != null) DirectShowUtil.ReleaseComObject(splitterPin);
+                    if (!result)
+                    {
+                        graphBuilder.RemoveFilter(lavSplitter);
+                        DirectShowUtil.ReleaseComObject(lavSplitter);
+                        lavSplitter = null;
+                    }
+                }
+            }
         }
 
         public static readonly Guid MEDIASUBTYPE_AVC1 = new Guid("31435641-0000-0010-8000-00aa00389b71");

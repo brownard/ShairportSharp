@@ -252,6 +252,12 @@ namespace ShairportSharp.Airplay
 
         public void SetPlaybackState(string sessionId, PlaybackCategory category, PlaybackState state)
         {
+            if (string.IsNullOrEmpty(sessionId))
+            {
+                Logger.Warn("AirplayServer: SetPlaybackState: Empty sessionId");
+                return;
+            }
+
             lock (connectionSync)
             {
                 AirplaySession eventConnection;

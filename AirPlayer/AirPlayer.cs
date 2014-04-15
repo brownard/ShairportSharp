@@ -341,24 +341,21 @@ namespace AirPlayer
         {
             DateTime photoReceiveTime = DateTime.Now;
             string photoPath;
-            if (e.AssetAction == PhotoAction.DisplayCached)
+            lock (photoCache)
             {
-                lock (photoCache)
-                    if (!photoCache.TryGetValue(e.AssetKey, out photoPath))
-                        return;
-            }
-            else
-            {
-                lock (photoCache)
-                    if (!photoCache.TryGetValue(e.AssetKey, out photoPath))
+                if (!photoCache.TryGetValue(e.AssetKey, out photoPath))
+                {
+                    if (e.AssetAction != PhotoAction.DisplayCached)
                     {
                         photoPath = saveFileToTemp(e.AssetKey, ".jpg", e.Photo);
                         if (photoPath != null)
                             photoCache[e.AssetKey] = photoPath;
                     }
-                if (photoPath == null || e.AssetAction == PhotoAction.CacheOnly)
-                    return;
+                }
             }
+
+            if (photoPath == null || e.AssetAction == PhotoAction.CacheOnly)
+                return;
 
             invoke(delegate()
             {
@@ -370,6 +367,7 @@ namespace AirPlayer
                     {
                         photoSessionId = e.SessionId;
                         photoWindow.SetPhoto(photoPath);
+                        GUIGraphicsContext.ResetLastActivity();
                         if (GUIWindowManager.ActiveWindow != PhotoWindow.WINDOW_ID)
                             GUIWindowManager.ActivateWindow(PhotoWindow.WINDOW_ID);
                     }
@@ -392,6 +390,8 @@ namespace AirPlayer
                 videoReceiveTime = DateTime.Now;
                 stopCurrentItem();
                 cleanupPendingPlayback();
+
+                GUIGraphicsContext.ResetLastActivity();
                 GUIWaitCursor.Init(); GUIWaitCursor.Show();
 
                 currentVideoSessionId = e.SessionId;
@@ -556,7 +556,6 @@ namespace AirPlayer
         {
             invoke(delegate()
             {
-                PlaybackState? playbackState = null;
                 if (isVideoPlaying)
                 {
                     PlaybackInfo playbackInfo = e.PlaybackInfo;
@@ -564,28 +563,26 @@ namespace AirPlayer
                     playbackInfo.Position = currentVideoPlayer.CurrentPosition;
                     playbackInfo.PlaybackLikelyToKeepUp = true;
                     playbackInfo.ReadyToPlay = true;
+                    
+                    AvailableTimerange availableTimerange = currentVideoPlayer.GetAvailableTimerange();
                     PlaybackTimeRange timeRange = new PlaybackTimeRange();
-                    timeRange.Duration = currentVideoPlayer.BufferedDuration;
-                    playbackInfo.LoadedTimeRanges.Add(timeRange);
-                    playbackInfo.SeekableTimeRanges.Add(timeRange);
-                    if (currentVideoPlayer.Paused)
+                    if (availableTimerange != null)
                     {
-                        playbackInfo.Rate = 0;
-                        //playbackState = PlaybackState.Paused;
+                        timeRange.Start = availableTimerange.StartTime;
+                        timeRange.Duration = availableTimerange.EndTime - availableTimerange.StartTime;
                     }
                     else
                     {
-                        playbackInfo.Rate = 1;
-                        //playbackState = PlaybackState.Playing;
+                        timeRange.Duration = currentVideoPlayer.Duration;
                     }
-                }
-                else if (currentVideoUrl != null)
-                {
-                    //playbackState = PlaybackState.Loading;
-                }
+                    playbackInfo.LoadedTimeRanges.Add(timeRange);
+                    playbackInfo.SeekableTimeRanges.Add(timeRange);
 
-                if (playbackState != null)
-                    airplayServer.SetPlaybackState(e.SessionId, PlaybackCategory.Video, playbackState.Value);
+                    if (currentVideoPlayer.Paused)
+                        playbackInfo.Rate = 0;
+                    else
+                        playbackInfo.Rate = 1;
+                }
             });
         }
 

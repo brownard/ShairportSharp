@@ -220,7 +220,6 @@ namespace AirPlayer
         {
             if (!isAudioBuffering)
             {
-                //airtunesServer.StopCurrentSession();
                 airtunesServer.SendCommand(RemoteCommand.Pause);
                 return;
             }
@@ -230,10 +229,14 @@ namespace AirPlayer
             IPlayerFactory savedFactory = g_Player.Factory;
             currentAudioPlayer = new AudioPlayer(new PlayerSettings(stream));
             g_Player.Factory = new PlayerFactory(currentAudioPlayer);
-            g_Player.Play(AudioPlayer.AIRPLAY_DUMMY_FILE, g_Player.MediaType.Music);
+            isAudioPlaying = g_Player.Play(AudioPlayer.AIRPLAY_DUMMY_FILE, g_Player.MediaType.Music);
             g_Player.Factory = savedFactory;
-            isAudioPlaying = true;
 
+            if (!isAudioPlaying)
+            {
+                currentAudioPlayer = null;
+                return;
+            }
             //Mediaportal sets the metadata skin properties internally, we overwrite them after a small delay
             ThreadPool.QueueUserWorkItem((o) =>
             {
@@ -526,6 +529,8 @@ namespace AirPlayer
                 if (!result)
                 {
                     bool showMessage = !currentVideoPlayer.BufferingStopped;
+                    currentVideoSessionId = null;
+                    currentVideoUrl = null;
                     currentVideoPlayer.Dispose();
                     currentVideoPlayer = null;
                     isVideoPlaying = false;
@@ -546,9 +551,16 @@ namespace AirPlayer
 
                 IPlayerFactory savedFactory = g_Player.Factory;
                 g_Player.Factory = new PlayerFactory(currentVideoPlayer);
-                g_Player.Play(VideoPlayer.DUMMY_URL, g_Player.MediaType.Video);
+                isVideoPlaying = g_Player.Play(VideoPlayer.DUMMY_URL, g_Player.MediaType.Video);
                 g_Player.Factory = savedFactory;
-                isVideoPlaying = true;
+
+                if (!isVideoPlaying)
+                {
+                    airplayServer.SetPlaybackState(currentVideoSessionId, PlaybackCategory.Video, PlaybackState.Stopped);
+                    currentVideoSessionId = null;
+                    currentVideoUrl = null;
+                    currentVideoPlayer = null;
+                }
             }
         }
 

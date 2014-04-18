@@ -9,7 +9,7 @@ namespace ShairportSharp.Http
 {
     #region SocketAcceptedEventArgs
 
-    class SocketAcceptedEventArgs : EventArgs
+    public class SocketAcceptedEventArgs : EventArgs
     {
         public SocketAcceptedEventArgs(Socket socket)
         {
@@ -22,7 +22,7 @@ namespace ShairportSharp.Http
 
     #endregion
 
-    class HttpConnectionHandler
+    public class HttpConnectionHandler
     {
         #region Variables
 
@@ -50,6 +50,15 @@ namespace ShairportSharp.Http
         {
             if (SocketAccepted != null)
                 SocketAccepted(this, e);
+        }
+
+        #endregion
+
+        #region Properties
+
+        public int Port
+        {
+            get { return port; }
         }
 
         #endregion
@@ -86,6 +95,7 @@ namespace ShairportSharp.Http
                         stopListener();
                         return false;
                     }
+                    port = ((IPEndPoint)listener.LocalEndpoint).Port;
                     result = true;
                     break;
                 }

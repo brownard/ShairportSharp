@@ -8,13 +8,13 @@ using ShairportSharp.Helpers;
 
 namespace ShairportSharp.Http
 {
-    enum HttpMessageType
+    public enum HttpMessageType
     {
         Request,
         Response
     }
 
-    abstract class HttpMessage
+    public abstract class HttpMessage
     {
         #region Static Members
         static readonly byte[] headerDelimiter = { 0x0D, 0x0A, 0x0D, 0x0A }; // \r\n\r\n
@@ -127,6 +127,7 @@ namespace ShairportSharp.Http
         public abstract HttpMessageType MessageType { get; }
         public abstract string StartLine { get; }
         public string Protocol { get; set; }
+        public Dictionary<string, string> Headers { get { return headers; } }
         
         public string GetHeader(string headerName)
         {

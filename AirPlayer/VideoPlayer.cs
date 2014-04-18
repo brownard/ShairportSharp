@@ -54,6 +54,7 @@ namespace AirPlayer
             this.sourceFilterName = sourceFilterName;
         }
 
+        public string SourceFilterName { get { return sourceFilterName; } }
         public string SessionId { get; protected set; }
 
         public override string CurrentFile // hack to get around the MP 1.3 Alpha bug with non http URLs

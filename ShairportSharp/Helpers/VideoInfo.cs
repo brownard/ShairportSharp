@@ -33,6 +33,7 @@ namespace ShairportSharp.Helpers
 
         #region Public Properties
 
+        public string UserAgent { get; set; }
         public string ContentType { get; protected set; }
         public string Content { get; protected set; }
 
@@ -75,7 +76,7 @@ namespace ShairportSharp.Helpers
 
         public void BeginAnalyse()
         {
-            analyseDownloader = new Downloader(videoUrl, "HEAD");
+            analyseDownloader = new Downloader(videoUrl, "HEAD") { UserAgent = this.UserAgent };
             analyseDownloader.Complete += (s, e) => 
             {
                 if (shouldRaiseAnalyseEvent())

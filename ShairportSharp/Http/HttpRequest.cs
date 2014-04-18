@@ -5,7 +5,7 @@ using System.Text;
 
 namespace ShairportSharp.Http
 {
-    class HttpRequest : HttpMessage
+    public class HttpRequest : HttpMessage
     {
         public HttpRequest(string method, string uri, string protocol)
             : base(protocol)

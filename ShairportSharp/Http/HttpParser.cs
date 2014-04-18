@@ -10,7 +10,7 @@ using ShairportSharp.Helpers;
 
 namespace ShairportSharp.Http
 {
-    abstract class HttpParser : IDisposable
+    public abstract class HttpParser : IDisposable
     {
         #region Variables
 
@@ -19,7 +19,8 @@ namespace ShairportSharp.Http
         object socketLock = new object();
         Socket socket;
         BufferedStream inputStream;
-        NetworkStream outputStream;
+        protected NetworkStream outputStream;
+
         List<byte> byteBuffer;
         byte[] buffer;
 
@@ -162,7 +163,7 @@ namespace ShairportSharp.Http
                 HttpMessage parsedMessage;
                 int parsedLength;
                 //Try and parse a complete packet from our data
-                while (HttpMessage.TryParse(byteBuffer.ToArray(), out parsedMessage, out parsedLength))
+                while (socket != null && HttpMessage.TryParse(byteBuffer.ToArray(), out parsedMessage, out parsedLength))
                 {
                     //Logger.Debug("RAOPSession:\r\n{0}", parsedPacket.ToString());
                     //remove packet from our buffer

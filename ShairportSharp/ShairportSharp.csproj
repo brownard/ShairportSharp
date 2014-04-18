@@ -35,6 +35,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -1181,8 +1182,13 @@
     <Compile Include="BouncyCastle\x509\X509V2AttributeCertificateGenerator.cs" />
     <Compile Include="BouncyCastle\x509\X509V2CRLGenerator.cs" />
     <Compile Include="BouncyCastle\x509\X509V3CertificateGenerator.cs" />
-    <Compile Include="Http\HttpRequest.cs" />
+    <Compile Include="Helpers\HlsProxy.cs" />
+    <Compile Include="Helpers\ProxyRequestParser.cs" />
     <Compile Include="Http\HttpConnectionHandler.cs" />
+    <Compile Include="Http\HttpMessage.cs" />
+    <Compile Include="Http\HttpParser.cs" />
+    <Compile Include="Http\HttpRequest.cs" />
+    <Compile Include="Http\HttpResponse.cs" />
     <Compile Include="Log\ILog.cs" />
     <Compile Include="Log\Logger.cs" />
     <Compile Include="Raop\RaopEmitter.cs" />
@@ -1196,11 +1202,8 @@
     <Compile Include="Audio\WaveStream.cs" />
     <Compile Include="Remote\RemoteCommand.cs" />
     <Compile Include="Remote\RemoteServerInfo.cs" />
-    <Compile Include="Http\HttpMessage.cs" />
     <Compile Include="Raop\RaopSession.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Http\HttpResponse.cs" />
-    <Compile Include="Http\HttpParser.cs" />
     <Compile Include="Raop\RaopServer.cs" />
     <Compile Include="Audio\UdpListener.cs" />
     <Compile Include="Helpers\HlsParser.cs" />
@@ -1209,6 +1212,10 @@
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>xcopy "$(TargetDir)$(TargetFileName)" "C:\Program Files (x86)\Team MediaPortal\MediaPortal\plugins\process\" /Y /E /I
+xcopy "$(TargetDir)$(TargetName).pdb" "C:\Program Files (x86)\Team MediaPortal\MediaPortal\plugins\process\" /Y /E /I</PostBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

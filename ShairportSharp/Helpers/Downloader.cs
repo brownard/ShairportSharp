@@ -64,6 +64,12 @@ namespace ShairportSharp.Helpers
 
         #endregion
 
+        #region Properties
+
+        public string UserAgent { get; set; }
+
+        #endregion
+
         #region Public Methods
 
         public void BeginDownload()
@@ -74,6 +80,8 @@ namespace ShairportSharp.Helpers
                 HttpWebRequest request = (HttpWebRequest)HttpWebRequest.Create(url);
                 if (!string.IsNullOrEmpty(method))
                     request.Method = method;
+                if (!string.IsNullOrEmpty(UserAgent))
+                    request.UserAgent = UserAgent;
 
                 request.BeginGetResponse(ar =>
                 {

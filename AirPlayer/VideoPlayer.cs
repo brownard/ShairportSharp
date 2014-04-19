@@ -54,6 +54,7 @@ namespace AirPlayer
             this.sourceFilterName = sourceFilterName;
         }
 
+        public string Url { get { return m_strCurrentFile; } }
         public string SourceFilterName { get { return sourceFilterName; } }
         public string SessionId { get; protected set; }
 
@@ -476,7 +477,6 @@ namespace AirPlayer
             SetVideoWindow();
             mediaPos.get_Duration(out m_dDuration);
             Logger.Instance.Info("AirPlayerVideo: Duration {0} sec", m_dDuration.ToString("F"));
-            g_Player.ShowFullScreenWindow();
             return true;
         }
 

@@ -27,7 +27,7 @@ namespace ShairportSharp.Audio
                 int sampleSize = BitsPerSample * Channels / 8; //sample size in bytes
 
                 ms.Write(encoding.GetBytes("RIFF"), 0, 4); //RIFF header
-                ms.Write(BitConverter.GetBytes(4), 0, 4); //Riff size
+                ms.Write(BitConverter.GetBytes(36), 0, 4); //Riff size
                 ms.Write(encoding.GetBytes("WAVE"), 0, 4); //Wave header
                 ms.Write(encoding.GetBytes("fmt "), 0, 4); //fmt header
                 ms.Write(BitConverter.GetBytes(16), 0, 4); //fmt size

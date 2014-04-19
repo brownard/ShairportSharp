@@ -406,6 +406,7 @@ namespace AirPlayer
                 if (sender != hlsParser)
                     return;
 
+                string finalUrl = currentVideoUrl;
                 bool useMPUrlSourceFilter;
                 if (hlsParser.StreamInfos.Count > 0)
                 {
@@ -423,7 +424,7 @@ namespace AirPlayer
                     }
 
                     Logger.Instance.Debug("Airplayer: Selected hls stream, Bandwidth: '{0}', Size: '{1}x{2}'", streamInfo.Bandwidth, streamInfo.Width, streamInfo.Height);
-                    currentVideoUrl = streamInfo.Url;
+                    finalUrl = streamInfo.Url;
                 }
 
                 if (hlsParser.IsHls)
@@ -451,16 +452,16 @@ namespace AirPlayer
                     useMPUrlSourceFilter = hlsParser.Success || (hlsParser.Url.EndsWith(".mov", StringComparison.InvariantCultureIgnoreCase) || hlsParser.Url.EndsWith(".mp4", StringComparison.InvariantCultureIgnoreCase));
                 }
                 hlsParser = null;
-                startVideoLoading(useMPUrlSourceFilter);
+                startVideoLoading(finalUrl, useMPUrlSourceFilter);
             }, false);
         }
 
-        void startVideoLoading(bool useMPSourceFilter = false)
+        void startVideoLoading(string url, bool useMPSourceFilter = false)
         {
             stopCurrentItem();
             string sourceFilter = useMPSourceFilter ? VideoPlayer.MPURL_SOURCE_FILTER : VideoPlayer.DEFAULT_SOURCE_FILTER;
             Logger.Instance.Info("Airplayer: Starting playback, Url: '{0}', SourceFilter: '{1}'", currentVideoUrl, sourceFilter);
-            currentVideoPlayer = new VideoPlayer(currentVideoUrl, currentVideoSessionId, sourceFilter) { BufferPercent = videoBuffer };
+            currentVideoPlayer = new VideoPlayer(url, currentVideoSessionId, sourceFilter) { BufferPercent = videoBuffer };
             bool? prepareResult;
             lock (bufferLock)
                 prepareResult = currentVideoPlayer.PrepareGraph();
@@ -536,9 +537,10 @@ namespace AirPlayer
 
                     if (isVideoPlaying)
                     {
-                        lastVideoUrl = currentVideoUrl;
+                        lastVideoUrl = currentVideoPlayer.Url;
                         lastVideoSessionId = currentVideoSessionId;
                         lastUseMPUrlSourceFilter = currentVideoPlayer.SourceFilterName == VideoPlayer.MPURL_SOURCE_FILTER;
+                        g_Player.ShowFullScreenWindow();
                     }
                     else
                     {
@@ -609,7 +611,7 @@ namespace AirPlayer
                     airplayServer.SetPlaybackState(lastVideoSessionId, PlaybackCategory.Video, PlaybackState.Loading);
                     currentVideoSessionId = lastVideoSessionId;
                     currentVideoUrl = lastVideoUrl;
-                    startVideoLoading(lastUseMPUrlSourceFilter);
+                    startVideoLoading(currentVideoUrl, lastUseMPUrlSourceFilter);
                 }
             }, false);
         }

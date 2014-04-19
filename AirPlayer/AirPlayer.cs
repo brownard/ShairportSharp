@@ -58,6 +58,7 @@ namespace AirPlayer
         bool isAudioBuffering;
         DmapData currentMeta;
         string currentCover;
+        string nextCover;
         uint currentStartStamp;
         uint currentStopStamp;
         
@@ -163,7 +164,7 @@ namespace AirPlayer
             airplayServer = new AirplayServer(settings.ServerName, settings.Password);
             airplayServer.MacAddress = settings.CustomAddress;
             airplayServer.Port = settings.AirplayPort;
-            airplayServer.PhotoReceived += airplayServer_PhotoReceived;
+            airplayServer.ShowPhoto += airplayServer_ShowPhoto;
             airplayServer.VideoReceived += airplayServer_VideoReceived;
             airplayServer.PlaybackInfoRequested += airplayServer_PlaybackInfoRequested;
             airplayServer.GetPlaybackPosition += airplayServer_GetPlaybackPosition;
@@ -243,8 +244,8 @@ namespace AirPlayer
                 Thread.Sleep(SKIN_PROPERTIES_UPDATE_DELAY);
                 invoke(delegate()
                 {
-                    setMetaData(currentMeta);
-                    setCover(currentCover);
+                    setMetaData();
+                    setCover();
                     setDuration();
                 }, false);
             });
@@ -271,36 +272,43 @@ namespace AirPlayer
             invoke(delegate()
             {
                 currentMeta = e.MetaData;
-                setMetaData(currentMeta);
+                setMetaData();
             }, false);
         }
 
-        void setMetaData(DmapData metaData)
+        void setMetaData()
         {
-            if (isAudioPlaying && metaData != null)
+            if (isAudioPlaying && currentMeta != null)
             {
-                GUIPropertyManager.SetProperty("#Play.Current.Title", metaData.Track);
-                GUIPropertyManager.SetProperty("#Play.Current.Album", metaData.Album);
-                GUIPropertyManager.SetProperty("#Play.Current.Artist", metaData.Artist);
-                GUIPropertyManager.SetProperty("#Play.Current.Genre", metaData.Genre);
+                GUIPropertyManager.SetProperty("#Play.Current.Title", currentMeta.Track);
+                GUIPropertyManager.SetProperty("#Play.Current.Album", currentMeta.Album);
+                GUIPropertyManager.SetProperty("#Play.Current.Artist", currentMeta.Artist);
+                GUIPropertyManager.SetProperty("#Play.Current.Genre", currentMeta.Genre);
             }
         }
 
         void airtunesServer_ArtworkChanged(object sender, ArtwokChangedEventArgs e)
         {
-            string newCover = saveCover(e.ImageData, e.ContentType);
+            string newCover = saveCover(e.ImageData);
             invoke(delegate()
             {
-                currentCover = newCover;
-                if (currentCover != null)
-                    setCover(currentCover);
+                if (nextCover != null)
+                    GUITextureManager.ReleaseTexture(nextCover);
+                nextCover = newCover;
+                setCover();
             }, false);
         }
 
-        void setCover(string cover)
+        void setCover()
         {
-            if (isAudioPlaying && !string.IsNullOrEmpty(cover))
-                GUIPropertyManager.SetProperty("#Play.Current.Thumb", cover);
+            if (isAudioPlaying && nextCover != null)
+            {
+                GUIPropertyManager.SetProperty("#Play.Current.Thumb", nextCover);
+                if (!string.IsNullOrEmpty(currentCover))
+                    GUITextureManager.ReleaseTexture(currentCover);
+                currentCover = nextCover;
+                nextCover = null;
+            }
         }
 
         void airtunesServer_VolumeChanged(object sender, ShairportSharp.Raop.VolumeChangedEventArgs e)
@@ -339,44 +347,25 @@ namespace AirPlayer
         #endregion
 
         #region AirPlay Event Handlers
-        
-        void airplayServer_PhotoReceived(object sender, PhotoReceivedEventArgs e)
+
+        void airplayServer_ShowPhoto(object sender, PhotoEventArgs e)
         {
-            Logger.Instance.Debug("Airplayer: Photo received - '{0}'", e.AssetAction);
-            DateTime photoReceiveTime = DateTime.Now;
-            string photoPath;
-            lock (photoCache)
-            {
-                if (!photoCache.TryGetValue(e.AssetKey, out photoPath))
-                {
-                    if (e.AssetAction != PhotoAction.DisplayCached)
-                    {
-                        photoPath = saveFileToTemp(e.AssetKey, ".jpg", e.Photo);
-                        if (photoPath != null)
-                            photoCache[e.AssetKey] = photoPath;
-                    }
-                }
-            }
-
-            if (photoPath == null || e.AssetAction == PhotoAction.CacheOnly)
-                return;
-
             invoke(delegate()
             {
                 //When playing a video from the camera roll the client sends a thumbnail before the video.
                 //Occasionally we receive it after due to threading so we should ignore it if we have just started playing a video.
-                if (!isVideoPlaying || photoReceiveTime.Subtract(videoReceiveTime).TotalSeconds > 2)
+                if (!isVideoPlaying || DateTime.Now.Subtract(videoReceiveTime).TotalSeconds > 2)
                 {
                     if (photoWindow != null)
                     {
                         photoSessionId = e.SessionId;
-                        photoWindow.SetPhoto(photoPath);
+                        photoWindow.SetPhoto(e.AssetKey, e.Photo);
                         GUIGraphicsContext.ResetLastActivity();
                         if (GUIWindowManager.ActiveWindow != PhotoWindow.WINDOW_ID)
                             GUIWindowManager.ActivateWindow(PhotoWindow.WINDOW_ID);
                     }
                 }
-            });
+            }, false);
         }
 
         void airplayServer_VideoReceived(object sender, VideoEventArgs e)
@@ -863,36 +852,38 @@ namespace AirPlayer
             }
         }
 
-        string saveCover(byte[] buffer, string contentType)
+        string saveCover(byte[] buffer)
         {
             lock (coverLock)
             {
-                coverNumber++;
-                coverNumber = coverNumber % 3;
-                string filename = "AirPlay_Thumb_" + coverNumber;
-                string extension = "." + contentType.Replace("image/", "");
-                if (extension == ".jpeg")
-                    extension = ".jpg";
-
-                return saveFileToTemp(filename, extension, buffer);
+                coverNumber = ++coverNumber % 2;
+                string identifier = getImageIdentifier("AirPlay_Thumb_" + coverNumber);
+                if (loadImage(identifier, buffer))
+                    return identifier;
             }
+            return "";
         }
 
-        static string saveFileToTemp(string filename, string extension, byte[] buffer)
+        static bool loadImage(string identifier, byte[] imageData)
         {
             try
             {
-                string path = Path.Combine(Path.GetTempPath(), string.Format("{0}{1}", filename, extension));
-                Logger.Instance.Debug("Saving file to '{0}'", path);
-                using (FileStream fs = File.Create(path))
-                    fs.Write(buffer, 0, buffer.Length);
-                return path;
+                using (MemoryStream ms = new MemoryStream(imageData))
+                {
+                    if (GUITextureManager.LoadFromMemory(System.Drawing.Image.FromStream(ms), identifier, 0, 0, 0) > 0)
+                        return true;
+                }
             }
             catch (Exception ex)
             {
-                Logger.Instance.Error("Failed to save file - {0}", ex.Message);
+                Logger.Instance.Error("Airplayer: Error loading image to TextureManager -", ex);
             }
-            return null;
+            return false;
+        }
+
+        static string getImageIdentifier(string name)
+        {
+            return "[Airplayer:" + name.GetHashCode() + "]";
         }
 
         static bool isSecureUrl(string url)

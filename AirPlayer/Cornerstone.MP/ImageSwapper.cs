@@ -4,7 +4,8 @@ using System.Text;
 using MediaPortal.GUI.Library;
 using System.Threading;
 
-namespace Cornerstone.MP {
+namespace Cornerstone.MP
+{
     /// <summary>
     /// This class takes two GUIImage objects so that you can treat them as one. When you assign
     /// a new image to this object using the Filename property, the currently active image is 
@@ -15,7 +16,8 @@ namespace Cornerstone.MP {
     /// dramtically improving GUI performance. It also takes advantage of the Delay feature of
     /// the AsyncImageResource to prevent unnecessary loads when rapid image changes are made.
     /// </summary>
-    public class ImageSwapper {
+    public class ImageSwapper
+    {
         private bool imagesNeedSwapping = false;
         private object loadingLock = new object();
 
@@ -24,72 +26,78 @@ namespace Cornerstone.MP {
         /// and all GUIImage objects set to invisible. Setting Active to false also clears the
         /// Filename property.
         /// </summary>
-        public bool Active {
+        public bool Active
+        {
             get { return _active; }
-            set {
+            set
+            {
                 if (_active == value)
                     return;
-                
+
                 _active = value;
                 _imageResource.Active = _active;
 
                 // if we are inactive be sure both properties are cleared
-                if (!Active) {
+                if (!Active)
+                {
                     _imageResource.Property = _propertyTwo;
                     _imageResource.Property = _propertyOne;
-                    _imageResource.Filename = null;
+                    _imageResource.SetResource(null, null);
                 }
             }
         }
         private bool _active = true;
-        
+
         /// <summary>
         /// The filename of the image backing this resource. Reassign to change textures.
         /// </summary>
-        public string Filename {
-            get {
-                return _filename;
-            }
-
-            set {
-                lock (loadingLock) {
-                    if (!Active)
-                        value = null;
-
-                    if ((value != null && value.Equals(_filename)) || _guiImageOne == null)
-                        return;
-
-                    // if we have a second backdrop image object, alternate between the two
-                    if (_guiImageTwo != null && imagesNeedSwapping) {
-                        if (_imageResource.Property.Equals(_propertyOne))
-                            _imageResource.Property = _propertyTwo;
-                        else
-                            _imageResource.Property = _propertyOne;
-
-                        imagesNeedSwapping = false;
-                    }
-
-                    // update resource with new file
-                    _filename = value;
-                    if (_loadingImage != null) _loadingImage.Visible = true;
-                    _imageResource.Filename = _filename;
-                }
-            }
+        public string Filename
+        {
+            get { return _filename; }
+            set { SetResource(value, null); }
         }
         string _filename = null;
+
+        public void SetResource(string identifier, byte[] imageData)
+        {
+            if (!Active)
+                identifier = null;
+
+            if ((identifier != null && identifier.Equals(_filename)) || _guiImageOne == null)
+                return;
+
+            // if we have a second backdrop image object, alternate between the two
+            if (_guiImageTwo != null && imagesNeedSwapping)
+            {
+                if (_imageResource.Property.Equals(_propertyOne))
+                    _imageResource.Property = _propertyTwo;
+                else
+                    _imageResource.Property = _propertyOne;
+
+                imagesNeedSwapping = false;
+            }
+
+            // update resource with new file
+            _filename = identifier;
+            if (_loadingImage != null) _loadingImage.Visible = true;
+            _imageResource.SetResource(_filename, imageData);
+        }
 
         /// <summary>
         /// First GUIImage used for the visibilty toggle behavior. If set to NULL the ImageSwapper
         /// behaves as if inactive.
         /// </summary>
-        public GUIImage GUIImageOne {
+        public GUIImage GUIImageOne
+        {
             get { return _guiImageOne; }
-            set {
+            set
+            {
                 if (_guiImageOne == value)
                     return;
 
                 _guiImageOne = value;
-                if (_guiImageOne != null) {
+                if (_guiImageOne != null)
+                {
                     _guiImageOne.FileName = _propertyOne;
                     _filename = null;
                 }
@@ -102,14 +110,17 @@ namespace Cornerstone.MP {
         /// occurs and only GUIImageOne is used. This provides backwards compatibility if a skin
         /// does not implement the second GUIImage control.
         /// </summary>
-        public GUIImage GUIImageTwo {
+        public GUIImage GUIImageTwo
+        {
             get { return _guiImageTwo; }
-            set {
+            set
+            {
                 if (_guiImageTwo == value)
                     return;
 
                 _guiImageTwo = value;
-                if (_guiImageTwo != null) {
+                if (_guiImageTwo != null)
+                {
                     _guiImageTwo.FileName = _propertyTwo;
                     _filename = null;
                 }
@@ -121,9 +132,11 @@ namespace Cornerstone.MP {
         /// If set, this image object will be set to visible during the load process and will
         /// be set to hidden when the next image has completed loading.
         /// </summary>
-        public GUIImage LoadingImage {
+        public GUIImage LoadingImage
+        {
             get { return _loadingImage; }
-            set {
+            set
+            {
                 _loadingImage = value;
             }
         } private GUIImage _loadingImage;
@@ -133,9 +146,11 @@ namespace Cornerstone.MP {
         /// field of another GUIImage object will result in the image being loaded there. This
         /// can also be useful for backwards compatibility.
         /// </summary>
-        public string PropertyOne {
+        public string PropertyOne
+        {
             get { return _propertyOne; }
-            set { 
+            set
+            {
                 if (_imageResource.Property.Equals(_propertyOne))
                     _imageResource.Property = value;
 
@@ -147,13 +162,15 @@ namespace Cornerstone.MP {
         /// <summary>
         /// The property field used for the second GUIImage.
         /// </summary>
-        public string PropertyTwo {
+        public string PropertyTwo
+        {
             get { return _propertyTwo; }
-            set {
+            set
+            {
                 if (_imageResource.Property.Equals(_propertyTwo))
                     _imageResource.Property = value;
 
-                _propertyTwo = value; 
+                _propertyTwo = value;
             }
         }
         private string _propertyTwo = "#Cornerstone.ImageSwapper2";
@@ -162,13 +179,15 @@ namespace Cornerstone.MP {
         /// The AsyncImageResource backing this object. All image loading and unloading is done
         /// in the background by this object.
         /// </summary>
-        public AsyncImageResource ImageResource {
+        public AsyncImageResource ImageResource
+        {
             get { return _imageResource; }
         }
         private AsyncImageResource _imageResource;
 
 
-        public ImageSwapper() {
+        public ImageSwapper()
+        {
             _imageResource = new AsyncImageResource();
             _imageResource.Property = _propertyOne;
             _imageResource.ImageLoadingComplete += new AsyncImageLoadComplete(imageResource_ImageLoadingComplete);
@@ -176,12 +195,15 @@ namespace Cornerstone.MP {
 
         // Once image loading is complete this method is called and the visibility of the
         // two GUIImages is swapped.
-        private void imageResource_ImageLoadingComplete(AsyncImageResource image) {
-            lock (loadingLock) {
+        private void imageResource_ImageLoadingComplete(AsyncImageResource image)
+        {
+            lock (loadingLock)
+            {
                 if (_guiImageOne == null)
                     return;
 
-                if (_filename == null) {
+                if (_filename == null)
+                {
                     if (_guiImageOne != null) _guiImageOne.Visible = false;
                     if (_guiImageTwo != null) _guiImageTwo.Visible = false;
                     return;
@@ -191,12 +213,15 @@ namespace Cornerstone.MP {
                 if (_guiImageTwo != null) _guiImageTwo.ResetAnimations();
 
                 // if we have a second backdrop image object, alternate between the two
-                if (_guiImageTwo != null) {
-                    if (_imageResource.Property.Equals(_propertyOne)) {
+                if (_guiImageTwo != null)
+                {
+                    if (_imageResource.Property.Equals(_propertyOne))
+                    {
                         _guiImageOne.Visible = _active;
                         _guiImageTwo.Visible = false;
                     }
-                    else {
+                    else
+                    {
                         _guiImageOne.Visible = false;
                         _guiImageTwo.Visible = _active;
                     }
@@ -211,6 +236,5 @@ namespace Cornerstone.MP {
                 if (_loadingImage != null) _loadingImage.Visible = false;
             }
         }
-
     }
 }

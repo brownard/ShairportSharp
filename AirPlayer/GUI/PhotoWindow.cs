@@ -12,7 +12,8 @@ namespace AirPlayer
         public const int WINDOW_ID = 9421;
         const string SKIN_FILE = "AirplayPhotoWindow.xml";
         ImageSwapper imageSwapper;
-        string filename;
+        string imageIdentifier;
+        byte[] imageData;
 
         [SkinControlAttribute(1230)]
         protected GUIImage photoControl1 = null;
@@ -50,14 +51,15 @@ namespace AirPlayer
             }
             imageSwapper.GUIImageOne = photoControl1;
             imageSwapper.GUIImageTwo = photoControl2;
-            imageSwapper.Filename = filename;
+            imageSwapper.SetResource(imageIdentifier, imageData);
         }
 
-        public void SetPhoto(string filename)
+        public void SetPhoto(string imageIdentifier, byte[] imageData)
         {
-            this.filename = filename;
+            this.imageIdentifier = imageIdentifier;
+            this.imageData = imageData;
             if (imageSwapper != null)
-                imageSwapper.Filename = filename;
+                imageSwapper.SetResource(imageIdentifier, imageData);
         }
     }
 }

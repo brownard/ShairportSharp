@@ -292,7 +292,8 @@ namespace AirPlayer
             string newCover = saveCover(e.ImageData);
             invoke(delegate()
             {
-                if (nextCover != null)
+                //we've previously loaded an image but never displayed it
+                if (!string.IsNullOrEmpty(nextCover))
                     GUITextureManager.ReleaseTexture(nextCover);
                 nextCover = newCover;
                 setCover();
@@ -854,12 +855,15 @@ namespace AirPlayer
 
         string saveCover(byte[] buffer)
         {
-            lock (coverLock)
+            if (buffer != null && buffer.Length > 0)
             {
-                coverNumber = ++coverNumber % 2;
-                string identifier = getImageIdentifier("AirPlay_Thumb_" + coverNumber);
-                if (loadImage(identifier, buffer))
-                    return identifier;
+                lock (coverLock)
+                {
+                    coverNumber = ++coverNumber % 2;
+                    string identifier = getImageIdentifier("AirPlay_Thumb_" + coverNumber);
+                    if (loadImage(identifier, buffer))
+                        return identifier;
+                }
             }
             return "";
         }

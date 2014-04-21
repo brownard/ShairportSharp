@@ -122,7 +122,7 @@ namespace ShairportSharp_Test
         {
             get
             {
-                uint currentTimeStamp = source.CurrentTimeStamp;
+                uint currentTimeStamp = source.CurrentTimestamp;
                 double position;
                 lock (positionLock)
                     position = currentTimeStamp < startStamp ? 0 : (currentTimeStamp - startStamp) / 44100.0;

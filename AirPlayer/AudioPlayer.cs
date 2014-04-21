@@ -52,17 +52,12 @@ namespace AirPlayer
         /// <summary> seek interface to set position in stream. </summary>
         private IMediaPosition mediaPos;
 
-        /// <summary> video preview window interface. </summary>
         /// <summary> audio interface used to control volume. </summary>
         private IBasicAudio basicAudio;
 
         PlayerSettings settings;
 
         private const int WM_GRAPHNOTIFY = 0x00008001; // message from graph
-
-        private const int WS_CHILD = 0x40000000; // attributes for video window
-        private const int WS_CLIPCHILDREN = 0x02000000;
-        private const int WS_CLIPSIBLINGS = 0x04000000;
 
         public AudioPlayer(PlayerSettings settings) 
         {
@@ -132,20 +127,16 @@ namespace AirPlayer
 
         public void UpdateDurationInfo(uint startStamp, uint stopStamp)
         {
-            lock (positionLock)
-            {
-                this.startStamp = startStamp;
-                this.stopStamp = stopStamp;
-                duration = (stopStamp - startStamp) / 44100.0;
-            }
+            this.startStamp = startStamp;
+            this.stopStamp = stopStamp;
+            duration = (stopStamp - startStamp) / (double)settings.Source.SampleRate;
         }
 
         public override double Duration
         {
             get
             {
-                lock (positionLock)
-                    return duration;
+                return duration;
             }
         }
 
@@ -153,11 +144,21 @@ namespace AirPlayer
         {
             get
             {
-                uint currentTimeStamp = settings.GetLastTimeStamp();
-                double position;
-                lock (positionLock)
-                    position = currentTimeStamp < startStamp ? 0 : (currentTimeStamp - startStamp) / 44100.0;
+                uint currentTimestamp;
+                double currentPosition;
+                settings.Source.GetPosition(out currentTimestamp, out currentPosition);
+                double position = (currentTimestamp - startStamp) / (double)settings.Source.SampleRate;
 
+                if (mediaPos != null)
+                {
+                    double mediaPosition;
+                    mediaPos.get_CurrentPosition(out mediaPosition);
+                    double offset = currentPosition - mediaPosition;
+                    position = position - offset;
+                }
+
+                if (position < 0)
+                    position = 0;
                 return position;
             }
         }

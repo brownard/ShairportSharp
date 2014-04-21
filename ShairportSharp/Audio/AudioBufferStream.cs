@@ -15,34 +15,54 @@ namespace ShairportSharp.Audio
     public class AudioBufferStream : Stream
     {
         AudioBuffer audioBuffer;
-        int currentOffset = 0;
+        AudioSession audioSession;
+
+        object timestampLock = new object();
+        uint currentTimestamp;
+        double packetDuration;
+        double currentPosition;
+
         byte[] currentData = null;
         int currentDataLength = 0;
-        object timeStampLock = new object();
-        uint currentTimeStamp;
+        int currentDataOffset = 0;
 
-        internal AudioBufferStream(AudioBuffer audioBuffer)
+        internal AudioBufferStream(AudioBuffer audioBuffer, AudioSession audioSession)
         {
             this.audioBuffer = audioBuffer;
+            this.audioSession = audioSession;
+            packetDuration = audioSession.FrameSize / (double)audioSession.SampleRate;
         }
 
-        public uint CurrentTimeStamp
+        public int SampleRate { get { return audioSession.SampleRate; } }
+        public int SampleSize { get { return audioSession.SampleSize; } }
+        public int Channels { get { return audioSession.Channels; } }
+
+        public uint CurrentTimestamp
         {
-            get { lock (timeStampLock) return currentTimeStamp; }
-            private set { lock (timeStampLock) currentTimeStamp = value; }
+            get { lock (timestampLock) return currentTimestamp; }
+            private set { lock (timestampLock) currentTimestamp = value; }
+        }
+
+        public void GetPosition(out uint currentTimestamp, out double currentPosition)
+        {
+            lock (timestampLock)
+            {
+                currentTimestamp = this.currentTimestamp;
+                currentPosition = this.currentPosition;
+            }
         }
 
         public override int Read(byte[] buffer, int offset, int count)
         {
             int remainingBytes = count;
             int bytesRead = 0;
-            if (currentData != null && currentOffset < currentDataLength)
+            if (currentData != null && currentDataOffset < currentDataLength)
             {
-                remainingBytes = currentDataLength - currentOffset;
+                remainingBytes = currentDataLength - currentDataOffset;
                 bytesRead = remainingBytes > count ? count : remainingBytes;
-                Buffer.BlockCopy(currentData, currentOffset, buffer, offset, bytesRead);
-                currentOffset += bytesRead;
-                if (currentOffset < currentDataLength)
+                Buffer.BlockCopy(currentData, currentDataOffset, buffer, offset, bytesRead);
+                currentDataOffset += bytesRead;
+                if (currentDataOffset < currentDataLength)
                 {
                     position += bytesRead;
                     return bytesRead;
@@ -53,29 +73,38 @@ namespace ShairportSharp.Audio
             remainingBytes = count - bytesRead;
             if (remainingBytes > 0)
             {
-                uint timeStamp = 0, timeStampTemp;
+                uint timestamp = 0;
+                uint timestampTemp;
+                int packetsRead = 0;
                 while (true)
                 {
-                    bool? result = audioBuffer.GetNextFrame(out currentData, out timeStampTemp);
+                    bool? result = audioBuffer.GetNextFrame(out currentData, out timestampTemp);
                     if (result == null)
                         break;
                     else if (result == true)
-                        timeStamp = timeStampTemp;
+                        timestamp = timestampTemp;
 
                     currentData = ProcessPacket(currentData, out currentDataLength);
 
                     if (currentData != null)
                     {
-                        currentOffset = remainingBytes > currentDataLength ? currentDataLength : remainingBytes;
-                        Buffer.BlockCopy(currentData, 0, buffer, offset + bytesRead, currentOffset);
-                        bytesRead += currentOffset;
+                        packetsRead++;
+                        currentDataOffset = remainingBytes > currentDataLength ? currentDataLength : remainingBytes;
+                        Buffer.BlockCopy(currentData, 0, buffer, offset + bytesRead, currentDataOffset);
+                        bytesRead += currentDataOffset;
                         remainingBytes = count - bytesRead;
                         if (remainingBytes == 0)
                             break;
                     }
                 }
-                if (timeStamp != 0)
-                    CurrentTimeStamp = timeStamp;
+                if (timestamp != 0)
+                {
+                    lock (timestampLock)
+                    {
+                        currentTimestamp = timestamp;
+                        currentPosition += packetsRead * packetDuration;
+                    }
+                }
             }
 
             position += bytesRead;
@@ -101,7 +130,7 @@ namespace ShairportSharp.Audio
 
         public override long Length
         {
-            get { return long.MaxValue; }
+            get { throw new NotImplementedException(); }
         }
 
         long position = 0;

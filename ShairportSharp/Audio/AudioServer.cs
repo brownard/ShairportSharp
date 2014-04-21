@@ -50,7 +50,7 @@ namespace ShairportSharp.Audio
         {
             if (streamType == StreamType.Wave)
                 return new WaveStream(audioBuffer, audioSession, false);
-            return new AudioBufferStream(audioBuffer);
+            return new AudioBufferStream(audioBuffer, audioSession);
         }
 
         /// <summary>

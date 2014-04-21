@@ -15,18 +15,18 @@ namespace ShairportSharp.Audio
         long fixVolume = 0x10000;
         short randomA, randomB;
         Random random = new Random();
-        bool manageBuffer;
 
-        AudioSession session;
+        AudioSession audioSession;
+        bool manageBuffer;
 
         public WaveHeader Header { get; private set; }
 
-        internal WaveStream(AudioBuffer audioBuffer, AudioSession session, bool manageBuffer)
-            : base(audioBuffer)
+        internal WaveStream(AudioBuffer audioBuffer, AudioSession audioSession, bool manageBuffer)
+            : base(audioBuffer, audioSession)
         {
-            this.session = session;
+            this.audioSession = audioSession;
             this.manageBuffer = manageBuffer;
-            Header = new WaveHeader(session.SampleRate, session.SampleSize, session.Channels);
+            Header = new WaveHeader(audioSession.SampleRate, audioSession.SampleSize, audioSession.Channels);
         }
 
         protected override byte[] ProcessPacket(byte[] packet, out int packetLength)
@@ -39,23 +39,23 @@ namespace ShairportSharp.Audio
         byte[] processPacket(byte[] alacFrame)
         {
             if (alacFrame == null)
-                return new byte[session.FrameSize * 4];
+                return new byte[audioSession.FrameSize * 4];
 
-            int[] outBuffer = new int[(session.FrameSize + 3) * 2];
-            int outputsize = AlacDecodeUtils.DecodeFrame(session.AlacFile, alacFrame, outBuffer);
-            if (outputsize != session.FrameSize * 4)
-                Logger.Warn("Alac Decoder: Unexpected audio frame size. Expected: {0}, Actual: {1}", session.FrameSize * 4, outputsize);
+            int[] outBuffer = new int[(audioSession.FrameSize + 3) * 2];
+            int outputsize = AlacDecodeUtils.DecodeFrame(audioSession.AlacFile, alacFrame, outBuffer);
+            if (outputsize != audioSession.FrameSize * 4)
+                Logger.Warn("Alac Decoder: Unexpected audio frame size. Expected: {0}, Actual: {1}", audioSession.FrameSize * 4, outputsize);
             
             int actualDataLength;
             if (manageBuffer)
             {
                 int[] output = new int[outBuffer.Length];
-                actualDataLength = stuffBuffer(session.Filter.PlaybackRate, outBuffer, output) * 2;
+                actualDataLength = stuffBuffer(audioSession.Filter.PlaybackRate, outBuffer, output) * 2;
                 outBuffer = output;
             }
             else
             {
-                actualDataLength = session.FrameSize * 2;
+                actualDataLength = audioSession.FrameSize * 2;
             }
 
             byte[] pcmData = new byte[actualDataLength * 2];
@@ -71,14 +71,14 @@ namespace ShairportSharp.Audio
 
         private int stuffBuffer(double playbackRate, int[] input, int[] output)
         {
-            int stuffSamples = session.FrameSize;
+            int stuffSamples = audioSession.FrameSize;
             int stuff = 0;
             double pStuff = 1.0 - Math.Pow(1.0 - Math.Abs(playbackRate - 1.0), stuffSamples);
 
             if (random.Next(RANDOM_MAX) < pStuff * RANDOM_MAX)
             {
                 stuff = playbackRate > 1.0 ? -1 : 1;
-                stuffSamples = (int)(random.Next(RANDOM_MAX) % (session.FrameSize - 1));
+                stuffSamples = (int)(random.Next(RANDOM_MAX) % (audioSession.FrameSize - 1));
             }
             Logger.Debug("pStuff: {0}, stuff: {1}, stuffSamp: {2}", pStuff, stuff, stuffSamples);
 
@@ -105,14 +105,14 @@ namespace ShairportSharp.Audio
                     l -= 2;
                 }
 
-                for (int i = stuffSamples; i < session.FrameSize + stuff; i++)
+                for (int i = stuffSamples; i < audioSession.FrameSize + stuff; i++)
                 {
                     output[j++] = ditheredVolume(input[l++]);
                     output[j++] = ditheredVolume(input[l++]);
                 }
             }
-            Logger.Debug("Stuff size: {0}", session.FrameSize + stuff);
-            return session.FrameSize + stuff;
+            Logger.Debug("Stuff size: {0}", audioSession.FrameSize + stuff);
+            return audioSession.FrameSize + stuff;
         }
 
         private short ditheredVolume(int sample)

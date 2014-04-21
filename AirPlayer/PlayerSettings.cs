@@ -32,7 +32,7 @@ namespace AirPlayer
         public uint GetLastTimeStamp()
         {
             if (source != null)
-                return source.CurrentTimeStamp;
+                return source.CurrentTimestamp;
             return 0;
         }
 

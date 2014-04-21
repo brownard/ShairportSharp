@@ -54,7 +54,7 @@ namespace AirPlayer
         bool lastUseMPUrlSourceFilter;
         DateTime videoReceiveTime = DateTime.MinValue;
 
-        AudioPlayer currentAudioPlayer;
+        IAudioPlayer currentAudioPlayer;
         bool isAudioBuffering;
         DmapData currentMeta;
         string currentCover;
@@ -227,9 +227,11 @@ namespace AirPlayer
             isAudioBuffering = false;
             GUIWaitCursor.Hide();
             stopCurrentItem();
+
+            IPlayer player = new AudioPlayer(new PlayerSettings(stream));
+            currentAudioPlayer = player as IAudioPlayer;
             IPlayerFactory savedFactory = g_Player.Factory;
-            currentAudioPlayer = new AudioPlayer(new PlayerSettings(stream));
-            g_Player.Factory = new PlayerFactory(currentAudioPlayer);
+            g_Player.Factory = new PlayerFactory(player);
             isAudioPlaying = g_Player.Play(AudioPlayer.AIRPLAY_DUMMY_FILE, g_Player.MediaType.Music);
             g_Player.Factory = savedFactory;
 

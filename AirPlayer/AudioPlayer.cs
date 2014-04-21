@@ -15,7 +15,7 @@ using ShairportSharp.Remote;
 
 namespace AirPlayer
 {
-    class AudioPlayer : IPlayer
+    class AudioPlayer : IPlayer, IAudioPlayer
     {
         public enum PlayState
         {
@@ -130,7 +130,7 @@ namespace AirPlayer
             }
         }
 
-        internal void UpdateDurationInfo(uint startStamp, uint stopStamp)
+        public void UpdateDurationInfo(uint startStamp, uint stopStamp)
         {
             lock (positionLock)
             {

@@ -104,7 +104,7 @@ namespace AirPlayer
             strButtonImage = null;
             strButtonImageFocus = null;
             strPictureImage = null;
-            return true;
+            return false;
         }
 
         public int GetWindowId()

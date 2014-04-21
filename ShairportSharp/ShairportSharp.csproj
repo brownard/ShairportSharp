@@ -1183,7 +1183,8 @@
     <Compile Include="BouncyCastle\x509\X509V2CRLGenerator.cs" />
     <Compile Include="BouncyCastle\x509\X509V3CertificateGenerator.cs" />
     <Compile Include="Helpers\HlsProxy.cs" />
-    <Compile Include="Helpers\ProxyRequestParser.cs" />
+    <Compile Include="Helpers\Proxy.cs" />
+    <Compile Include="Helpers\HlsProxyRequestParser.cs" />
     <Compile Include="Http\HttpConnectionHandler.cs" />
     <Compile Include="Http\HttpMessage.cs" />
     <Compile Include="Http\HttpParser.cs" />

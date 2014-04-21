@@ -9,11 +9,11 @@ using System.Net.Sockets;
 
 namespace ShairportSharp.Helpers
 {
-    class ProxyRequestParser : HttpParser
+    class HlsProxyRequestParser : HttpParser
     {
         HlsProxy handler;
 
-        public ProxyRequestParser(Socket socket, HlsProxy handler)
+        public HlsProxyRequestParser(Socket socket, HlsProxy handler)
             : base(socket)
         {
             this.handler = handler;

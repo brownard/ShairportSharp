@@ -394,7 +394,7 @@ namespace AirPlayer
                 currentVideoUrl = e.ContentLocation;
                 //See if we are loading a HLS stream. 
                 //If so, manually select the best quality as LAVSplitter just selects the first/default.
-                //If not, allow allow MPUrlSourceFilter as it has better seeking support but doesn't seem to like HLS streams :(
+                //If not, allow MPUrlSourceFilter as it has better seeking support but doesn't seem to like HLS streams :(
                 hlsParser = new HlsParser(currentVideoUrl);
                 hlsParser.Completed += hlsParser_Completed;
                 hlsParser.Start();

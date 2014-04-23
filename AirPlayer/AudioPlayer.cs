@@ -148,15 +148,6 @@ namespace AirPlayer
                 double currentPosition;
                 settings.Source.GetPosition(out currentTimestamp, out currentPosition);
                 double position = (currentTimestamp - startStamp) / (double)settings.Source.SampleRate;
-
-                if (mediaPos != null)
-                {
-                    double mediaPosition;
-                    mediaPos.get_CurrentPosition(out mediaPosition);
-                    double offset = currentPosition - mediaPosition;
-                    position = position - offset;
-                }
-
                 if (position < 0)
                     position = 0;
                 return position;
@@ -241,10 +232,11 @@ namespace AirPlayer
             int iStage = 1;
             string audioDevice;
             using (Settings xmlreader = new MPSettings())
-                audioDevice = xmlreader.GetValueAsString("movieplayer", "audiorenderer", "Default DirectSound Device");
+                audioDevice = xmlreader.GetValueAsString("audioplayer", "sounddevice", "Default DirectSound Device");
+            //If user has bass as default player the default device is named slightly differently
+            if (audioDevice == "Default Sound Device")
+                audioDevice = "Default DirectSound Device";
 
-            //if (audioDevice == "Default Sound Device")
-            //    audioDevice = "Default DirectSound Device";
             Logger.Instance.Debug("AirplayerAudioPlayer: Using audio device '{0}'", audioDevice);
                   
             int hr;

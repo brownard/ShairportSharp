@@ -1,0 +1,34 @@
+0.4.0
+
+Add reverse proxy for secure http live streams
+Fix waking/entering screensaver when viewing photos
+Load images directly from memory instead of saving to file first
+Fix now playing screen shown instead of fullscreen video in certain circumstances
+Fix empty menu entry in homescreen
+Fix configured audio device not being used
+
+0.3.0
+
+Fix YouTube ads looping
+Fix entering screensaver/standby when video is playing
+Correctly report playback finished
+Add support for replaying video
+
+0.2.5
+
+Fix cover art not updating
+
+0.2.0
+
+Add video and photo support.
+Restore volume when audio/video playback has finished.
+Fix client disconnected when playback finished.
+Fix iTunes failing to stream audio.
+Change pre-configured ports to non default values.
+Add option to use dummy identifier to allow multiple servers on same machine.
+Other minor fixes.
+
+0.1.5
+
+Fix exception when parsing doubles
+Improve error resilience when handling connections

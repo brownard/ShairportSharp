@@ -10,7 +10,7 @@ namespace ShairportSharp.Raop
     {
         public DmapData(byte[] data)
         {
-            Encoding encoding = Encoding.ASCII;
+            Encoding encoding = Encoding.UTF8;
             int index = 8; //skip top header and length
             while (index < data.Length)
             {

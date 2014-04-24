@@ -147,10 +147,9 @@ namespace AirPlayer
                 uint currentTimestamp;
                 double currentPosition;
                 settings.Source.GetPosition(out currentTimestamp, out currentPosition);
-                double position = (currentTimestamp - startStamp) / (double)settings.Source.SampleRate;
-                if (position < 0)
-                    position = 0;
-                return position;
+                if (currentTimestamp > startStamp)
+                    return (currentTimestamp - startStamp) / (double)settings.Source.SampleRate;
+                return 0;
             }
         }
 

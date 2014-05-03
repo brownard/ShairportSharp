@@ -81,13 +81,20 @@ namespace ShairportSharp.Helpers
 
         void populateStreamInfo(string hlsString)
         {
+
             Uri baseUrl = new Uri(this.url);
-            System.IO.StringReader reader = new System.IO.StringReader(hlsString);
-            int bandwidth = 0; 
-            int width = 0; 
+            System.IO.StringReader reader = new System.IO.StringReader(hlsString.Trim());
+            string line = reader.ReadLine();
+            if (!line.StartsWith("#EXTM3U", StringComparison.InvariantCultureIgnoreCase))
+            {
+                Logger.Warn("HlsParser: Not a valid m3u8 file");
+                return;
+            }
+
+            int bandwidth = 0;
+            int width = 0;
             int height = 0;
             Match m;
-            string line;
             while ((line = reader.ReadLine()) != null)
             {
                 if (line.StartsWith(STREAM_INFO_TAG))

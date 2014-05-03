@@ -70,8 +70,8 @@ namespace ShairportSharp.Helpers
             videoInfo = new VideoInfo(url) { UserAgent = userAgent };
             videoInfo.AnalyseComplete += videoInfo_AnalyseComplete;
             videoInfo.DownloadComplete += videoInfo_DownloadComplete;
-            videoInfo.AnalyseFailed += videoInfo_Failed;
-            videoInfo.DownloadFailed += videoInfo_Failed;
+            videoInfo.AnalyseFailed += videoInfo_AnalyzeFailed;
+            videoInfo.DownloadFailed += videoInfo_DownloadFailed;
             videoInfo.BeginAnalyse();
         }
 
@@ -135,6 +135,22 @@ namespace ShairportSharp.Helpers
             }
         }
 
+        void videoInfo_AnalyzeFailed(object sender, EventArgs e)
+        {
+            Uri uri = new Uri(url);
+            if (uri.AbsolutePath.EndsWith(".m3u8", StringComparison.InvariantCultureIgnoreCase))
+            {
+                //Probably HLS stream, download the playlist and see if there are multiple qualities available
+                IsHls = true;
+                Logger.Debug("HlsParser: Guessed HLS stream from extension, selecting sub-stream");
+                videoInfo.BeginDownload();
+            }
+            else
+            {
+                OnCompleted();
+            }
+        }
+
         void videoInfo_DownloadComplete(object sender, EventArgs e)
         {
             Success = true;
@@ -142,7 +158,7 @@ namespace ShairportSharp.Helpers
             OnCompleted();
         }
 
-        void videoInfo_Failed(object sender, EventArgs e)
+        void videoInfo_DownloadFailed(object sender, EventArgs e)
         {
             OnCompleted();
         }

@@ -462,7 +462,7 @@ namespace AirPlayer
         {
             stopCurrentItem();
             string sourceFilter = useMPSourceFilter ? VideoPlayer.MPURL_SOURCE_FILTER : VideoPlayer.DEFAULT_SOURCE_FILTER;
-            Logger.Instance.Info("Airplayer: Starting playback, Url: '{0}', SourceFilter: '{1}'", currentVideoUrl, sourceFilter);
+            Logger.Instance.Info("Airplayer: Starting playback, Url: '{0}', SourceFilter: '{1}'", url, sourceFilter);
             currentVideoPlayer = new VideoPlayer(url, currentVideoSessionId, sourceFilter) { BufferPercent = videoBuffer };
             bool? prepareResult;
             lock (bufferLock)

@@ -376,7 +376,7 @@ namespace AirPlayer
             airplayServer.SetPlaybackState(e.SessionId, PlaybackCategory.Video, PlaybackState.Loading);
             invoke(delegate()
             {
-                //YouTube sometimes sends play video twice?? Ignore but make sure we resend playing state if necessary
+                //YouTube sometimes sends play video twice?? Ignore the second request
                 if (e.SessionId == currentVideoSessionId && e.ContentLocation == currentVideoUrl)
                 {
                     Logger.Instance.Debug("Airplayer: Ignoring duplicate playback request");

@@ -546,7 +546,6 @@ namespace AirPlayer
                     }
                     else
                     {
-                        airplayServer.SetPlaybackState(currentVideoSessionId, PlaybackCategory.Video, PlaybackState.Stopped);
                         cleanupVideoPlayback();
                     }
                 }
@@ -749,7 +748,6 @@ namespace AirPlayer
             }
             if (currentVideoPlayer != null)
             {
-                airplayServer.SetPlaybackState(currentVideoPlayer.SessionId, PlaybackCategory.Video, PlaybackState.Stopped);
                 cleanupVideoPlayback();
             }
         }
@@ -811,10 +809,14 @@ namespace AirPlayer
                 proxy.Stop();
                 proxy = null;
             }
+            if (currentVideoSessionId != null)
+            {
+                airplayServer.SetPlaybackState(currentVideoSessionId, PlaybackCategory.Video, PlaybackState.Stopped);
+                currentVideoSessionId = null;
+            }
 
             restoreVolume();
             currentVideoPlayer = null;
-            currentVideoSessionId = null;
             currentVideoUrl = null;
         }
 

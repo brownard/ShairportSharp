@@ -275,11 +275,13 @@ namespace ShairportSharp.Airplay
             {
                 Dictionary<string, object> plist;
                 object action;
-                if (tryGetPlist(request, out plist) && plist.TryGetValue("type", out action))
+                if (tryGetPlist(request, out plist) && plist.TryGetValue("type", out action) && action as string == "playlistRemove")
                 {
-                    //Logger.Debug("Action plist - " + Plist.writeXml(plist));
-                    if ((string)action == "playlistRemove")
-                        OnStopped(new AirplayEventArgs(sessionId));
+                    OnStopped(new AirplayEventArgs(sessionId));
+                }
+                else
+                {
+                    Logger.Warn("Unhandled action request\r\n{0}", request);
                 }
                 response = getPlistResponse(new Dictionary<string, object>(), true);
             }

@@ -5,7 +5,7 @@
 /ShairportSharp/bin
 /ShairportSharp/obj
 /ShairportSharp_Test/bin
-/ShairportSharp_Test/
+/ShairportSharp_Test/obj
 [Pp]ackages/
 nuget.exe
 /*.suo

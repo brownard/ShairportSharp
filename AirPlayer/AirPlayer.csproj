@@ -111,7 +111,6 @@
   <ItemGroup>
     <Content Include="GUI\AirplayPhotoWindow.xml" />
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>xcopy "$(ProjectDir)..\External\merge.bat" "$(TargetDir)" /Y /E /I
@@ -122,7 +121,8 @@ xcopy "$(TargetDir)ShairportSharp.dll" "$(ProgramFiles)\Team MediaPortal\MediaPo
 xcopy "$(TargetDir)ShairportSharp.pdb" "$(ProgramFiles)\Team MediaPortal\MediaPortal\plugins\process\" /Y /E /I
 xcopy "$(TargetDir)DirectShowWrapper.dll" "$(ProgramFiles)\Team MediaPortal\MediaPortal\plugins\process\" /Y /E /I
 xcopy "$(TargetDir)DirectShowWrapper.pdb" "$(ProgramFiles)\Team MediaPortal\MediaPortal\plugins\process\" /Y /E /I
-xcopy "$(TargetDir)ZeroconfService.dll" "$(ProgramFiles)\Team MediaPortal\MediaPortal\plugins\process\" /Y /E /I</PostBuildEvent>
+xcopy "$(TargetDir)ZeroconfService.dll" "$(ProgramFiles)\Team MediaPortal\MediaPortal\plugins\process\" /Y /E /I
+xcopy "$(TargetDir)BouncyCastle.Crypto.dll" "$(ProgramFiles)\Team MediaPortal\MediaPortal\plugins\process\" /Y /E /I</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -666,7 +666,7 @@ namespace AirPlayer
             {
                 if (e.SessionId == currentVideoSessionId)
                 {
-                    cleanupVideoPlayback();
+                    cleanupVideoPlayback(false);
                     if (isVideoPlaying)
                         stopCurrentItem();
                 }
@@ -786,7 +786,7 @@ namespace AirPlayer
             currentAudioPlayer = null;
         }
 
-        void cleanupVideoPlayback()
+        void cleanupVideoPlayback(bool sendStoppedState = true)
         {
             if (videoBufferThread != null && videoBufferThread.IsAlive)
             {
@@ -809,13 +809,13 @@ namespace AirPlayer
                 proxy.Stop();
                 proxy = null;
             }
-            if (currentVideoSessionId != null)
+            if (sendStoppedState && currentVideoSessionId != null)
             {
                 airplayServer.SetPlaybackState(currentVideoSessionId, PlaybackCategory.Video, PlaybackState.Stopped);
-                currentVideoSessionId = null;
             }
 
             restoreVolume();
+            currentVideoSessionId = null;
             currentVideoPlayer = null;
             currentVideoUrl = null;
         }

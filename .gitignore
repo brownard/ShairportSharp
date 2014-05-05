@@ -12,3 +12,6 @@ nuget.exe
 
 /Airplayer.Common/bin
 /Airplayer.Common/obj
+
+/AirPlayer-MP2/obj
+/AirPlayer-MP2/bin

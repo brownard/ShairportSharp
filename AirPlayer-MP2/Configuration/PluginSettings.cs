@@ -18,7 +18,7 @@ namespace AirPlayer.MediaPortal2.Configuration
         const double DEFAULT_AUDIO_BUFFER = 2;
         const double DEFAULT_VIDEO_BUFFER = 2;
 
-        [Setting(SettingScope.User, System.Windows.Forms.SystemInformation.ComputerName)]
+        [Setting(SettingScope.User, null)]
         public string ServerName { get; set; }
 
         [Setting(SettingScope.User, null)]
@@ -53,7 +53,10 @@ namespace AirPlayer.MediaPortal2.Configuration
 
         public static PluginSettings Load()
         {
-            return ServiceRegistration.Get<ISettingsManager>().Load<PluginSettings>();
+            PluginSettings settings = ServiceRegistration.Get<ISettingsManager>().Load<PluginSettings>();
+            if (string.IsNullOrEmpty(settings.ServerName))
+                settings.ServerName = System.Windows.Forms.SystemInformation.ComputerName;
+            return settings;
         }
 
         public void Save()

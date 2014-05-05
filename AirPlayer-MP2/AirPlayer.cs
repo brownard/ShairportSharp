@@ -33,6 +33,7 @@ namespace AirPlayer.MediaPortal2
         PluginSettings settings;
         RaopServer airtunesServer;
         AirplayServer airplayServer;
+        HlsProxy proxy;
 
         Dictionary<string, string> photoCache = new Dictionary<string, string>();
         string photoSessionId;
@@ -193,7 +194,7 @@ namespace AirPlayer.MediaPortal2
             invoke(delegate()
             {
                 stopCurrentItem();
-                cleanupPendingPlayback();
+                cleanupPlayback();
                 ServiceRegistration.Get<ISuperLayerManager>().ShowBusyScreen();
                 isAudioBuffering = true;
             });
@@ -323,7 +324,7 @@ namespace AirPlayer.MediaPortal2
         {
             invoke(delegate()
             {
-                cleanupPendingAudio();
+                cleanupAudioPlayback();
                 if (isAudioPlaying)
                     stopCurrentItem();
             }, false);
@@ -387,7 +388,7 @@ namespace AirPlayer.MediaPortal2
 
                 videoReceiveTime = DateTime.Now;
                 stopCurrentItem();
-                cleanupPendingPlayback();
+                cleanupPlayback();
                 ServiceRegistration.Get<ISuperLayerManager>().ShowBusyScreen();
 
                 currentVideoSessionId = e.SessionId;
@@ -408,52 +409,37 @@ namespace AirPlayer.MediaPortal2
                 if (sender != hlsParser)
                     return;
 
-                string selectedUrl;
+                //We shouldn't alter currentVideoUrl as this is how we check for duplicate requests
+                string finalUrl;
                 bool useMPUrlSourceFilter;
-
-                if (hlsParser.StreamInfos.Count > 0)
+                if (hlsParser.IsHls)
                 {
-                    //HLS sub-streams, select best quality
-                    HlsStreamInfo streamInfo;
-                    if (!allowHDStreams)
-                    {
-                        streamInfo = hlsParser.StreamInfos.LastOrDefault(si => si.Height < 720);
-                        if (streamInfo == null)
-                            streamInfo = hlsParser.StreamInfos.First();
-                    }
-                    else
-                    {
-                        streamInfo = hlsParser.StreamInfos.Last();
-                    }
-
-                    Logger.Instance.Debug("Airplayer: Selected hls stream '{0}x{1}'", streamInfo.Width, streamInfo.Height);
-                    selectedUrl = streamInfo.Url;
                     useMPUrlSourceFilter = false;
+                    finalUrl = hlsParser.SelectBestSubStream(allowHDStreams);
+                    //Secure HLS stream
+                    if (isSecureUrl(finalUrl))
+                    {
+                        //Lav Splitter does not support SSL so it cannot download the HLS segments
+                        //Use reverse proxy to workaround
+                        Logger.Instance.Debug("Airplayer: Secure HLS Stream, setting up proxy");
+                        proxy = new HlsProxy();
+                        proxy.Start();
+                        finalUrl = proxy.GetProxyUrl(finalUrl);
+                    }
                 }
                 else
                 {
-                    //Failed or non HLS stream or no sub-streams
-                    selectedUrl = currentVideoUrl;
-                    if (hlsParser.IsHls || selectedUrl.StartsWith("https", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        useMPUrlSourceFilter = false;
-                    }
-                    else
-                    {
-                        //see if we can determine type by extension
-                        useMPUrlSourceFilter = hlsParser.Success || (hlsParser.Url.EndsWith(".mov", StringComparison.InvariantCultureIgnoreCase) || hlsParser.Url.EndsWith(".mp4", StringComparison.InvariantCultureIgnoreCase));
-                    }
+                    finalUrl = currentVideoUrl;
+                    //Again, MPUrlSource does not support SSL, FileSource is OK for non HLS streams
+                    //Use MPUrlSource if we're not secure and definately not a HLS stream or we can guess filetype by extension
+                    useMPUrlSourceFilter = !isSecureUrl(finalUrl) && (hlsParser.Success || isKnownExtension(finalUrl));
                 }
                 hlsParser = null;
-
-                lastVideoUrl = selectedUrl;
-                lastVideoSessionId = currentVideoSessionId;
-                lastUseMPUrlSourceFilter = useMPUrlSourceFilter;
-                startVideoLoading(selectedUrl, currentVideoSessionId, useMPUrlSourceFilter);
+                startVideoLoading(finalUrl, useMPUrlSourceFilter);
             }, false);
         }
 
-        void startVideoLoading(string url, string sessionId, bool useMPSourceFilter = false)
+        void startVideoLoading(string url, bool useMPSourceFilter = false)
         {
             stopCurrentItem();
             ServiceRegistration.Get<ISuperLayerManager>().HideBusyScreen();
@@ -523,10 +509,10 @@ namespace AirPlayer.MediaPortal2
                 }
                 else if (currentVideoUrl == null && e.SessionId == lastVideoSessionId && lastVideoUrl != null)
                 {
+                    airplayServer.SetPlaybackState(currentVideoSessionId, PlaybackCategory.Video, ShairportSharp.Airplay.PlaybackState.Loading);
                     currentVideoSessionId = lastVideoSessionId;
                     currentVideoUrl = lastVideoUrl;
-                    airplayServer.SetPlaybackState(currentVideoSessionId, PlaybackCategory.Video, ShairportSharp.Airplay.PlaybackState.Loading);
-                    startVideoLoading(lastVideoUrl, currentVideoSessionId, lastUseMPUrlSourceFilter);
+                    startVideoLoading(currentVideoUrl, lastUseMPUrlSourceFilter);
                 }
             }, false);
         }
@@ -591,7 +577,7 @@ namespace AirPlayer.MediaPortal2
             {
                 if (e.SessionId == currentVideoSessionId)
                 {
-                    cleanupPendingVideo();
+                    cleanupVideoPlayback(false);
                     if (isVideoPlaying)
                         stopCurrentItem();
                 }
@@ -628,13 +614,13 @@ namespace AirPlayer.MediaPortal2
 
         #region Utils
 
-        void cleanupPendingPlayback()
+        void cleanupPlayback()
         {
-            cleanupPendingAudio();
-            cleanupPendingVideo();
+            cleanupAudioPlayback();
+            cleanupVideoPlayback();
         }
 
-        void cleanupPendingAudio()
+        void cleanupAudioPlayback()
         {
             if (isAudioBuffering)
             {
@@ -645,27 +631,26 @@ namespace AirPlayer.MediaPortal2
             //currentAudioPlayer = null;
         }
 
-        void cleanupPendingVideo()
+        void cleanupVideoPlayback(bool sendStoppedState = true)
         {
-            //if (videoBufferThread != null && videoBufferThread.IsAlive)
-            //{
-            //    videoBufferThread.Abort();
-            //    videoBufferThread = null;
-            //}
-            //if (bufferingPlayer != null)
-            //{
-            //    ServiceRegistration.Get<ISuperLayerManager>().HideBusyScreen();
-            //    bufferingPlayer.Dispose();
-            //    bufferingPlayer = null;
-            //}
             if (hlsParser != null)
             {
                 ServiceRegistration.Get<ISuperLayerManager>().HideBusyScreen();
                 hlsParser = null;
             }
+            if (proxy != null)
+            {
+                proxy.Stop();
+                proxy = null;
+            }
+            if (sendStoppedState && currentVideoSessionId != null)
+            {
+                airplayServer.SetPlaybackState(currentVideoSessionId, PlaybackCategory.Video, ShairportSharp.Airplay.PlaybackState.Stopped);
+            }
+
             //restoreVolume();
-            //currentVideoPlayer = null;
             currentVideoSessionId = null;
+            //currentVideoPlayer = null;
             currentVideoUrl = null;
         }
 
@@ -736,6 +721,16 @@ namespace AirPlayer.MediaPortal2
                 Logger.Instance.Error("Failed to save file - {0}", ex.Message);
             }
             return null;
+        }
+
+        static bool isSecureUrl(string url)
+        {
+            return !string.IsNullOrEmpty(url) && url.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase);
+        }
+
+        static bool isKnownExtension(string url)
+        {
+            return url.EndsWith(".mov", StringComparison.InvariantCultureIgnoreCase) || url.EndsWith(".mp4", StringComparison.InvariantCultureIgnoreCase);
         }
 
         #endregion

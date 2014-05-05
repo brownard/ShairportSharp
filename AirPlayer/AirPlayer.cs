@@ -408,6 +408,7 @@ namespace AirPlayer
                 if (sender != hlsParser)
                     return;
 
+                //We shouldn't alter currentVideoUrl as this is how we check for duplicate requests
                 string finalUrl = currentVideoUrl;
                 bool useMPUrlSourceFilter;
                 if (hlsParser.StreamInfos.Count > 0)
@@ -433,17 +434,17 @@ namespace AirPlayer
                 {
                     useMPUrlSourceFilter = false;
                     //Secure HLS stream
-                    if (isSecureUrl(currentVideoUrl))
+                    if (isSecureUrl(finalUrl))
                     {
                         //Lav Splitter does not support SSL so it cannot download the HLS segments
                         //Use reverse proxy to workaround
                         Logger.Instance.Debug("Airplayer: Secure HLS Stream, setting up proxy");
                         proxy = new HlsProxy();
                         proxy.Start();
-                        currentVideoUrl = proxy.GetProxyUrl(currentVideoUrl);
+                        finalUrl = proxy.GetProxyUrl(finalUrl);
                     }
                 }
-                else if (isSecureUrl(currentVideoUrl))
+                else if (isSecureUrl(finalUrl))
                 {
                     //Again, MPUrlSource does not support SSL, FileSource is OK for non HLS streams  
                     useMPUrlSourceFilter = false;
@@ -451,7 +452,7 @@ namespace AirPlayer
                 else
                 {
                     //Use MPUrlSource if we're definately not a HLS stream or we can guess filetype by extension
-                    useMPUrlSourceFilter = hlsParser.Success || (hlsParser.Url.EndsWith(".mov", StringComparison.InvariantCultureIgnoreCase) || hlsParser.Url.EndsWith(".mp4", StringComparison.InvariantCultureIgnoreCase));
+                    useMPUrlSourceFilter = hlsParser.Success || (finalUrl.EndsWith(".mov", StringComparison.InvariantCultureIgnoreCase) || finalUrl.EndsWith(".mp4", StringComparison.InvariantCultureIgnoreCase));
                 }
                 hlsParser = null;
                 startVideoLoading(finalUrl, useMPUrlSourceFilter);

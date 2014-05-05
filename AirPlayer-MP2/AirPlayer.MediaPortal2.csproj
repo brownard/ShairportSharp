@@ -72,6 +72,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Airplayer.Common\AirPlayer.Common.csproj">
+      <Project>{5b98c320-4de1-483b-81ab-f3d7394827b4}</Project>
+      <Name>AirPlayer.Common</Name>
+    </ProjectReference>
     <ProjectReference Include="..\DirectShowWrapper\DirectShowWrapper.csproj">
       <Project>{c4a45fa7-bcd1-4b14-b6d5-051a780eb83b}</Project>
       <Name>DirectShowWrapper</Name>

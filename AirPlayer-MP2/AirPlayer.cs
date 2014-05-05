@@ -1,4 +1,6 @@
-﻿using AirPlayer.MediaPortal2.Configuration;
+﻿using AirPlayer.Common.Hls;
+using AirPlayer.Common.Proxy;
+using AirPlayer.MediaPortal2.Configuration;
 using MediaPortal.Common;
 using MediaPortal.Common.Messaging;
 using MediaPortal.Common.PluginManager;

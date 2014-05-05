@@ -75,13 +75,35 @@ namespace ShairportSharp.Helpers
             videoInfo.BeginAnalyse();
         }
 
+        public string SelectBestSubStream(bool allowHD)
+        {
+            if (streamInfos.Count > 0)
+            {
+                //HLS sub-streams, select best quality
+                HlsStreamInfo streamInfo;
+                if (!allowHD)
+                {
+                    streamInfo = streamInfos.LastOrDefault(si => si.Height < 720);
+                    if (streamInfo == null)
+                        streamInfo = streamInfos.First();
+                }
+                else
+                {
+                    streamInfo = streamInfos.Last();
+                }
+
+                Logger.Debug("HlsParser: Selected hls stream, Bandwidth: '{0}', Size: '{1}x{2}'", streamInfo.Bandwidth, streamInfo.Width, streamInfo.Height);
+                return streamInfo.Url;
+            }
+            return url;
+        }
+
         #endregion
 
         #region Private Methods
 
         void populateStreamInfo(string hlsString)
         {
-
             Uri baseUrl = new Uri(this.url);
             System.IO.StringReader reader = new System.IO.StringReader(hlsString.Trim());
             string line = reader.ReadLine();
@@ -132,7 +154,7 @@ namespace ShairportSharp.Helpers
             {
                 //HLS stream, download the playlist and see if there are multiple qualities available
                 IsHls = true;
-                Logger.Debug("HlsParser: HLS stream detected, selecting sub-stream");
+                Logger.Debug("HlsParser: HLS stream detected, checking for sub-streams");
                 videoInfo.BeginDownload();
             }
             else
@@ -149,7 +171,7 @@ namespace ShairportSharp.Helpers
             {
                 //Probably HLS stream, download the playlist and see if there are multiple qualities available
                 IsHls = true;
-                Logger.Debug("HlsParser: Guessed HLS stream from extension, selecting sub-stream");
+                Logger.Debug("HlsParser: Guessed HLS stream from extension, checking for sub-streams");
                 videoInfo.BeginDownload();
             }
             else

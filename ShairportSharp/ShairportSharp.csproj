@@ -40,7 +40,6 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Web" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -75,9 +74,6 @@
     <Compile Include="Audio\BiquadFilter.cs" />
     <Compile Include="Audio\DecryptedAudioBuffer.cs" />
     <Compile Include="Bonjour\BonjourEmitter.cs" />
-    <Compile Include="Helpers\HlsProxy.cs" />
-    <Compile Include="Helpers\Proxy.cs" />
-    <Compile Include="Helpers\HlsProxyRequestParser.cs" />
     <Compile Include="Http\HttpConnectionHandler.cs" />
     <Compile Include="Http\HttpMessage.cs" />
     <Compile Include="Http\HttpParser.cs" />
@@ -88,7 +84,6 @@
     <Compile Include="Raop\RaopEmitter.cs" />
     <Compile Include="Raop\Constants.cs" />
     <Compile Include="Raop\DmapData.cs" />
-    <Compile Include="Helpers\Downloader.cs" />
     <Compile Include="Helpers\ExtensionMethods.cs" />
     <Compile Include="Raop\RaopEventArgs.cs" />
     <Compile Include="Remote\RemoteHandler.cs" />
@@ -100,9 +95,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Raop\RaopServer.cs" />
     <Compile Include="Audio\UdpListener.cs" />
-    <Compile Include="Helpers\HlsParser.cs" />
     <Compile Include="Helpers\Utils.cs" />
-    <Compile Include="Helpers\VideoInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

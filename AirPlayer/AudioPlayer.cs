@@ -12,6 +12,7 @@ using DirectShow;
 using DShowNET.Helper;
 using DirectShow.Helper;
 using ShairportSharp.Remote;
+using AirPlayer.Common.Player;
 
 namespace AirPlayer
 {

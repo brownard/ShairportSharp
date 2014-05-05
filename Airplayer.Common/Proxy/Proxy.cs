@@ -1,4 +1,5 @@
-﻿using ShairportSharp.Http;
+﻿using ShairportSharp.Helpers;
+using ShairportSharp.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,7 +7,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 
-namespace ShairportSharp.Helpers
+namespace AirPlayer.Common.Proxy
 {
     public abstract class Proxy
     {

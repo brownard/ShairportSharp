@@ -9,8 +9,6 @@ namespace ShairportSharp.Helpers
 {
     static class Utils
     {
-        public const string APPLE_USER_AGENT = "AppleCoreMedia/1.0.0.8F455 (AppleTV; U; CPU OS 4_3 like Mac OS X; en_en)"; 
-
         public static byte[] GetMacAddress()
         {
             byte[] macAddress = null;

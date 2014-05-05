@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Timers;
 
-namespace ShairportSharp.Helpers
+namespace AirPlayer.Common.Hls
 {
     class VideoInfo : IDisposable
     {

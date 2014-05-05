@@ -4,12 +4,12 @@ using System.Linq;
 using System.Text;
 using ShairportSharp.Http;
 
-namespace ShairportSharp.Helpers
+namespace AirPlayer.Common.Proxy
 {
     public class HlsProxy : Proxy
     {
-        string userAgent = Utils.APPLE_USER_AGENT;
-        public string UserAgent 
+        string userAgent = Constants.APPLE_USER_AGENT;
+        public string UserAgent
         {
             get { return userAgent; }
             set { userAgent = value; }

@@ -39,7 +39,6 @@ namespace AirPlayer
         HlsProxy proxy;
 
         PhotoWindow photoWindow;
-        Dictionary<string, string> photoCache = new Dictionary<string, string>();
         string photoSessionId;
 
         VideoPlayer currentVideoPlayer;

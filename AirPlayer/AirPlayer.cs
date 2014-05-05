@@ -409,9 +409,8 @@ namespace AirPlayer
                     return;
 
                 //We shouldn't alter currentVideoUrl as this is how we check for duplicate requests
-                string finalUrl = currentVideoUrl;
+                string finalUrl;
                 bool useMPUrlSourceFilter;
-
                 if (hlsParser.IsHls)
                 {
                     useMPUrlSourceFilter = false;
@@ -427,15 +426,12 @@ namespace AirPlayer
                         finalUrl = proxy.GetProxyUrl(finalUrl);
                     }
                 }
-                else if (isSecureUrl(finalUrl))
-                {
-                    //Again, MPUrlSource does not support SSL, FileSource is OK for non HLS streams  
-                    useMPUrlSourceFilter = false;
-                }
                 else
                 {
-                    //Use MPUrlSource if we're definately not a HLS stream or we can guess filetype by extension
-                    useMPUrlSourceFilter = hlsParser.Success || (finalUrl.EndsWith(".mov", StringComparison.InvariantCultureIgnoreCase) || finalUrl.EndsWith(".mp4", StringComparison.InvariantCultureIgnoreCase));
+                    finalUrl = currentVideoUrl;
+                    //Again, MPUrlSource does not support SSL, FileSource is OK for non HLS streams
+                    //Use MPUrlSource if we're not secure and definately not a HLS stream or we can guess filetype by extension
+                    useMPUrlSourceFilter = !isSecureUrl(finalUrl) && (hlsParser.Success || isKnownExtension(finalUrl));
                 }
                 hlsParser = null;
                 startVideoLoading(finalUrl, useMPUrlSourceFilter);
@@ -883,6 +879,11 @@ namespace AirPlayer
         static bool isSecureUrl(string url)
         {
             return !string.IsNullOrEmpty(url) && url.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase);
+        }
+
+        static bool isKnownExtension(string url)
+        {
+            return url.EndsWith(".mov", StringComparison.InvariantCultureIgnoreCase) || url.EndsWith(".mp4", StringComparison.InvariantCultureIgnoreCase);
         }
 
         #endregion

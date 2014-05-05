@@ -9,3 +9,6 @@
 [Pp]ackages/
 nuget.exe
 /*.suo
+
+/Airplayer.Common/bin
+/Airplayer.Common/obj

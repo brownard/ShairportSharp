@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace ShairportSharp.Helpers
+namespace AirPlayer.Common.Hls
 {
     public class HlsParser : IDisposable
     {
@@ -34,7 +34,7 @@ namespace ShairportSharp.Helpers
         public string ContentType { get; protected set; }
         public bool Success { get; protected set; }
 
-        string userAgent = Utils.APPLE_USER_AGENT;
+        string userAgent = Constants.APPLE_USER_AGENT;
         public string UserAgent
         {
             get { return userAgent; }

@@ -6,8 +6,9 @@ using System.Net;
 using System.Text;
 using System.IO;
 using System.Net.Sockets;
+using AirPlayer.Common.Hls;
 
-namespace ShairportSharp.Helpers
+namespace AirPlayer.Common.Proxy
 {
     class HlsProxyRequestParser : HttpParser
     {

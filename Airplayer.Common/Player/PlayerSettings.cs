@@ -7,9 +7,9 @@ using ShairportSharp;
 using ShairportSharp.Audio;
 using ShairportSharp.Remote;
 
-namespace AirPlayer
+namespace AirPlayer.Common.Player
 {
-    class PlayerSettings
+    public class PlayerSettings
     {
         AudioBufferStream source;
         public PlayerSettings(AudioBufferStream source)

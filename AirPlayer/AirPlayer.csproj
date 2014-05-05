@@ -68,7 +68,6 @@
   <ItemGroup>
     <Compile Include="Cornerstone.MP\AsyncImageResource.cs" />
     <Compile Include="Cornerstone.MP\ImageSwapper.cs" />
-    <Compile Include="IAudioPlayer.cs" />
     <Compile Include="MPUrlSourceFilter\IFilterState.cs" />
     <Compile Include="GUI\PhotoWindow.cs" />
     <Compile Include="MPUrlSourceFilter\MPUrlSourceSplitterError.cs" />
@@ -84,10 +83,13 @@
     <Compile Include="PluginSettings.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="AudioPlayer.cs" />
-    <Compile Include="PlayerSettings.cs" />
     <Compile Include="VideoPlayer.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Airplayer.Common\AirPlayer.Common.csproj">
+      <Project>{5b98c320-4de1-483b-81ab-f3d7394827b4}</Project>
+      <Name>AirPlayer.Common</Name>
+    </ProjectReference>
     <ProjectReference Include="..\DirectShowWrapper\DirectShowWrapper.csproj">
       <Project>{c4a45fa7-bcd1-4b14-b6d5-051a780eb83b}</Project>
       <Name>DirectShowWrapper</Name>
@@ -117,6 +119,8 @@
 xcopy "$(ProjectDir)..\External\ilmerge.exe" "$(TargetDir)" /Y /E /I
 xcopy "$(TargetDir)$(TargetFileName)" "$(ProgramFiles)\Team MediaPortal\MediaPortal\plugins\process\" /Y /E /I
 xcopy "$(TargetDir)$(TargetName).pdb" "$(ProgramFiles)\Team MediaPortal\MediaPortal\plugins\process\" /Y /E /I
+xcopy "$(TargetDir)AirPlayer.Common.dll" "$(ProgramFiles)\Team MediaPortal\MediaPortal\plugins\process\" /Y /E /I
+xcopy "$(TargetDir)AirPlayer.Common.pdb" "$(ProgramFiles)\Team MediaPortal\MediaPortal\plugins\process\" /Y /E /I
 xcopy "$(TargetDir)ShairportSharp.dll" "$(ProgramFiles)\Team MediaPortal\MediaPortal\plugins\process\" /Y /E /I
 xcopy "$(TargetDir)ShairportSharp.pdb" "$(ProgramFiles)\Team MediaPortal\MediaPortal\plugins\process\" /Y /E /I
 xcopy "$(TargetDir)DirectShowWrapper.dll" "$(ProgramFiles)\Team MediaPortal\MediaPortal\plugins\process\" /Y /E /I

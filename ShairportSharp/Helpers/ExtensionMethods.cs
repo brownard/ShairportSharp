@@ -65,6 +65,30 @@ namespace ShairportSharp.Helpers
         }
     }
 
+    public static class UrlExtensionMethods
+    {
+        public static Dictionary<string, string> GetQueryStringParameters(this string value)
+        {
+            Dictionary<string, string> query = new Dictionary<string, string>();
+            if (string.IsNullOrEmpty(value))
+                return query;
+
+            int index = value.IndexOf("?");
+            if (index > -1)
+                value = value.Substring(index + 1);
+
+            string[] keyVals = value.Split('&');
+            foreach (string keyVal in keyVals)
+            {
+                string[] keyValSplit = keyVal.Split('=');
+                if (keyValSplit.Length == 2)
+                    query[keyValSplit[0]] = keyValSplit[1];
+            }
+
+            return query;
+        }
+    }
+
     static class ExtensionMethods
     {
         public static string ComputerNameIfNullOrEmpty(this string name)
@@ -161,27 +185,6 @@ namespace ShairportSharp.Helpers
                     parameters[m.Groups[1].Value] = m.Groups[2].Value;
             }
             return parameters;
-        }
-
-        public static Dictionary<string, string> GetQueryStringParameters(this string value)
-        {
-            Dictionary<string, string> query = new Dictionary<string, string>();
-            if (string.IsNullOrEmpty(value))
-                return query;
-
-            int index = value.IndexOf("?");
-            if (index > -1)
-                value = value.Substring(index + 1);
-
-            string[] keyVals = value.Split('&');
-            foreach (string keyVal in keyVals)
-            {
-                string[] keyValSplit = keyVal.Split('=');
-                if (keyValSplit.Length == 2)
-                    query[keyValSplit[0]] = keyValSplit[1];
-            }
-
-            return query;
         }
     }
 }

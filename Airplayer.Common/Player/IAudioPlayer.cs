@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace AirPlayer
+namespace AirPlayer.Common.Player
 {
-    interface IAudioPlayer
+    public interface IAudioPlayer
     {
         void UpdateDurationInfo(uint startStamp, uint stopStamp);
     }

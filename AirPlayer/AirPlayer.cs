@@ -17,6 +17,9 @@ using ShairportSharp.Raop;
 using ShairportSharp.Airplay;
 using MediaPortal.Dialogs;
 using ShairportSharp.Helpers;
+using AirPlayer.Common.Player;
+using AirPlayer.Common.Proxy;
+using AirPlayer.Common.Hls;
 
 namespace AirPlayer
 {
@@ -39,7 +42,6 @@ namespace AirPlayer
         HlsProxy proxy;
 
         PhotoWindow photoWindow;
-        Dictionary<string, string> photoCache = new Dictionary<string, string>();
         string photoSessionId;
 
         VideoPlayer currentVideoPlayer;
@@ -74,6 +76,16 @@ namespace AirPlayer
         bool isAudioPlaying;
         bool isVideoPlaying;
         
+        #endregion
+
+        #region Ctor
+
+        public AirPlayer()
+        {
+            Common.Logger.SetLogger(Logger.Instance);
+            ShairportSharp.Logger.SetLogger(Logger.Instance);
+        }
+
         #endregion
 
         #region ISetupForm Members
@@ -134,7 +146,6 @@ namespace AirPlayer
         public void Start()
         {
             pluginIconPath = MediaPortal.Configuration.Config.GetFile(MediaPortal.Configuration.Config.Dir.Thumbs, "AirPlayer", "airplay-icon.png");
-            ShairportSharp.Logger.SetLogger(Logger.Instance);
             GUIWindow window = new PhotoWindow();
             window.Init();
             GUIWindowManager.Add(ref window);

@@ -411,28 +411,11 @@ namespace AirPlayer
                 //We shouldn't alter currentVideoUrl as this is how we check for duplicate requests
                 string finalUrl = currentVideoUrl;
                 bool useMPUrlSourceFilter;
-                if (hlsParser.StreamInfos.Count > 0)
-                {
-                    //HLS sub-streams, select best quality
-                    HlsStreamInfo streamInfo;
-                    if (!allowHDStreams)
-                    {
-                        streamInfo = hlsParser.StreamInfos.LastOrDefault(si => si.Height < 720);
-                        if (streamInfo == null)
-                            streamInfo = hlsParser.StreamInfos.First();
-                    }
-                    else
-                    {
-                        streamInfo = hlsParser.StreamInfos.Last();
-                    }
-
-                    Logger.Instance.Debug("Airplayer: Selected hls stream, Bandwidth: '{0}', Size: '{1}x{2}'", streamInfo.Bandwidth, streamInfo.Width, streamInfo.Height);
-                    finalUrl = streamInfo.Url;
-                }
 
                 if (hlsParser.IsHls)
                 {
                     useMPUrlSourceFilter = false;
+                    finalUrl = hlsParser.SelectBestSubStream(allowHDStreams);
                     //Secure HLS stream
                     if (isSecureUrl(finalUrl))
                     {

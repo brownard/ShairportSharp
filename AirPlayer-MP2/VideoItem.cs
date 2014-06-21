@@ -24,15 +24,7 @@ namespace AirPlayer.MediaPortal2
             Aspects[ProviderResourceAspect.ASPECT_ID].SetAttribute(ProviderResourceAspect.ATTR_SYSTEM_ID, ServiceRegistration.Get<ISystemResolver>().LocalSystemId);
 
             Aspects[ProviderResourceAspect.ASPECT_ID].SetAttribute(ProviderResourceAspect.ATTR_RESOURCE_ACCESSOR_PATH, RawUrlResourceProvider.ToProviderResourcePath(resolvedPlaybackUrl).Serialize());
-            Aspects[MediaAspect.ASPECT_ID].SetAttribute(MediaAspect.ATTR_MIME_TYPE, AirplayVideoPlayer.AirPlayer_MIMETYPE);
-
-            //Aspects[MediaAspect.ASPECT_ID].SetAttribute(MediaAspect.ATTR_TITLE, videoInfo.Title);			
-            //Aspects[VideoAspect.ASPECT_ID].SetAttribute(VideoAspect.ATTR_STORYPLOT, videoInfo.Description);
-
-            //DateTime parsedAirDate;
-            //if (DateTime.TryParse(videoInfo.VideoInfo.Airdate, out parsedAirDate))
-            //    Aspects[MediaAspect.ASPECT_ID].SetAttribute(MediaAspect.ATTR_RECORDINGTIME, parsedAirDate);
-
-        }
+            Aspects[MediaAspect.ASPECT_ID].SetAttribute(MediaAspect.ATTR_MIME_TYPE, AirplayVideoPlayer.MIMETYPE);
+        }                
 	}
 }

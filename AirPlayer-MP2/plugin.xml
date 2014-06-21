@@ -21,6 +21,11 @@
     <PluginStateTracker ClassName="AirPlayer.MediaPortal2.AirPlayer"/>
   </Runtime>
 
+  <Register Location="/Players/Builders">
+    <PlayerBuilder Id="1BC2FC01-60EA-459C-9F91-65A2050A078F" ClassName="AirPlayer.MediaPortal2.AudioPlayerBuilder"/>
+    <PlayerBuilder Id="F3A48E3B-1CE8-4506-9FD3-5869E7AEB7E4" ClassName="AirPlayer.MediaPortal2.ImagePlayerBuilder"/>
+  </Register>
+  
   <Register Location="/VideoPlayers/MimeTypeRegistrations">
     <VideoPlayerMimeTypeMapping Id="airplay" ClassName="AirPlayer.MediaPortal2.AirplayVideoPlayer" MimeType="video/airplayer"/>
   </Register>
@@ -82,47 +87,67 @@
     <Resource Id="OnlineVideosLanguage" Directory="Language" Type="Language"/>
   </Register>
 
-  --><!-- Registration of our configuration section --><!--
+  --> 
+  <!--Registration of our configuration section--> 
   <Register Location="/Configuration/Settings/Plugins">
     <ConfigSection
-        Id="OnlineVideos"
+        Id="AirPlayer"
         Redundant="true"
-        Text="OnlineVideos"/>
+        Text="AirPlayer"/>
   </Register>
 
-  --><!-- Contents of '/Plugins/OnlineVideos' section --><!--
-  <Register Location="/Configuration/Settings/Plugins/OnlineVideos">
+  <!-- Contents of '/Plugins/AirPlayer' section -->  
+  <Register Location="/Configuration/Settings/Plugins/AirPlayer">
     <ConfigSetting
-        Id="OnlineVideosUseAgeConfirmation"
-        Text="Use Age Confirmation"
-        HelpText="Require a pin for adult sites?"
-        ClassName="OnlineVideos.MediaPortal2.Configuration.UseAgeConfirmation"/>
+        Id="AirPlayerServerName"
+        Text="Server name"
+        HelpText="The display name of the server"
+        ClassName="AirPlayer.MediaPortal2.Configuration.ServerName"/>
     <ConfigSetting
-        Id="OnlineVideosAgeConfirmationPin"
-        Text="Pin for Age Confirmation"
-        HelpText="What is the pin for adult sites?"
-        ClassName="OnlineVideos.MediaPortal2.Configuration.AgeConfirmationPin"/>
+        Id="AirPlayerPassword"
+        Text="Password"
+        HelpText="The password used to connect to the server, leave blank for no password"
+        ClassName="AirPlayer.MediaPortal2.Configuration.Password"/>
     <ConfigSetting
-        Id="OnlineVideosUtilTimeout"
-        Text="[OnlineVideos.Settings_UtilTimeout]"
-        HelpText="After how many seconds should a request for online data be aborted?"
-        ClassName="OnlineVideos.MediaPortal2.Configuration.UtilTimeout"/>
+        Id="AirPlayerUseDummyIdentifier"
+        Text="Use dummy identifier"
+        HelpText="Use a custom identifier, allows multiple airplay servers on the same machine"
+        ClassName="AirPlayer.MediaPortal2.Configuration.DummyIdentifier"/>
     <ConfigSetting
-        Id="OnlineVideosCacheTimeout"
-        Text="[OnlineVideos.Settings_CacheTimeout]"
-        HelpText="After how many minutes should http data be invalidated in the cache?"
-        ClassName="OnlineVideos.MediaPortal2.Configuration.CacheTimeout"/>
+        Id="AirPlayerRtspPort"
+        Text="RTSP port"
+        HelpText="The TCP port used to receive audio stream information"
+        ClassName="AirPlayer.MediaPortal2.Configuration.RtspPort"/>
     <ConfigSetting
-        Id="OnlineVideosDownloadFolder"
-        Text="Download Folder"
-        HelpText="Choose a folder where to store downloaded videos."
-        ClassName="OnlineVideos.MediaPortal2.Configuration.DownloadFolder"/>
-    <CustomConfigSetting
-        Id="OnlineVideosSiteManagement"
-        Text="[OnlineVideos.ManageSites]"
-        HelpText="Add, remove and update your Sites."
-        ClassName="OnlineVideos.MediaPortal2.Configuration.SiteManagement"
-        AdditionalData="WorkflowState=026DF45C-86CB-44AE-9174-114810A6BAFF,ConfAppPanel=..."/>
-  </Register>-->
+        Id="AirPlayerUdpPort"
+        Text="UDP port"
+        HelpText="The UDP port used to receive audio data"
+        ClassName="AirPlayer.MediaPortal2.Configuration.UdpPort"/>
+    <ConfigSetting
+        Id="AirPlayerAudioBuffer"
+        Text="Audio buffer size (seconds)"
+        HelpText="The amount of audio to buffer before starting playback"
+        ClassName="AirPlayer.MediaPortal2.Configuration.AudioBuffer"/>
+    <ConfigSetting
+        Id="AirPlayerAllowVolume"
+        Text="Allow client to control volume"
+        HelpText="Whether to allow the client to control MediaPortal's volume"
+        ClassName="AirPlayer.MediaPortal2.Configuration.AllowVolume"/>
+    <ConfigSetting
+        Id="AirPlayerSendAudioCommands"
+        Text="Send playback commands to client"
+        HelpText="Whether to send Play/Pause/Prev/Next commands to the client"
+        ClassName="AirPlayer.MediaPortal2.Configuration.SendAudioCommands"/>
+    <ConfigSetting
+        Id="AirPlayerAirplayPort"
+        Text="Video port"
+        HelpText="The TCP port used to receive photo and video information"
+        ClassName="AirPlayer.MediaPortal2.Configuration.AirplayPort"/>
+    <ConfigSetting
+        Id="AirPlayerAllowHD"
+        Text="Allow HD streams"
+        HelpText="Allow HD stream selection if available"
+        ClassName="AirPlayer.MediaPortal2.Configuration.AllowHDStreams"/>
+  </Register>
   
 </Plugin>

@@ -32,6 +32,9 @@
     <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="ImagePlayer">
+      <HintPath>External\ImagePlayer.dll</HintPath>
+    </Reference>
     <Reference Include="Media, Version=2.0.0.1402, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>External\Media.dll</HintPath>
@@ -44,6 +47,12 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>External\MediaPortal.UI.dll</HintPath>
     </Reference>
+    <Reference Include="SharpDX">
+      <HintPath>External\SharpDX.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.Direct3D9">
+      <HintPath>External\SharpDX.Direct3D9.dll</HintPath>
+    </Reference>
     <Reference Include="SkinEngine, Version=2.0.0.1402, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>External\SkinEngine.dll</HintPath>
@@ -52,6 +61,7 @@
     <Reference Include="System.Core">
       <Private>True</Private>
     </Reference>
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -64,8 +74,14 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AirplayAudioPlayer.cs" />
     <Compile Include="AirPlayer.cs" />
     <Compile Include="AirplayVideoPlayer.cs" />
+    <Compile Include="AudioItem.cs" />
+    <Compile Include="AudioPlayerBuilder.cs" />
+    <Compile Include="ImageItem.cs" />
+    <Compile Include="AirplayImagePlayer.cs" />
+    <Compile Include="ImagePlayerBuilder.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="Configuration\PluginSettings.cs" />
     <Compile Include="VideoItem.cs" />
@@ -86,7 +102,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="plugin.xml" />
+    <Content Include="plugin.xml">
+      <SubType>Designer</SubType>
+    </Content>
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

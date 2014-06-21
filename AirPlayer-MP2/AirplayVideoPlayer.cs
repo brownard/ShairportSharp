@@ -9,6 +9,6 @@ namespace AirPlayer.MediaPortal2
 {
     public class AirplayVideoPlayer : VideoPlayer
     {
-        public const string AirPlayer_MIMETYPE = "video/airplayer";
+        public const string MIMETYPE = "video/airplayer";
     }
 }

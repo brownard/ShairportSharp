@@ -94,12 +94,12 @@ namespace AirPlayer.Common.Hls
             };
 
             Logger.Debug("VideoInfo: Analyse started at {0}", DateTime.Now);
-            analyseDownloader.BeginDownload();
             lock (timeoutTimer)
             {
                 analyseComplete = false;
                 timeoutTimer.Start();
             }
+            analyseDownloader.BeginDownload();
         }
 
         public void BeginDownload()

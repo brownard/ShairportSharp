@@ -1,9 +1,11 @@
-﻿using System;
+﻿using DirectShow;
+using DirectShow.Helper;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace DirectShow.Helper
+namespace AirPlayer.Common.DirectShow
 {
     public static class Utils
     {

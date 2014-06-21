@@ -1,4 +1,5 @@
-﻿using DirectShow;
+﻿using AirPlayer.Common.DirectShow;
+using DirectShow;
 using DirectShow.Helper;
 using ShairportSharp.Audio;
 using System;

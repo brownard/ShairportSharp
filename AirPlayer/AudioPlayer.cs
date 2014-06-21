@@ -13,6 +13,7 @@ using DShowNET.Helper;
 using DirectShow.Helper;
 using ShairportSharp.Remote;
 using AirPlayer.Common.Player;
+using AirPlayer.Common.DirectShow;
 
 namespace AirPlayer
 {
@@ -244,7 +245,7 @@ namespace AirPlayer
             {
                 graphBuilder = (IGraphBuilder)new FilterGraph();
                 iStage = 5;
-                DirectShow.Helper.Utils.AddFilterByName(graphBuilder, DirectShow.FilterCategory.AudioRendererCategory, audioDevice);
+                Utils.AddFilterByName(graphBuilder, DirectShow.FilterCategory.AudioRendererCategory, audioDevice);
                 var sourceFilter = new GenericPushSourceFilter(settings.Source, settings.GetMediaType());
                 hr = graphBuilder.AddFilter(sourceFilter, sourceFilter.Name);
                 new HRESULT(hr).Throw();

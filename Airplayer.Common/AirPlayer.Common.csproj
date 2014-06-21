@@ -40,6 +40,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DirectShow\GenericPushSourceFilter.cs" />
+    <Compile Include="DirectShow\Utils.cs" />
     <Compile Include="Hls\Downloader.cs" />
     <Compile Include="Hls\HlsParser.cs" />
     <Compile Include="Logger.cs" />

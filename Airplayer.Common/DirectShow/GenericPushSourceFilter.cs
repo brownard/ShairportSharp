@@ -5,8 +5,9 @@ using System.Linq;
 using System.Text;
 using DirectShow.BaseClasses;
 using DirectShow.Helper;
+using DirectShow;
 
-namespace DirectShow
+namespace AirPlayer.Common.DirectShow
 {
     public class GenericPushSourceFilter : BaseSourceFilterTemplate<GenericFileParser>
     {

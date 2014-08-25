@@ -224,21 +224,20 @@ namespace AirPlayer
 
             invoke(delegate()
             {
+                if (!isAudioBuffering)
+                {
+                    airtunesServer.SendCommand(RemoteCommand.Stop);
+                    return;
+                }
+                isAudioBuffering = false;
+                GUIWaitCursor.Hide();
                 startPlayback(input);
             }, false);
         }
 
         void startPlayback(AudioBufferStream stream)
         {
-            if (!isAudioBuffering)
-            {
-                airtunesServer.SendCommand(RemoteCommand.Pause);
-                return;
-            }
-            isAudioBuffering = false;
-            GUIWaitCursor.Hide();
             stopCurrentItem();
-
             IPlayer player = new AudioPlayer(new PlayerSettings(stream));
             currentAudioPlayer = player as IAudioPlayer;
             IPlayerFactory savedFactory = g_Player.Factory;
@@ -264,13 +263,27 @@ namespace AirPlayer
             });
         }
 
+        void restartPlayback()
+        {
+            AudioBufferStream input = airtunesServer.GetStream(StreamType.Wave);
+            if (input != null)
+                startPlayback(input);
+        }
+
         void airtunesServer_PlaybackProgressChanged(object sender, PlaybackProgressChangedEventArgs e)
         {
             invoke(delegate()
             {
+                //If we have maunally stopped MP's player we stop playback on the client too causing it to send us zeroed timestamps.
+                //If playback has been restarted on the client and the original connection is still open, it sends new timestamps 
+                //so we should restart playback in this case.
+                bool restart = currentStartStamp == 0 && currentStopStamp == 0;
                 currentStartStamp = e.Start;
                 currentStopStamp = e.Stop;
-                setDuration();
+                if (restart)
+                    restartPlayback();
+                else
+                    setDuration();
             }, false);
         }
 
@@ -734,7 +747,7 @@ namespace AirPlayer
             isVideoPlaying = false;
             if (currentAudioPlayer != null)
             {
-                airtunesServer.SendCommand(RemoteCommand.Pause);
+                airtunesServer.SendCommand(RemoteCommand.Stop);
                 cleanupAudioPlayback();
             }
             if (currentVideoPlayer != null)

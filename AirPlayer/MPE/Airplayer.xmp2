@@ -189,23 +189,7 @@ Click Next to continue or Cancel to exit Setup.</Value>
     </Items>
   </Dependencies>
   <PluginDependencies>
-    <Items>
-      <PluginDependencyItem AssemblyName="AirPlayer.dll">
-        <CompatibleVersion>
-          <Items>
-            <CompatibleVersionItem>
-              <MinRequiredVersion>1.2.0.0</MinRequiredVersion>
-              <DesignedForVersion>1.4.0.0</DesignedForVersion>
-            </CompatibleVersionItem>
-          </Items>
-        </CompatibleVersion>
-        <SubSystemsUsed>
-          <Items>
-            <SubSystemItem Name="MP.Players.Music" />
-          </Items>
-        </SubSystemsUsed>
-      </PluginDependencyItem>
-    </Items>
+    <Items />
   </PluginDependencies>
   <GeneralInfo>
     <Name>AirPlayer</Name>
@@ -217,21 +201,16 @@ Click Next to continue or Cancel to exit Setup.</Value>
     <Version>
       <Major>0</Major>
       <Minor>4</Minor>
-      <Build>0</Build>
+      <Build>1</Build>
       <Revision>0</Revision>
     </Version>
     <ExtensionDescription>An Airplay server for MediaPortal. 
 
 Allows you to stream videos, photos and audio from your iDevice/iTunes to MediaPortal.</ExtensionDescription>
-    <VersionDescription>Add reverse proxy for secure http live streams
-Fix waking/entering screensaver when viewing photos
-Load images directly from memory instead of saving to file first
-Fix now playing screen shown instead of fullscreen video in certain circumstances
-Fix empty menu entry in homescreen
-Fix configured audio device not being used</VersionDescription>
+    <VersionDescription>Minor fixes</VersionDescription>
     <DevelopmentStatus>Stable</DevelopmentStatus>
     <OnlineLocation>http://www.team-mediaportal.com/index.php?option=com_mtree&amp;task=att_download&amp;link_id=308&amp;cf_id=24</OnlineLocation>
-    <ReleaseDate>2014-04-23T18:25:54</ReleaseDate>
+    <ReleaseDate>2014-06-22T18:25:54</ReleaseDate>
     <Tags />
     <Location>C:\AirPlayer.mpe1</Location>
     <Params>

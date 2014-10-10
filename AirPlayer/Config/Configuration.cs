@@ -20,6 +20,7 @@ namespace AirPlayer.Config
             nameTextBox.Text = pluginSettings.ServerName;
             passwordTextBox.Text = pluginSettings.Password;
             useDummyAddressCheckBox.Checked = pluginSettings.CustomAddress != null && pluginSettings.CustomAddress.Length > 0;
+            ios8WorkaroundCheckBox.Checked = pluginSettings.iOS8Workaround;
             //Audio
             rtspPortUpDown.Value = pluginSettings.RtspPort;
             udpPortUpDown.Value = pluginSettings.UdpPort;
@@ -36,6 +37,7 @@ namespace AirPlayer.Config
         {
             pluginSettings.ServerName = nameTextBox.Text;
             pluginSettings.Password = passwordTextBox.Text;
+            pluginSettings.iOS8Workaround = ios8WorkaroundCheckBox.Checked;
             if (useDummyAddressCheckBox.Checked)
             {
                 //keep existing address if we have one so the client knows to use saved credentials 
@@ -49,6 +51,7 @@ namespace AirPlayer.Config
             {
                 pluginSettings.CustomAddress = null;
             }
+
             pluginSettings.RtspPort = (int)rtspPortUpDown.Value;
             pluginSettings.UdpPort = (int)udpPortUpDown.Value;
             pluginSettings.AudioBuffer = audioBufferUpDown.Value;

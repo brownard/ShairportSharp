@@ -54,6 +54,7 @@
             this.label7 = new System.Windows.Forms.Label();
             this.toolTip = new System.Windows.Forms.ToolTip(this.components);
             this.useDummyAddressCheckBox = new System.Windows.Forms.CheckBox();
+            this.ios8WorkaroundCheckBox = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.audioBufferUpDown)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.udpPortUpDown)).BeginInit();
@@ -100,7 +101,7 @@
             // 
             // okButton
             // 
-            this.okButton.Location = new System.Drawing.Point(294, 323);
+            this.okButton.Location = new System.Drawing.Point(294, 293);
             this.okButton.Name = "okButton";
             this.okButton.Size = new System.Drawing.Size(75, 23);
             this.okButton.TabIndex = 13;
@@ -111,7 +112,7 @@
             // cancelButton
             // 
             this.cancelButton.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.cancelButton.Location = new System.Drawing.Point(375, 323);
+            this.cancelButton.Location = new System.Drawing.Point(375, 293);
             this.cancelButton.Name = "cancelButton";
             this.cancelButton.Size = new System.Drawing.Size(75, 23);
             this.cancelButton.TabIndex = 14;
@@ -131,7 +132,7 @@
             this.groupBox1.Controls.Add(this.label3);
             this.groupBox1.Controls.Add(this.rtspPortUpDown);
             this.groupBox1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.groupBox1.Location = new System.Drawing.Point(15, 128);
+            this.groupBox1.Location = new System.Drawing.Point(15, 100);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(208, 179);
             this.groupBox1.TabIndex = 15;
@@ -269,9 +270,9 @@
             this.groupBox2.Controls.Add(this.label8);
             this.groupBox2.Controls.Add(this.httpPortUpDown);
             this.groupBox2.Controls.Add(this.label7);
-            this.groupBox2.Location = new System.Drawing.Point(242, 128);
+            this.groupBox2.Location = new System.Drawing.Point(242, 100);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(208, 179);
+            this.groupBox2.Size = new System.Drawing.Size(208, 119);
             this.groupBox2.TabIndex = 16;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Video/Photo";
@@ -361,7 +362,7 @@
             // useDummyAddressCheckBox
             // 
             this.useDummyAddressCheckBox.AutoSize = true;
-            this.useDummyAddressCheckBox.Location = new System.Drawing.Point(86, 96);
+            this.useDummyAddressCheckBox.Location = new System.Drawing.Point(242, 234);
             this.useDummyAddressCheckBox.Name = "useDummyAddressCheckBox";
             this.useDummyAddressCheckBox.Size = new System.Drawing.Size(212, 17);
             this.useDummyAddressCheckBox.TabIndex = 17;
@@ -370,13 +371,24 @@
         "at you are also using different ports).");
             this.useDummyAddressCheckBox.UseVisualStyleBackColor = true;
             // 
+            // ios8WorkaroundCheckBox
+            // 
+            this.ios8WorkaroundCheckBox.AutoSize = true;
+            this.ios8WorkaroundCheckBox.Location = new System.Drawing.Point(242, 258);
+            this.ios8WorkaroundCheckBox.Name = "ios8WorkaroundCheckBox";
+            this.ios8WorkaroundCheckBox.Size = new System.Drawing.Size(147, 17);
+            this.ios8WorkaroundCheckBox.TabIndex = 18;
+            this.ios8WorkaroundCheckBox.Text = "Enable iOS 8 workaround";
+            this.ios8WorkaroundCheckBox.UseVisualStyleBackColor = true;
+            // 
             // Configuration
             // 
             this.AcceptButton = this.okButton;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.cancelButton;
-            this.ClientSize = new System.Drawing.Size(467, 357);
+            this.ClientSize = new System.Drawing.Size(467, 328);
+            this.Controls.Add(this.ios8WorkaroundCheckBox);
             this.Controls.Add(this.useDummyAddressCheckBox);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
@@ -430,5 +442,6 @@
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.ToolTip toolTip;
         private System.Windows.Forms.CheckBox useDummyAddressCheckBox;
+        private System.Windows.Forms.CheckBox ios8WorkaroundCheckBox;
     }
 }

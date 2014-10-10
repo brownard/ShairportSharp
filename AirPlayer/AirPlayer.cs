@@ -175,6 +175,7 @@ namespace AirPlayer
             airplayServer = new AirplayServer(settings.ServerName, settings.Password);
             airplayServer.MacAddress = settings.CustomAddress;
             airplayServer.Port = settings.AirplayPort;
+            airplayServer.iOS8Workaround = settings.iOS8Workaround;
             airplayServer.ShowPhoto += airplayServer_ShowPhoto;
             airplayServer.VideoReceived += airplayServer_VideoReceived;
             airplayServer.PlaybackInfoRequested += airplayServer_PlaybackInfoRequested;

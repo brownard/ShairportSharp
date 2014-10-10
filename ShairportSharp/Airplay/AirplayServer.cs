@@ -99,6 +99,13 @@ namespace ShairportSharp.Airplay
             set { port = value.CheckValidPortNumber(DEFAULT_PORT); }
         }
 
+        bool ios8Workaround;
+        public bool iOS8Workaround
+        {
+            get { return ios8Workaround; }
+            set { ios8Workaround = value; }
+        }
+
         public AirplayServerInfo ServerInfo
         {
             get { return serverInfo; }
@@ -221,7 +228,7 @@ namespace ShairportSharp.Airplay
                 listener = new HttpConnectionHandler(IPAddress.Any, port);
                 listener.SocketAccepted += listener_SocketAccepted;
                 listener.Start();
-                emitter = new AirplayEmitter(name.ComputerNameIfNullOrEmpty(), serverInfo, port, !string.IsNullOrEmpty(password));
+                emitter = new AirplayEmitter(name.ComputerNameIfNullOrEmpty(), serverInfo, port, !string.IsNullOrEmpty(password), ios8Workaround);
                 emitter.Publish();
             }
         }

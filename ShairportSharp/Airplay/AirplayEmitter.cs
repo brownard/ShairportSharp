@@ -20,13 +20,14 @@ namespace ShairportSharp.Airplay
         string features;
         int port;
         bool pass;
+        bool ios8Workaround;
 
         Dictionary<string, object> txtRecord;
         bool dummyVal = false;
         object timerSync = new object();
         Timer timer;
 
-        public AirplayEmitter(string name, AirplayServerInfo serverInfo, int port = 7000, bool pass = false)
+        public AirplayEmitter(string name, AirplayServerInfo serverInfo, int port = 7000, bool pass = false, bool ios8Workaround = false)
         {
             this.name = name;
             this.identifier = serverInfo.DeviceId;
@@ -35,6 +36,7 @@ namespace ShairportSharp.Airplay
             Logger.Debug("Features: {0} ({1})", serverInfo.Features, features);
             this.port = port;
             this.pass = pass;
+            this.ios8Workaround = ios8Workaround;
         }
 
         protected override NetService GetNetService()
@@ -45,7 +47,7 @@ namespace ShairportSharp.Airplay
             txtRecord.Add("model", model);
             txtRecord.Add("deviceid", identifier);
             txtRecord.Add("srcvers", "130.14");
-            txtRecord.Add("features", features);
+            txtRecord.Add("features", ios8Workaround ? "0x20F7" : features);
             if (pass) txtRecord.Add("pw", "1");
 
             NetService service = new NetService("", TYPE, name, port);

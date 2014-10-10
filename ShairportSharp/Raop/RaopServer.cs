@@ -80,11 +80,11 @@ namespace ShairportSharp.Raop
             set { password = value; }
         }
 
+        byte[] macAddress = null;
         /// <summary>
         /// The MAC address used to identify this server. If null or empty the actual MAC address of this computer will be used.
         /// Set to an alternative value to allow multiple servers on the same computer.
         /// </summary>
-        byte[] macAddress = null;
         public byte[] MacAddress
         {
             get { return macAddress; }

@@ -189,7 +189,23 @@ Click Next to continue or Cancel to exit Setup.</Value>
     </Items>
   </Dependencies>
   <PluginDependencies>
-    <Items />
+    <Items>
+      <PluginDependencyItem AssemblyName="AirPlayer.dll">
+        <CompatibleVersion>
+          <Items>
+            <CompatibleVersionItem>
+              <MinRequiredVersion>1.2.0.0</MinRequiredVersion>
+              <DesignedForVersion>1.4.0.0</DesignedForVersion>
+            </CompatibleVersionItem>
+          </Items>
+        </CompatibleVersion>
+        <SubSystemsUsed>
+          <Items>
+            <SubSystemItem Name="MP.Players.Music" />
+          </Items>
+        </SubSystemsUsed>
+      </PluginDependencyItem>
+    </Items>
   </PluginDependencies>
   <GeneralInfo>
     <Name>AirPlayer</Name>
@@ -200,17 +216,19 @@ Click Next to continue or Cancel to exit Setup.</Value>
     <UpdateUrl>http://www.team-mediaportal.com/index.php?option=com_mtree&amp;task=att_download&amp;link_id=308&amp;cf_id=52</UpdateUrl>
     <Version>
       <Major>0</Major>
-      <Minor>4</Minor>
-      <Build>1</Build>
+      <Minor>5</Minor>
+      <Build>0</Build>
       <Revision>0</Revision>
     </Version>
-    <ExtensionDescription>An Airplay server for MediaPortal. 
-
+    <ExtensionDescription>An Airplay server for MediaPortal. 
+
 Allows you to stream videos, photos and audio from your iDevice/iTunes to MediaPortal.</ExtensionDescription>
-    <VersionDescription>Minor fixes</VersionDescription>
+    <VersionDescription>Add workaround for iOS 8
+Improve stream quality selection (fixes iPlayer low quality)
+Minor fixes and improvements</VersionDescription>
     <DevelopmentStatus>Stable</DevelopmentStatus>
     <OnlineLocation>http://www.team-mediaportal.com/index.php?option=com_mtree&amp;task=att_download&amp;link_id=308&amp;cf_id=24</OnlineLocation>
-    <ReleaseDate>2014-06-22T18:25:54</ReleaseDate>
+    <ReleaseDate>2014-10-11T18:25:54</ReleaseDate>
     <Tags />
     <Location>C:\AirPlayer.mpe1</Location>
     <Params>

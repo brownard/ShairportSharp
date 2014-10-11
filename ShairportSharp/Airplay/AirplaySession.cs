@@ -389,6 +389,9 @@ namespace ShairportSharp.Airplay
                 {
                     if (plist.ContainsKey("Content-Location"))
                         contentLocation = (string)plist["Content-Location"];
+                    else if (plist.ContainsKey("host") && plist.ContainsKey("path"))
+                        contentLocation = string.Format("http://{0}{1}", plist["host"], plist["path"]);
+
                     if (plist.ContainsKey("Start-Position"))
                         startPosition = (double)plist["Start-Position"];
                 }
@@ -396,13 +399,10 @@ namespace ShairportSharp.Airplay
             else
             {
                 Dictionary<string, string> textParameters = request.GetContentString().AsTextParameters();
-                foreach (KeyValuePair<string, string> keyVal in textParameters)
-                {
-                    if (keyVal.Key == "Content-Location")
-                        contentLocation = keyVal.Value;
-                    else if (keyVal.Key == "Start-Position")
-                        startPosition = Convert.ToDouble(keyVal.Value, CultureInfo.InvariantCulture);
-                }
+                if (textParameters.ContainsKey("Content-Location"))
+                    contentLocation = textParameters["Content-Location"];
+                if (textParameters.ContainsKey("Start-Position"))
+                    startPosition = Convert.ToDouble(textParameters["Start-Position"], CultureInfo.InvariantCulture);
             }
 
             if (!string.IsNullOrEmpty(contentLocation))

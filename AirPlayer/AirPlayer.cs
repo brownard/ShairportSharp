@@ -266,6 +266,7 @@ namespace AirPlayer
 
         void restartPlayback()
         {
+            Logger.Instance.Debug("AirPlayer: Restarting playback");
             AudioBufferStream input = airtunesServer.GetStream(StreamType.Wave);
             if (input != null)
                 startPlayback(input);
@@ -275,10 +276,8 @@ namespace AirPlayer
         {
             invoke(delegate()
             {
-                //If we have maunally stopped MP's player we stop playback on the client too causing it to send us zeroed timestamps.
-                //If playback has been restarted on the client and the original connection is still open, it sends new timestamps 
-                //so we should restart playback in this case.
-                bool restart = currentStartStamp == 0 && currentStopStamp == 0;
+
+                bool restart = !isAudioBuffering && !isAudioPlaying && currentStartStamp == 0 && currentStopStamp == 0;
                 currentStartStamp = e.Start;
                 currentStopStamp = e.Stop;
                 if (restart)

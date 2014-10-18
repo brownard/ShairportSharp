@@ -74,6 +74,7 @@
     <Compile Include="Audio\BiquadFilter.cs" />
     <Compile Include="Audio\DecryptedAudioBuffer.cs" />
     <Compile Include="Bonjour\BonjourEmitter.cs" />
+    <Compile Include="Constants.cs" />
     <Compile Include="Http\HttpConnectionHandler.cs" />
     <Compile Include="Http\HttpMessage.cs" />
     <Compile Include="Http\HttpParser.cs" />

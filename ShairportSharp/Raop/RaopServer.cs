@@ -98,7 +98,18 @@ namespace ShairportSharp.Raop
         public int Port
         {
             get { return port; }
-            set { port = value.CheckValidPortNumber(DEFAULT_PORT); } 
+            set { port = value.CheckValidPortNumber(DEFAULT_PORT); }
+        }
+
+        string modelName = Constants.DEFAULT_MODEL_NAME;
+        /// <summary>
+        /// The model of the server, should be in the format '[NAME], [VERSION]'
+        /// In most cases can be left as the default 'ShairportSharp, 1'
+        /// </summary>
+        public string ModelName
+        {
+            get { return modelName; }
+            set { modelName = value; }
         }
 
         /// <summary>
@@ -331,7 +342,7 @@ namespace ShairportSharp.Raop
 
         void publishBonjour()
         {
-            bonjour = new RaopEmitter(name.ComputerNameIfNullOrEmpty(), macAddress.HexStringFromBytes(), port, !string.IsNullOrEmpty(password));
+            bonjour = new RaopEmitter(name.ComputerNameIfNullOrEmpty(), macAddress.HexStringFromBytes(), port, modelName, !string.IsNullOrEmpty(password));
             bonjour.Publish();
         }
 

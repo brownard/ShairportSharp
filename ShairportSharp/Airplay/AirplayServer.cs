@@ -38,7 +38,6 @@ namespace ShairportSharp.Airplay
         {
             serverInfo = new AirplayServerInfo()
             {
-                Model = "MediaPortal,1",
                 ProtocolVersion = "1.0",
                 ServerVersion = "130.14",
                 Features = AirplayFeature.Photo |
@@ -104,6 +103,17 @@ namespace ShairportSharp.Airplay
         {
             get { return ios8Workaround; }
             set { ios8Workaround = value; }
+        }
+
+        string modelName = Constants.DEFAULT_MODEL_NAME;
+        /// <summary>
+        /// The model of the server, should be in the format '[NAME], [VERSION]'
+        /// In most cases can be left as the default 'ShairportSharp, 1'
+        /// </summary>
+        public string ModelName
+        {
+            get { return modelName; }
+            set { modelName = value; }
         }
 
         public AirplayServerInfo ServerInfo
@@ -223,6 +233,7 @@ namespace ShairportSharp.Airplay
                 if (listener != null)
                     Stop();
 
+                serverInfo.Model = modelName;
                 serverInfo.DeviceId = macAddress.HexStringFromBytes(":");
                 Logger.Info("Airplay Server: Starting - MAC address {0}, port {1}", serverInfo.DeviceId, port);
                 listener = new HttpConnectionHandler(IPAddress.Any, port);

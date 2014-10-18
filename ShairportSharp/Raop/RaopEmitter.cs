@@ -12,14 +12,16 @@ namespace ShairportSharp.Raop
         const string TYPE = "_raop._tcp.";
         string name;
         string identifier;
+        string model;
         int port;
         bool pass;
 
-        public RaopEmitter(string name, string identifier, int port = 6000, bool pass = false)
+        public RaopEmitter(string name, string identifier, int port, string model, bool pass = false)
         {
             this.name = name;
             this.identifier = identifier;
             this.port = port;
+            this.model = model;
             this.pass = pass;
         }
 
@@ -40,6 +42,9 @@ namespace ShairportSharp.Raop
             txtRecord.Add("cn", "0,1");
             txtRecord.Add("vn", "3");
             txtRecord.Add("md", "0,1,2");
+            txtRecord.Add("da", "true");
+            txtRecord.Add("am", model);
+            txtRecord.Add("vs", "130.14");
 
             NetService service = new NetService("", TYPE, identifier + "@" + name, port);
             service.TXTRecordData = NetService.DataFromTXTRecordDictionary(txtRecord);

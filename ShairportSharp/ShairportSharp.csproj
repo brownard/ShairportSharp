@@ -82,7 +82,7 @@
     <Compile Include="Log\ILog.cs" />
     <Compile Include="Log\Logger.cs" />
     <Compile Include="Raop\RaopEmitter.cs" />
-    <Compile Include="Raop\Constants.cs" />
+    <Compile Include="Raop\RSAKey.cs" />
     <Compile Include="Raop\DmapData.cs" />
     <Compile Include="Helpers\ExtensionMethods.cs" />
     <Compile Include="Raop\RaopEventArgs.cs" />

@@ -490,7 +490,7 @@ namespace ShairportSharp.Raop
         {
             try
             {
-                PemReader pemReader = new PemReader(new StringReader(Constants.RSA_KEY));
+                PemReader pemReader = new PemReader(new StringReader(RSAKey.RSA_KEY));
                 AsymmetricCipherKeyPair pObj = (AsymmetricCipherKeyPair)pemReader.ReadObject();
                 IBufferedCipher cipher = CipherUtilities.GetCipher("RSA/ECB/PKCS1Padding");
                 cipher.Init(true, pObj.Private);
@@ -510,7 +510,7 @@ namespace ShairportSharp.Raop
         {
             try
             {                
-                PemReader pemReader = new PemReader(new StringReader(Constants.RSA_KEY));
+                PemReader pemReader = new PemReader(new StringReader(RSAKey.RSA_KEY));
                 AsymmetricCipherKeyPair pObj = (AsymmetricCipherKeyPair)pemReader.ReadObject();
                 IBufferedCipher cipher = CipherUtilities.GetCipher("RSA/NONE/OAEPPadding");
                 cipher.Init(false, pObj.Private);

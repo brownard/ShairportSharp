@@ -5,7 +5,7 @@ using System.Text;
 
 namespace ShairportSharp.Raop
 {
-    static class Constants
+    static class RSAKey
     {
         public const string RSA_KEY = //Insert RSA Key
     }

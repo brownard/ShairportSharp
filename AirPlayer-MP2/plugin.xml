@@ -29,63 +29,6 @@
   <Register Location="/VideoPlayers/MimeTypeRegistrations">
     <VideoPlayerMimeTypeMapping Id="airplay" ClassName="AirPlayer.MediaPortal2.AirplayVideoPlayer" MimeType="video/airplayer"/>
   </Register>
-  
-  <!--<Register Location="/Workflow/States">
-    <WorkflowState Id="F9D7500D-EC5C-4FEF-8FAE-E4DED8A22CE0"
-        Name="OnlineVideosSites" MainScreen="sites" WorkflowModel="C418243F-5BD3-4637-8871-DA6545387929"
-        DisplayLabel="OnlineVideos"/>
-
-    <WorkflowState Id="BFDE18C2-0019-43D5-8ED7-8C9C426CE4A1"
-        Name="OnlineVideosSiteSettings" MainScreen="ovsSiteSettings" WorkflowModel="C418243F-5BD3-4637-8871-DA6545387929"
-        DisplayLabel="Settings"/>
-
-    <WorkflowState Id="FF474A1A-CA39-4247-BFEA-4E7B578F482B"
-        Name="OnlineVideosVideos" MainScreen="videos" WorkflowModel="C418243F-5BD3-4637-8871-DA6545387929"
-        DisplayLabel="Category:"/>
-
-    <WorkflowState Id="F7DF593E-A606-4096-B8E1-BE702C43A325"
-      Name="OnlineVideosDetails" MainScreen="details" WorkflowModel="C418243F-5BD3-4637-8871-DA6545387929"
-      DisplayLabel="Video:"/>
-
-    <DialogState Id="F068C0DE-3763-4BA1-A59F-24435DBF0227"
-        Name="OnlineVideosSearch" DialogScreen="dialogSearch" WorkflowModel="C418243F-5BD3-4637-8871-DA6545387929"
-        DisplayLabel="[OnlineVideos.Search]" />
-
-    <WorkflowState Id="026DF45C-86CB-44AE-9174-114810A6BAFF"
-        Name="OnlineVideosSiteManagement" MainScreen="ovsSiteManagement" WorkflowModel="C39D6682-90B5-4813-8A28-A1C9118D4F3E"
-        DisplayLabel="[OnlineVideos.ManageSites]"/>
-
-    <WorkflowState Id="6B369DE9-CD49-4C11-9FF4-5BD157BF6902"
-        Name="OnlineVideosUserReports" MainScreen="ovsUserReports" WorkflowModel="C39D6682-90B5-4813-8A28-A1C9118D4F3E"
-        DisplayLabel="[OnlineVideos.Reports]"/>
-
-    <DialogState Id="F6E1864A-4B9E-45FF-8200-23F4C1798562"
-        Name="OnlineVideosSiteUpdate" DialogScreen="ovsDialogSiteUpdate" WorkflowModel="C8EA3B4B-E484-469B-AE3E-56A8E9EF9F04"
-        DisplayLabel="[OnlineVideos.AutomaticUpdate]" />
-
-    <DialogState Id="23E542F8-CA2A-45F4-B173-47801C4480E4"
-        Name="OnlineVideosReportSite" DialogScreen="ovsDialogReportSite" WorkflowModel="C39D6682-90B5-4813-8A28-A1C9118D4F3E"
-        DisplayLabel="[OnlineVideos.ReportBroken]" />
-
-  </Register>
-  
-  --><!-- Registration of our skin directory --><!--
-  <Register Location="/Resources/Skin">
-    --><!-- This registration is necessary to declare the skin directory. You can use an arbitrary directory name or
-         relative path; the path must be the relative to directory of the plugin.
-         The id of the plugin can be arbitrary but must be unique in the MP 2 system. It is not referenced directly
-         in any place. --><!--
-    <Resource Id="OnlineVideosSkin" Directory="Skin" Type="Skin"/>
-  </Register>
-
-  --><!-- Registration of our language directory --><!--
-  <Register Location="/Resources/Language">
-    --><!-- This registration is necessary to declare the language directory. Just like for the skin directory,
-         you can use an arbitrary directory name or relative path; the path must be the relative to the directory of the plugin.
-         The id of the plugin can be arbitrary but must be unique in the MP 2 system. It is not referenced directly
-         in any place. --><!--
-    <Resource Id="OnlineVideosLanguage" Directory="Language" Type="Language"/>
-  </Register>
 
   --> 
   <!--Registration of our configuration section--> 
@@ -113,6 +56,11 @@
         Text="Use dummy identifier"
         HelpText="Use a custom identifier, allows multiple airplay servers on the same machine"
         ClassName="AirPlayer.MediaPortal2.Configuration.DummyIdentifier"/>
+    <ConfigSetting
+        Id="iOS8Workaround"
+        Text="Enable iOS 8 workaround"
+        HelpText="Enable experimental support for iOS 8"
+        ClassName="AirPlayer.MediaPortal2.Configuration.iOS8Workaround"/>
     <ConfigSetting
         Id="AirPlayerRtspPort"
         Text="RTSP port"

@@ -39,6 +39,9 @@ namespace AirPlayer.MediaPortal2.Configuration
         [Setting(SettingScope.User, null)]
         public byte[] CustomAddress { get; set; }
 
+        [Setting(SettingScope.User, false)]
+        public bool iOS8Workaround { get; set; }
+
         [Setting(SettingScope.User, DEFAULT_RTSP_PORT)]
         public int RtspPort { get; set; }
 
@@ -127,6 +130,21 @@ namespace AirPlayer.MediaPortal2.Configuration
             {
                 settings.CustomAddress = null;
             }
+            SettingsManager.Save(settings);
+        }
+    }
+
+    public class iOS8Workaround : YesNo
+    {
+        public override void Load()
+        {
+            _yes = SettingsManager.Load<PluginSettings>().iOS8Workaround;
+        }
+
+        public override void Save()
+        {
+            PluginSettings settings = SettingsManager.Load<PluginSettings>();
+            settings.iOS8Workaround = _yes;
             SettingsManager.Save(settings);
         }
     }

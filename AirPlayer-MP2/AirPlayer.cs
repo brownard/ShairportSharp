@@ -235,6 +235,7 @@ namespace AirPlayer.MediaPortal2
                 airplayServer.Name = settings.ServerName;
                 airplayServer.Password = settings.Password;
                 airplayServer.MacAddress = settings.CustomAddress;
+                airplayServer.iOS8Workaround = settings.iOS8Workaround;
                 airplayServer.Port = settings.AirplayPort;
                 airplayServer.Start();
             }

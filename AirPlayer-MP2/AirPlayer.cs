@@ -104,7 +104,7 @@ namespace AirPlayer.MediaPortal2
 
         void OnMessageReceived(AsynchronousMessageQueue queue, SystemMessage message)
         {
-            if (message.ChannelName == PlayerManagerMessaging.CHANNEL)
+            if (message.ChannelName == PlayerManagerMessaging.CHANNEL && message.MessageData.ContainsKey(PlayerManagerMessaging.PLAYER_SLOT_CONTROLLER))
             {
                 HandlePlayerMessage((PlayerManagerMessaging.MessageType)message.MessageType, (IPlayerSlotController)message.MessageData[PlayerManagerMessaging.PLAYER_SLOT_CONTROLLER]);
             }

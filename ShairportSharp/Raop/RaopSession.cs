@@ -426,8 +426,6 @@ namespace ShairportSharp.Raop
                 Logger.Debug("RAOPSession: Set client timing port to {0}", timingPort);
             }
 
-            //OnStreamStarting(EventArgs.Empty);
-
             AudioSession session = new AudioSession(aesIV, aesKey, fmtp, controlPort, timingPort, BufferSize);
             audioServer = new AudioServer(session, UDPPort);
             audioServer.Buffer.BufferReady += (o, e) => OnStreamReady(EventArgs.Empty);
@@ -497,7 +495,10 @@ namespace ShairportSharp.Raop
                 return cipher.DoFinal(array);
 
             }
-            catch { }
+            catch(Exception ex) 
+            {
+                Logger.Error("RAOPSession: Exception encrypting RSA -", ex);
+            }
             return null;
         }
 
@@ -516,7 +517,10 @@ namespace ShairportSharp.Raop
                 cipher.Init(false, pObj.Private);
                 return cipher.DoFinal(array);
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Logger.Error("RAOPSession: Exception decrypting RSA -", ex);
+            }
             return null;
         }
 

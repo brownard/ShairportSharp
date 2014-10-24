@@ -22,8 +22,7 @@
   </Runtime>
 
   <Register Location="/Players/Builders">
-    <PlayerBuilder Id="1BC2FC01-60EA-459C-9F91-65A2050A078F" ClassName="AirPlayer.MediaPortal2.AudioPlayerBuilder"/>
-    <PlayerBuilder Id="F3A48E3B-1CE8-4506-9FD3-5869E7AEB7E4" ClassName="AirPlayer.MediaPortal2.ImagePlayerBuilder"/>
+    <PlayerBuilder Id="1BC2FC01-60EA-459C-9F91-65A2050A078F" ClassName="AirPlayer.MediaPortal2.AirplayPlayerBuilder"/>
   </Register>
   
   <Register Location="/VideoPlayers/MimeTypeRegistrations">

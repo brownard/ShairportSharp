@@ -14,20 +14,31 @@ namespace AirPlayer.MediaPortal2
     /// <summary>
     /// Player builder for Airplay audio streams.
     /// </summary>
-    public class AudioPlayerBuilder : IPlayerBuilder
+    public class AirplayPlayerBuilder : IPlayerBuilder
     {
         #region IPlayerBuilder implementation
 
         public IPlayer GetPlayer(MediaItem mediaItem)
         {
             AudioItem audioItem = mediaItem as AudioItem;
-            if (audioItem == null)
-                return null;
+            if (audioItem != null)
+                return getAudioPlayer(audioItem);
 
-            AirplayAudioPlayer player = new AirplayAudioPlayer(audioItem.PlayerSettings);
+            ImageItem imageItem = mediaItem as ImageItem;
+            if (imageItem != null)
+                return getImagePlayer(imageItem);
+
+            return null;
+        }
+
+        #endregion
+
+        IPlayer getAudioPlayer(AudioItem mediaItem)
+        {
+            AirplayAudioPlayer player = new AirplayAudioPlayer(mediaItem.PlayerSettings);
             try
             {
-                player.SetMediaItem(audioItem.GetResourceLocator(), null);
+                player.SetMediaItem(mediaItem.GetResourceLocator(), null);
             }
             catch (Exception e)
             {
@@ -40,6 +51,11 @@ namespace AirPlayer.MediaPortal2
             return (IPlayer)player;
         }
 
-        #endregion
+        IPlayer getImagePlayer(ImageItem mediaItem)
+        {
+            AirplayImagePlayer player = new AirplayImagePlayer();
+            player.NextItem(mediaItem, StartTime.AtOnce);
+            return (IPlayer)player;
+        }
     }
 }

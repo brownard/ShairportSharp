@@ -20,6 +20,8 @@ namespace AirPlayer.MediaPortal2
 {
     class AirplayImagePlayer : ISharpDXImagePlayer, IReusablePlayer
     {
+        public const string MIMETYPE = "airplay-image/airplayer";
+        public const string DUMMY_FILE = "airplay://localhost/AirPlayerImage.airplay";
         protected static readonly IImageAnimator STILL_IMAGE_ANIMATION = new StillImageAnimator();
 
         object imageSync = new object();

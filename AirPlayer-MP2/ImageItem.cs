@@ -24,7 +24,8 @@ namespace AirPlayer.MediaPortal2
             ImageId = imageId;
             ImageData = imageData;
             Aspects[ProviderResourceAspect.ASPECT_ID].SetAttribute(ProviderResourceAspect.ATTR_SYSTEM_ID, ServiceRegistration.Get<ISystemResolver>().LocalSystemId);
-            Aspects[ProviderResourceAspect.ASPECT_ID].SetAttribute(ProviderResourceAspect.ATTR_RESOURCE_ACCESSOR_PATH, RawUrlResourceProvider.ToProviderResourcePath(AirplayAudioPlayer.DUMMY_FILE).Serialize());
+            Aspects[ProviderResourceAspect.ASPECT_ID].SetAttribute(ProviderResourceAspect.ATTR_RESOURCE_ACCESSOR_PATH, RawUrlResourceProvider.ToProviderResourcePath(AirplayImagePlayer.DUMMY_FILE).Serialize());
+            Aspects[MediaAspect.ASPECT_ID].SetAttribute(MediaAspect.ATTR_MIME_TYPE, AirplayImagePlayer.MIMETYPE);
             Aspects[ImageAspect.ASPECT_ID].SetAttribute(ImageAspect.ATTR_ORIENTATION, 0);
         }
 

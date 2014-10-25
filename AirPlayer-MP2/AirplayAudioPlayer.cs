@@ -13,7 +13,7 @@ namespace AirPlayer.MediaPortal2
 {
     public class AirplayAudioPlayer : BaseDXPlayer, MediaPortal.UI.Presentation.Players.IAudioPlayer, Common.Player.IAudioPlayer, IReusablePlayer
     {
-        public const string MIMETYPE = "audio/airplayer";
+        public const string MIMETYPE = "airplay-audio/airplayer";
         public const string DUMMY_FILE = "airplay://localhost/AirPlayerAudio.airplay";
         PlayerSettings settings;
 

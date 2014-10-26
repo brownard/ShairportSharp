@@ -471,14 +471,17 @@ namespace AirPlayer.MediaPortal2
                     useMPUrlSourceFilter = !isSecureUrl(finalUrl) && (hlsParser.Success || isKnownExtension(finalUrl));
                 }
                 hlsParser = null;
+                ServiceRegistration.Get<ISuperLayerManager>().HideBusyScreen();
                 startVideoLoading(finalUrl, useMPUrlSourceFilter);
             }
         }
 
         void startVideoLoading(string url, bool useMPSourceFilter = false)
         {
-            ServiceRegistration.Get<ISuperLayerManager>().HideBusyScreen();
             PlayItemsModel.CheckQueryPlayAction(new VideoItem(url));
+            lastVideoUrl = url;
+            lastVideoSessionId = currentVideoSessionId;
+            lastUseMPUrlSourceFilter = useMPSourceFilter;
         }
 
         void airplayServer_PlaybackInfoRequested(object sender, PlaybackInfoEventArgs e)

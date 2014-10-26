@@ -2,6 +2,8 @@
 using AirPlayer.Common.Player;
 using AirPlayer.Common.Proxy;
 using AirPlayer.MediaPortal2.Configuration;
+using AirPlayer.MediaPortal2.MediaItems;
+using AirPlayer.MediaPortal2.Players;
 using MediaPortal.Common;
 using MediaPortal.Common.MediaManagement;
 using MediaPortal.Common.Messaging;
@@ -33,8 +35,6 @@ namespace AirPlayer.MediaPortal2
     public class AirPlayer : IPluginStateTracker
     {
         #region Variables
-
-        string pluginIconPath;
 
         AsynchronousMessageQueue _messageQueue;
         readonly SettingsChangeWatcher<PluginSettings> settingsWatcher = new SettingsChangeWatcher<PluginSettings>();
@@ -181,7 +181,6 @@ namespace AirPlayer.MediaPortal2
             airplayServer.PlaybackRateChanged += airplayServer_PlaybackRateChanged;
             airplayServer.VolumeChanged += airplayServer_VolumeChanged;
             airplayServer.SessionStopped += airplayServer_SessionStopped;
-            airplayServer.SessionClosed += airplayServer_SessionClosed;
 
             init();
         }
@@ -272,10 +271,6 @@ namespace AirPlayer.MediaPortal2
 
         void airtunesServer_StreamReady(object sender, EventArgs e)
         {
-            AudioBufferStream stream = airtunesServer.GetStream(StreamType.Wave);
-            if (stream == null)
-                return;
-
             lock (audioInfoSync)
             {
                 if (!isAudioBuffering)
@@ -285,6 +280,15 @@ namespace AirPlayer.MediaPortal2
                 }
                 isAudioBuffering = false;
                 ServiceRegistration.Get<ISuperLayerManager>().HideBusyScreen();
+                startPlayback();
+            }
+        }
+
+        void startPlayback()
+        {
+            AudioBufferStream stream = airtunesServer.GetStream(StreamType.Wave);
+            if (stream != null)
+            {
                 AudioItem item = new AudioItem(new PlayerSettings(stream));
                 setMetaData(item);
                 PlayItemsModel.CheckQueryPlayAction(item);
@@ -297,9 +301,13 @@ namespace AirPlayer.MediaPortal2
         {
             lock (audioInfoSync)
             {
+                bool restart = !isAudioBuffering && !isAudioPlaying && currentStartStamp == 0 && currentStopStamp == 0;
                 currentStartStamp = e.Start;
                 currentStopStamp = e.Stop;
-                setDuration();
+                if (restart)
+                    startPlayback();
+                else
+                    setDuration();
             }
         }
 
@@ -364,13 +372,9 @@ namespace AirPlayer.MediaPortal2
                 }
 
                 if (e.Volume < -30)
-                {
                     pm.Muted = true;
-                }
                 else
-                {
                     pm.Volume = (int)((e.Volume + 30) / 0.3);
-                }
             }
         }
 
@@ -602,11 +606,6 @@ namespace AirPlayer.MediaPortal2
                     stopPlayer<AirplayImagePlayer>();
                 }
             }
-        }
-
-        void airplayServer_SessionClosed(object sender, AirplayEventArgs e)
-        {
-
         }
 
         #endregion

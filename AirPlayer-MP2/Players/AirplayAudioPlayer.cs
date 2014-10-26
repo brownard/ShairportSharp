@@ -1,5 +1,6 @@
 ﻿using AirPlayer.Common.DirectShow;
 using AirPlayer.Common.Player;
+using AirPlayer.MediaPortal2.MediaItems;
 using DirectShow.Helper;
 using MediaPortal.UI.Players.Video;
 using MediaPortal.UI.Presentation.Players;
@@ -9,7 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AirPlayer.MediaPortal2
+namespace AirPlayer.MediaPortal2.Players
 {
     public class AirplayAudioPlayer : BaseDXPlayer, MediaPortal.UI.Presentation.Players.IAudioPlayer, Common.Player.IAudioPlayer, IReusablePlayer
     {
@@ -38,11 +39,6 @@ namespace AirPlayer.MediaPortal2
             hr = source2.OutputPin.Render();
             new HRESULT(hr).Throw();
             return;
-        }
-
-        protected override void FreeCodecs()
-        {
-
         }
 
         public override string Name
@@ -75,10 +71,7 @@ namespace AirPlayer.MediaPortal2
                 }
                 return TimeSpan.Zero;
             }
-            set
-            {
-
-            }
+            set { }
         }
 
         public override TimeSpan Duration

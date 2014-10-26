@@ -1,4 +1,5 @@
-﻿using MediaPortal.Common;
+﻿using AirPlayer.MediaPortal2.MediaItems;
+using MediaPortal.Common;
 using MediaPortal.Common.MediaManagement;
 using MediaPortal.Common.ResourceAccess;
 using MediaPortal.Common.Settings;
@@ -16,7 +17,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AirPlayer.MediaPortal2
+namespace AirPlayer.MediaPortal2.Players
 {
     class AirplayImagePlayer : ISharpDXImagePlayer, IReusablePlayer
     {

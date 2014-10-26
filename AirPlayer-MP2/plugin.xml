@@ -22,11 +22,11 @@
   </Runtime>
 
   <Register Location="/Players/Builders">
-    <PlayerBuilder Id="1BC2FC01-60EA-459C-9F91-65A2050A078F" ClassName="AirPlayer.MediaPortal2.AirplayPlayerBuilder"/>
+    <PlayerBuilder Id="1BC2FC01-60EA-459C-9F91-65A2050A078F" ClassName="AirPlayer.MediaPortal2.Players.AirplayPlayerBuilder"/>
   </Register>
   
   <Register Location="/VideoPlayers/MimeTypeRegistrations">
-    <VideoPlayerMimeTypeMapping Id="airplay" ClassName="AirPlayer.MediaPortal2.AirplayVideoPlayer" MimeType="video/airplayer"/>
+    <VideoPlayerMimeTypeMapping Id="airplay" ClassName="AirPlayer.MediaPortal2.Players.AirplayVideoPlayer" MimeType="video/airplayer"/>
   </Register>
 
   --> 
@@ -95,6 +95,5 @@
         Text="Allow HD streams"
         HelpText="Allow HD stream selection if available"
         ClassName="AirPlayer.MediaPortal2.Configuration.AllowHDStreams"/>
-  </Register>
-  
+  </Register>  
 </Plugin>

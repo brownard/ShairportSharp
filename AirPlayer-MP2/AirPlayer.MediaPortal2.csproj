@@ -74,16 +74,16 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AirplayAudioPlayer.cs" />
+    <Compile Include="Players\AirplayAudioPlayer.cs" />
     <Compile Include="AirPlayer.cs" />
-    <Compile Include="AirplayVideoPlayer.cs" />
-    <Compile Include="AudioItem.cs" />
-    <Compile Include="AirplayPlayerBuilder.cs" />
-    <Compile Include="ImageItem.cs" />
-    <Compile Include="AirplayImagePlayer.cs" />
+    <Compile Include="Players\AirplayVideoPlayer.cs" />
+    <Compile Include="MediaItems\AudioItem.cs" />
+    <Compile Include="Players\AirplayPlayerBuilder.cs" />
+    <Compile Include="MediaItems\ImageItem.cs" />
+    <Compile Include="Players\AirplayImagePlayer.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="Configuration\PluginSettings.cs" />
-    <Compile Include="VideoItem.cs" />
+    <Compile Include="MediaItems\VideoItem.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

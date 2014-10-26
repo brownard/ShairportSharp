@@ -8,8 +8,9 @@ using MediaPortal.Common;
 using MediaPortal.Common.SystemResolver;
 using MediaPortal.Common.ResourceAccess;
 using MediaPortal.Common.Services.ResourceAccess.RawUrlResourceProvider;
+using AirPlayer.MediaPortal2.Players;
 
-namespace AirPlayer.MediaPortal2
+namespace AirPlayer.MediaPortal2.MediaItems
 {
 	public class VideoItem : MediaItem
 	{

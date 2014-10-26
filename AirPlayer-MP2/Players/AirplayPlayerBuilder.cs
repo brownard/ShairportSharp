@@ -1,4 +1,5 @@
-﻿using MediaPortal.Common;
+﻿using AirPlayer.MediaPortal2.MediaItems;
+using MediaPortal.Common;
 using MediaPortal.Common.Logging;
 using MediaPortal.Common.MediaManagement;
 using MediaPortal.Common.PluginManager;
@@ -9,7 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AirPlayer.MediaPortal2
+namespace AirPlayer.MediaPortal2.Players
 {
     /// <summary>
     /// Player builder for Airplay audio streams.

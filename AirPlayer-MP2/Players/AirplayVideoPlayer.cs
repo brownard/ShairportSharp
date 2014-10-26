@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AirPlayer.MediaPortal2
+namespace AirPlayer.MediaPortal2.Players
 {
     public class AirplayVideoPlayer : VideoPlayer
     {

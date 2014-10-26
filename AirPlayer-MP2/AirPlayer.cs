@@ -382,7 +382,6 @@ namespace AirPlayer.MediaPortal2
         {
             lock (audioInfoSync)
             {
-                isAudioPlaying = false;
                 cleanupAudioPlayback();
                 stopPlayer<AirplayAudioPlayer>();
             }

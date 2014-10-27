@@ -57,6 +57,7 @@ namespace AirPlayer
         DateTime videoReceiveTime = DateTime.MinValue;
 
         IAudioPlayer currentAudioPlayer;
+        string currentAudioSessionId;
         bool isAudioBuffering;
         DmapData currentMeta;
         string currentCover;
@@ -212,6 +213,7 @@ namespace AirPlayer
                 stopCurrentItem();
                 cleanupPlayback();
                 GUIWaitCursor.Init(); GUIWaitCursor.Show();
+                currentAudioSessionId = e.SessionId;
                 isAudioBuffering = true;
             });
 
@@ -276,8 +278,9 @@ namespace AirPlayer
         {
             invoke(delegate()
             {
-
-                bool restart = !isAudioBuffering && !isAudioPlaying && currentStartStamp == 0 && currentStopStamp == 0;
+                //When stopping playback on the client by stopping MP's player we get zeroed timestamps, 
+                //if the client wants to restart playback and the connection is still open it just sends new timestamps 
+                bool restart = !isAudioBuffering && !isAudioPlaying && e.SessionId == currentAudioSessionId && currentStartStamp == 0 && currentStopStamp == 0;
                 currentStartStamp = e.Start;
                 currentStopStamp = e.Stop;
                 if (restart)

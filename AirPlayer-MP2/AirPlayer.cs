@@ -62,6 +62,7 @@ namespace AirPlayer.MediaPortal2
         string photoSessionId;
 
         object audioInfoSync = new object();
+        string currentAudioSessionId;
         bool isAudioBuffering;
         DmapData currentMeta;
         byte[] currentCover;
@@ -265,6 +266,7 @@ namespace AirPlayer.MediaPortal2
                 stopPlayer<AirplayAudioPlayer>();
                 cleanupAudioPlayback();
                 ServiceRegistration.Get<ISuperLayerManager>().ShowBusyScreen();
+                currentAudioSessionId = e.SessionId;
                 isAudioBuffering = true;
             }
         }
@@ -301,7 +303,9 @@ namespace AirPlayer.MediaPortal2
         {
             lock (audioInfoSync)
             {
-                bool restart = !isAudioBuffering && !isAudioPlaying && currentStartStamp == 0 && currentStopStamp == 0;
+                //When stopping playback on the client by stopping MP's player we get zeroed timestamps, 
+                //if the client wants to restart playback and the connection is still open it just sends new timestamps 
+                bool restart = !isAudioBuffering && !isAudioPlaying && currentAudioSessionId == e.SessionId && currentStartStamp == 0 && currentStopStamp == 0;
                 currentStartStamp = e.Start;
                 currentStopStamp = e.Stop;
                 if (restart)

@@ -230,7 +230,7 @@ namespace ShairportSharp_Test
 
         #region AirTunes Events
 
-        void server_StreamStarting(object sender, EventArgs e)
+        void server_StreamStarting(object sender, RaopEventArgs e)
         {
             if (InvokeRequired)
             {
@@ -254,7 +254,7 @@ namespace ShairportSharp_Test
             closeAirtunesForms();
         }
 
-        void server_StreamReady(object sender, EventArgs e)
+        void server_StreamReady(object sender, RaopEventArgs e)
         {
             if (InvokeRequired)
             {

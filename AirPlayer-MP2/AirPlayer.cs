@@ -258,7 +258,7 @@ namespace AirPlayer.MediaPortal2
 
         #region Airtunes Event Handlers
 
-        void airtunesServer_StreamStarting(object sender, EventArgs e)
+        void airtunesServer_StreamStarting(object sender, RaopEventArgs e)
         {
             lock (audioInfoSync)
             {
@@ -269,7 +269,7 @@ namespace AirPlayer.MediaPortal2
             }
         }
 
-        void airtunesServer_StreamReady(object sender, EventArgs e)
+        void airtunesServer_StreamReady(object sender, RaopEventArgs e)
         {
             lock (audioInfoSync)
             {

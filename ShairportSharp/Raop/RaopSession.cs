@@ -32,6 +32,7 @@ namespace ShairportSharp.Raop
         object requestLock = new object();
         AudioServer audioServer; // Audio listener
 
+        string sessionId;
         RemoteServerInfo remoteServerInfo = null;
         
         int[] fmtp; //audio stream info
@@ -46,8 +47,8 @@ namespace ShairportSharp.Raop
         /// <summary>
         /// Fired when the client begins streaming audio
         /// </summary>
-        public event EventHandler StreamStarting;
-        protected virtual void OnStreamStarting(EventArgs e)
+        public event EventHandler<RaopEventArgs> StreamStarting;
+        protected virtual void OnStreamStarting(RaopEventArgs e)
         {
             Logger.Debug("RAOPSession: Stream starting");
             if (StreamStarting != null)
@@ -57,8 +58,8 @@ namespace ShairportSharp.Raop
         /// <summary>
         /// Fired when the audio buffer has enough data to play
         /// </summary>
-        public event EventHandler StreamReady;
-        protected virtual void OnStreamReady(EventArgs e)
+        public event EventHandler<RaopEventArgs> StreamReady;
+        protected virtual void OnStreamReady(RaopEventArgs e)
         {
             if (StreamReady != null)
                 StreamReady(this, e);
@@ -210,6 +211,9 @@ namespace ShairportSharp.Raop
             string requestType = request.Method;
             lock (requestLock)
             {
+                if (sessionId == null && !string.IsNullOrEmpty(request.Uri) && request.Uri != "*")
+                    sessionId = request.Uri;
+
                 if (requestType == "OPTIONS")
                 {
                     response.SetHeader("Public", "ANNOUNCE, SETUP, RECORD, PAUSE, FLUSH, TEARDOWN, OPTIONS, GET_PARAMETER, SET_PARAMETER");
@@ -258,12 +262,12 @@ namespace ShairportSharp.Raop
                     if (contentType == "application/x-dmap-tagged")
                     {
                         Logger.Debug("RAOPSession: Received metadata");
-                        OnMetaDataChanged(new MetaDataChangedEventArgs(new DmapData(request.Content)));
+                        OnMetaDataChanged(new MetaDataChangedEventArgs(new DmapData(request.Content), sessionId));
                     }
                     else if (contentType != null && contentType.StartsWith("image/"))
                     {
                         Logger.Debug("RAOPSession: Received cover art");
-                        OnArtworkChanged(new ArtwokChangedEventArgs(request.Content, contentType));
+                        OnArtworkChanged(new ArtwokChangedEventArgs(request.Content, contentType, sessionId));
                     }
                     else
                     {
@@ -279,7 +283,7 @@ namespace ShairportSharp.Raop
                         {
                             handled = true;
                             Logger.Debug("RAOPSession: Client requested volume");
-                            VolumeRequestedEventArgs e = new VolumeRequestedEventArgs();
+                            VolumeRequestedEventArgs e = new VolumeRequestedEventArgs(sessionId);
                             OnVolumeRequested(e);
                             response["Content-Type"] = "text/parameters";
                             response.SetContent(string.Format(CultureInfo.InvariantCulture, "volume: {0}", e.Volume));
@@ -395,7 +399,7 @@ namespace ShairportSharp.Raop
             {
                 remoteServerInfo = new RemoteServerInfo(dacpId, activeRemote);
                 Logger.Debug("RAOPSession: Received remote info - DacpId : '{0}', ActiveRemote : '{1}'", dacpId, activeRemote);
-                OnRemoteFound(new RemoteInfoFoundEventArgs(remoteServerInfo));
+                OnRemoteFound(new RemoteInfoFoundEventArgs(remoteServerInfo, sessionId));
             }
         }
 
@@ -428,12 +432,12 @@ namespace ShairportSharp.Raop
 
             AudioSession session = new AudioSession(aesIV, aesKey, fmtp, controlPort, timingPort, BufferSize);
             audioServer = new AudioServer(session, UDPPort);
-            audioServer.Buffer.BufferReady += (o, e) => OnStreamReady(EventArgs.Empty);
+            audioServer.Buffer.BufferReady += (o, e) => OnStreamReady(new RaopEventArgs(sessionId));
             audioServer.Buffer.BufferChanged += (o, e) => 
             {
                 if (!bufferStarted && e.CurrentSize > 0)
                 {
-                    OnStreamStarting(EventArgs.Empty);
+                    OnStreamStarting(new RaopEventArgs(sessionId));
                     bufferStarted = true;
                 }
                 OnBufferChanged(e); 
@@ -462,7 +466,7 @@ namespace ShairportSharp.Raop
                 {
                     double volume = double.Parse(paramVal, CultureInfo.InvariantCulture);
                     Logger.Debug("RAOPSession: Set Volume: {0}", volume);
-                    OnVolumeChanged(new VolumeChangedEventArgs(volume));
+                    OnVolumeChanged(new VolumeChangedEventArgs(volume, sessionId));
                 }
                 else if (paramName == "progress")
                 {
@@ -473,7 +477,7 @@ namespace ShairportSharp.Raop
                         uint current = uint.Parse(m.Groups[2].Value, CultureInfo.InvariantCulture);
                         uint stop = uint.Parse(m.Groups[3].Value, CultureInfo.InvariantCulture);
                         Logger.Debug("RAOPSession: Set Progress: {0} / {1} / {2}", start, current, stop);
-                        OnProgressChanged(new PlaybackProgressChangedEventArgs(start, stop, current));
+                        OnProgressChanged(new PlaybackProgressChangedEventArgs(start, stop, current, sessionId));
                     }
                 }
             }

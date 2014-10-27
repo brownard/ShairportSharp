@@ -205,7 +205,7 @@ namespace AirPlayer
 
         #region Airtunes Event Handlers
         
-        void airtunesServer_StreamStarting(object sender, EventArgs e)
+        void airtunesServer_StreamStarting(object sender, RaopEventArgs e)
         {
             invoke(delegate()
             {
@@ -217,7 +217,7 @@ namespace AirPlayer
 
         }
 
-        void airtunesServer_StreamReady(object sender, EventArgs e)
+        void airtunesServer_StreamReady(object sender, RaopEventArgs e)
         {
             AudioBufferStream input = airtunesServer.GetStream(StreamType.Wave);
             if (input == null)

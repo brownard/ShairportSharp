@@ -6,9 +6,20 @@ using System.Text;
 
 namespace ShairportSharp.Raop
 {
-    public class VolumeChangedEventArgs : EventArgs
+    public class RaopEventArgs : EventArgs
     {
-        public VolumeChangedEventArgs(double volume)
+        public RaopEventArgs(string sessionId)
+        {
+            SessionId = sessionId;
+        }
+
+        public string SessionId { get; protected set; }
+    }
+
+    public class VolumeChangedEventArgs : RaopEventArgs
+    {
+        public VolumeChangedEventArgs(double volume, string sessionId)
+            : base(sessionId)
         {
             Volume = volume;
         }
@@ -16,14 +27,19 @@ namespace ShairportSharp.Raop
         public double Volume { get; private set; }
     }
 
-    public class VolumeRequestedEventArgs : EventArgs
+    public class VolumeRequestedEventArgs : RaopEventArgs
     {
+        public VolumeRequestedEventArgs(string sessionId)
+            : base(sessionId)
+        { }
+
         public double Volume { get; set; }
     }
 
-    public class MetaDataChangedEventArgs : EventArgs
+    public class MetaDataChangedEventArgs : RaopEventArgs
     {
-        public MetaDataChangedEventArgs(DmapData metaData)
+        public MetaDataChangedEventArgs(DmapData metaData, string sessionId)
+            : base(sessionId)
         {
             MetaData = metaData;
         }
@@ -31,9 +47,10 @@ namespace ShairportSharp.Raop
         public DmapData MetaData { get; private set; }
     }
 
-    public class ArtwokChangedEventArgs : EventArgs
+    public class ArtwokChangedEventArgs : RaopEventArgs
     {
-        public ArtwokChangedEventArgs(byte[] imageData, string contentType)
+        public ArtwokChangedEventArgs(byte[] imageData, string contentType, string sessionId)
+            : base(sessionId)
         {
             ImageData = imageData;
             ContentType = contentType;
@@ -43,9 +60,10 @@ namespace ShairportSharp.Raop
         public string ContentType { get; private set; }
     }
 
-    public class PlaybackProgressChangedEventArgs : EventArgs
+    public class PlaybackProgressChangedEventArgs : RaopEventArgs
     {
-        public PlaybackProgressChangedEventArgs(uint start, uint stop, uint current)
+        public PlaybackProgressChangedEventArgs(uint start, uint stop, uint current, string sessionId)
+            : base(sessionId)
         {
             Start = start;
             Stop = stop;
@@ -57,9 +75,10 @@ namespace ShairportSharp.Raop
         public uint Current { get; private set; }
     }
 
-    class RemoteInfoFoundEventArgs : EventArgs
+    class RemoteInfoFoundEventArgs : RaopEventArgs
     {
-        public RemoteInfoFoundEventArgs(RemoteServerInfo remoteServer)
+        public RemoteInfoFoundEventArgs(RemoteServerInfo remoteServer, string sessionId)
+            : base(sessionId)
         {
             RemoteServer = remoteServer;
         }

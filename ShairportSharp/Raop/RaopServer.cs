@@ -147,8 +147,8 @@ namespace ShairportSharp.Raop
         /// <summary>
         /// Fired when an audio stream has been started but not yet buffered fully.
         /// </summary>
-        public event EventHandler StreamStarting;
-        protected virtual void OnStreamStarting(EventArgs e)
+        public event EventHandler<RaopEventArgs> StreamStarting;
+        protected virtual void OnStreamStarting(RaopEventArgs e)
         {
             if (StreamStarting != null)
                 StreamStarting(this, e);
@@ -167,8 +167,8 @@ namespace ShairportSharp.Raop
         /// <summary>
         /// Fired when an audio stream has buffered fully and is ready to play.
         /// </summary>
-        public event EventHandler<EventArgs> StreamReady;
-        protected virtual void OnStreamReady(EventArgs e)
+        public event EventHandler<RaopEventArgs> StreamReady;
+        protected virtual void OnStreamReady(RaopEventArgs e)
         {
             if (StreamReady != null)
                 StreamReady(this, e);
@@ -392,7 +392,7 @@ namespace ShairportSharp.Raop
             }
         }
 
-        void streamStarting(object sender, EventArgs e)
+        void streamStarting(object sender, RaopEventArgs e)
         {
             lock (sessionLock)
             {
@@ -414,7 +414,7 @@ namespace ShairportSharp.Raop
             }
         }
 
-        void raop_StreamReady(object sender, EventArgs e)
+        void raop_StreamReady(object sender, RaopEventArgs e)
         {
             lock (sessionLock)
             {

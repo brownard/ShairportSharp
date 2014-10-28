@@ -270,6 +270,7 @@ namespace AirPlayer
         {
             Logger.Instance.Debug("AirPlayer: Restarting playback");
             AudioBufferStream input = airtunesServer.GetStream(StreamType.Wave);
+            Logger.Instance.Debug("AirPlayer: Got audio stream");
             if (input != null)
                 startPlayback(input);
         }

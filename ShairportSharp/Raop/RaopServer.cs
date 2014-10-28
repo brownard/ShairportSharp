@@ -34,7 +34,6 @@ namespace ShairportSharp.Raop
         object sessionLock = new object();
         RaopSession currentSession = null;
         RemoteHandler remoteHandler;
-        RemoteServerInfo currentRemote;
 
         #endregion
 
@@ -322,9 +321,10 @@ namespace ShairportSharp.Raop
         /// <param name="command">The playback command to send.</param>
         public void SendCommand(RemoteCommand command)
         {
-            RemoteServerInfo serverInfo;
+            RemoteServerInfo serverInfo = null;
             lock (sessionLock)
-                serverInfo = currentRemote;
+                if (currentSession != null)
+                    serverInfo = currentSession.RemoteServerInfo;
 
             if (serverInfo != null)
             {
@@ -365,7 +365,6 @@ namespace ShairportSharp.Raop
                     {
                         Logger.Info("RAOP Server: Stopping current connection, new connection requested");
                         currentSession.Close();
-                        currentRemote = null;
                     }
                     else
                     {
@@ -386,7 +385,6 @@ namespace ShairportSharp.Raop
                 raop.ArtworkChanged += raop_ArtworkChanged;
                 raop.VolumeChanged += raop_VolumeChanged;
                 raop.BufferChanged += raop_BufferChanged;
-                raop.RemoteFound += raop_RemoteFound;
                 raop.Start();
                 currentSession = raop;
             }
@@ -409,7 +407,6 @@ namespace ShairportSharp.Raop
                 {
                     OnStreamStopped(e);
                     currentSession = null;
-                    currentRemote = null;
                 }
             }
         }
@@ -465,15 +462,6 @@ namespace ShairportSharp.Raop
             {
                 if (sender == currentSession)
                     OnAudioBufferChanged(e);
-            }
-        }
-
-        void raop_RemoteFound(object sender, RemoteInfoFoundEventArgs e)
-        {
-            lock (sessionLock)
-            {
-                if (sender == currentSession)
-                    currentRemote = e.RemoteServer;
             }
         }
 

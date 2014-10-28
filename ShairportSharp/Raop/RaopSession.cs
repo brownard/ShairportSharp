@@ -30,11 +30,12 @@ namespace ShairportSharp.Raop
         byte[] localEndpoint;
 
         object requestLock = new object();
-        AudioServer audioServer; // Audio listener
-
-        string sessionId;
-        RemoteServerInfo remoteServerInfo = null;
         
+        object remoteServerLock = new object();
+        RemoteServerInfo remoteServerInfo = null;
+
+        object audioServerLock = new object();
+        AudioServer audioServer; // Audio listener
         int[] fmtp; //audio stream info
         byte[] aesKey; //audio data encryption key
         byte[] aesIV; //IV
@@ -122,13 +123,6 @@ namespace ShairportSharp.Raop
                 BufferChanged(this, e);
         }
 
-        public event EventHandler<RemoteInfoFoundEventArgs> RemoteFound;
-        protected virtual void OnRemoteFound(RemoteInfoFoundEventArgs e)
-        {
-            if (RemoteFound != null)
-                RemoteFound(this, e);
-        }
-
         #endregion
 
         #region Constructor
@@ -174,7 +168,7 @@ namespace ShairportSharp.Raop
         /// </summary>
         public override void Close()
         {
-            lock (requestLock)
+            lock (audioServerLock)
             {
                 if (audioServer != null)
                 {
@@ -209,95 +203,88 @@ namespace ShairportSharp.Raop
             }
 
             string requestType = request.Method;
-            lock (requestLock)
+            if (requestType == "OPTIONS")
             {
-                if (sessionId == null && !string.IsNullOrEmpty(request.Uri) && request.Uri != "*")
-                    sessionId = request.Uri;
+                response.SetHeader("Public", "ANNOUNCE, SETUP, RECORD, PAUSE, FLUSH, TEARDOWN, OPTIONS, GET_PARAMETER, SET_PARAMETER");
+            }
+            else if (requestType == "ANNOUNCE")
+            {
+                initRemoteHandler(request);
+                getSessionParams(request);
+            }
+            else if (requestType == "SETUP")
+            {
+                if (setupAudioServer(request))
+                {
+                    response.SetHeader("Transport", request.GetHeader("Transport") + ";server_port=" + audioServer.Port);
+                    response.SetHeader("Session", "DEADBEEF");
+                }
+            }
+            else if (requestType == "RECORD")
+            {
+                //        	Headers	
+                //        	Range: ntp=0-
+                //        	RTP-Info: seq={Note 1};rtptime={Note 2}
+                //        	Note 1: Initial value for the RTP Sequence Number, random 16 bit value
+                //        	Note 2: Initial value for the RTP Timestamps, random 32 bit value
 
-                if (requestType == "OPTIONS")
-                {
-                    response.SetHeader("Public", "ANNOUNCE, SETUP, RECORD, PAUSE, FLUSH, TEARDOWN, OPTIONS, GET_PARAMETER, SET_PARAMETER");
-                }
-                else if (requestType == "ANNOUNCE")
-                {
-                    initRemoteHandler(request);
-                    getSessionParams(request);
-                }
-                else if (requestType == "SETUP")
-                {
-                    if (setupAudioServer(request))
-                    {
-                        response.SetHeader("Transport", request.GetHeader("Transport") + ";server_port=" + audioServer.Port);
-                        response.SetHeader("Session", "DEADBEEF");
-                    }
-                }
-                else if (requestType == "RECORD")
-                {
-                    //        	Headers	
-                    //        	Range: ntp=0-
-                    //        	RTP-Info: seq={Note 1};rtptime={Note 2}
-                    //        	Note 1: Initial value for the RTP Sequence Number, random 16 bit value
-                    //        	Note 2: Initial value for the RTP Timestamps, random 32 bit value
-
-                    response.SetHeader("Audio-Latency", "44100");
-                }
-                else if (requestType == "FLUSH")
-                {
+                response.SetHeader("Audio-Latency", "44100");
+            }
+            else if (requestType == "FLUSH")
+            {
+                lock (audioServerLock)
                     if (audioServer != null)
-                    {
                         audioServer.Buffer.Flush();
-                    }
-                }
-                else if (requestType == "TEARDOWN")
-                {
-                    Logger.Debug("RAOPSession: TEARDOWN received");
-                    response.SetHeader("Connection", "close");
-                }
-                else if (requestType == "SET_PARAMETER")
-                {
-                    string contentType = request.GetHeader("Content-Type");
-                    if (contentType == null)
-                        Logger.Debug("RAOPSession: Empty Content-Type\r\n{0}", request.ToString());
+            }
+            else if (requestType == "TEARDOWN")
+            {
+                Logger.Debug("RAOPSession: TEARDOWN received");
+                response.SetHeader("Connection", "close");
+            }
+            else if (requestType == "SET_PARAMETER")
+            {
+                string contentType = request.GetHeader("Content-Type");
+                if (contentType == null)
+                    Logger.Debug("RAOPSession: Empty Content-Type\r\n{0}", request.ToString());
 
-                    if (contentType == "application/x-dmap-tagged")
-                    {
-                        Logger.Debug("RAOPSession: Received metadata");
-                        OnMetaDataChanged(new MetaDataChangedEventArgs(new DmapData(request.Content), sessionId));
-                    }
-                    else if (contentType != null && contentType.StartsWith("image/"))
-                    {
-                        Logger.Debug("RAOPSession: Received cover art");
-                        OnArtworkChanged(new ArtwokChangedEventArgs(request.Content, contentType, sessionId));
-                    }
-                    else
-                    {
-                        handleParameterString(request.GetContentString());
-                    }
-                }
-                else if (requestType == "GET_PARAMETER")
+                if (contentType == "application/x-dmap-tagged")
                 {
-                    bool handled = false;
-                    if (request["Content-Type"] == "text/parameters")
-                    {
-                        if (request.GetContentString().StartsWith("volume"))
-                        {
-                            handled = true;
-                            Logger.Debug("RAOPSession: Client requested volume");
-                            VolumeRequestedEventArgs e = new VolumeRequestedEventArgs(sessionId);
-                            OnVolumeRequested(e);
-                            response["Content-Type"] = "text/parameters";
-                            response.SetContent(string.Format(CultureInfo.InvariantCulture, "volume: {0}", e.Volume));
-                        }
-                    }
-                    if (!handled)
-                        Logger.Debug("Unhandled GET_PARAMETER request\r\n{0}", request.ToString());
+                    Logger.Debug("RAOPSession: Received metadata");
+                    OnMetaDataChanged(new MetaDataChangedEventArgs(new DmapData(request.Content), request.Uri));
+                }
+                else if (contentType != null && contentType.StartsWith("image/"))
+                {
+                    Logger.Debug("RAOPSession: Received cover art");
+                    OnArtworkChanged(new ArtwokChangedEventArgs(request.Content, contentType, request.Uri));
                 }
                 else
                 {
-                    //Unsupported
-                    Logger.Debug("RAOPSession: Unsupported request type: {0}", requestType);
-                    Logger.Debug(request.ToString());
+                    handleParameterString(request);
                 }
+            }
+            else if (requestType == "GET_PARAMETER")
+            {
+                bool handled = false;
+                if (request["Content-Type"] == "text/parameters")
+                {
+                    if (request.GetContentString().StartsWith("volume"))
+                    {
+                        handled = true;
+                        Logger.Debug("RAOPSession: Client requested volume");
+                        VolumeRequestedEventArgs e = new VolumeRequestedEventArgs(request.Uri);
+                        OnVolumeRequested(e);
+                        response["Content-Type"] = "text/parameters";
+                        response.SetContent(string.Format(CultureInfo.InvariantCulture, "volume: {0}", e.Volume));
+                    }
+                }
+                if (!handled)
+                    Logger.Debug("Unhandled GET_PARAMETER request\r\n{0}", request.ToString());
+            }
+            else
+            {
+                //Unsupported
+                Logger.Debug("RAOPSession: Unsupported request type: {0}", requestType);
+                Logger.Debug(request.ToString());
             }
             return response;
         }
@@ -308,23 +295,17 @@ namespace ShairportSharp.Raop
 
         public AudioBufferStream GetStream(StreamType streamType)
         {
-            lock (requestLock)
-            {
+            lock (audioServerLock)
                 if (audioServer != null)
                     return audioServer.GetStream(streamType);
-            }
             return null;
         }
-        
+
         public int BufferedPercent()
         {
-            lock (requestLock)
-            {
+            lock (audioServerLock)
                 if (audioServer != null)
-                {
                     return audioServer.Buffer.CurrentBufferSize * 100 / audioServer.Buffer.MaxBufferSize;
-                }
-            }
             return 0;
         }
         
@@ -367,26 +348,30 @@ namespace ShairportSharp.Raop
 
         void getSessionParams(HttpRequest request)
         {
-            foreach (Match m in Regex.Matches(request.GetContentString(), "^a=([^:]+):(.+)", RegexOptions.Multiline))
+            MatchCollection matches = Regex.Matches(request.GetContentString(), "^a=([^:]+):(.+)", RegexOptions.Multiline);
+            lock (audioServerLock)
             {
-                if (m.Groups[1].Value == "fmtp")
+                foreach (Match m in matches)
                 {
-                    // Parse FMTP as array
-                    string[] temp = m.Groups[2].Value.Split(' ');
-                    fmtp = new int[temp.Length];
-                    for (int i = 0; i < temp.Length; i++)
-                        fmtp[i] = int.Parse(temp[i], CultureInfo.InvariantCulture);
-                    Logger.Debug("RAOPSession: Received audio info - '{0}'", m.Groups[2].Value);
-                }
-                else if (m.Groups[1].Value == "rsaaeskey")
-                {
-                    aesKey = decryptRSA(decodeBase64(m.Groups[2].Value));
-                    Logger.Debug("RAOPSession: Received AES Key - '{0}'", m.Groups[2].Value);
-                }
-                else if (m.Groups[1].Value == "aesiv")
-                {
-                    aesIV = decodeBase64(m.Groups[2].Value);
-                    Logger.Debug("RAOPSession: Received AES IV - '{0}'", m.Groups[2].Value);
+                    if (m.Groups[1].Value == "fmtp")
+                    {
+                        // Parse FMTP as array
+                        string[] temp = m.Groups[2].Value.Split(' ');
+                        fmtp = new int[temp.Length];
+                        for (int i = 0; i < temp.Length; i++)
+                            fmtp[i] = int.Parse(temp[i], CultureInfo.InvariantCulture);
+                        Logger.Debug("RAOPSession: Received audio info - '{0}'", m.Groups[2].Value);
+                    }
+                    else if (m.Groups[1].Value == "rsaaeskey")
+                    {
+                        aesKey = decryptRSA(decodeBase64(m.Groups[2].Value));
+                        Logger.Debug("RAOPSession: Received AES Key - '{0}'", m.Groups[2].Value);
+                    }
+                    else if (m.Groups[1].Value == "aesiv")
+                    {
+                        aesIV = decodeBase64(m.Groups[2].Value);
+                        Logger.Debug("RAOPSession: Received AES IV - '{0}'", m.Groups[2].Value);
+                    }
                 }
             }
         }
@@ -397,20 +382,14 @@ namespace ShairportSharp.Raop
             string activeRemote = request.GetHeader("Active-Remote");
             if (dacpId != null && activeRemote != null)
             {
-                remoteServerInfo = new RemoteServerInfo(dacpId, activeRemote);
                 Logger.Debug("RAOPSession: Received remote info - DacpId : '{0}', ActiveRemote : '{1}'", dacpId, activeRemote);
-                OnRemoteFound(new RemoteInfoFoundEventArgs(remoteServerInfo, sessionId));
+                lock (remoteServerLock)
+                    remoteServerInfo = new RemoteServerInfo(dacpId, activeRemote);
             }
         }
 
         bool setupAudioServer(HttpRequest request)
         {
-            if (fmtp == null)
-            {
-                Logger.Warn("RAOPSession: Unable to create Audio Server, received SETUP before ANNOUNCE");
-                return false;
-            }
-
             int controlPort = 0;
             int timingPort = 0;
 
@@ -430,34 +409,44 @@ namespace ShairportSharp.Raop
                 Logger.Debug("RAOPSession: Set client timing port to {0}", timingPort);
             }
 
-            AudioSession session = new AudioSession(aesIV, aesKey, fmtp, controlPort, timingPort, BufferSize);
-            audioServer = new AudioServer(session, UDPPort);
-            audioServer.Buffer.BufferReady += (o, e) => OnStreamReady(new RaopEventArgs(sessionId));
-            audioServer.Buffer.BufferChanged += (o, e) => 
+            lock (audioServerLock)
             {
-                if (!bufferStarted && e.CurrentSize > 0)
+                if (fmtp == null)
                 {
-                    OnStreamStarting(new RaopEventArgs(sessionId));
-                    bufferStarted = true;
+                    Logger.Warn("RAOPSession: Unable to create Audio Server, received SETUP before ANNOUNCE");
+                    return false;
                 }
-                OnBufferChanged(e); 
-            };
 
-            if (audioServer.Start())
-            {
-                Logger.Debug("RAOPSession: Started new Audio Server");
-                return true;
-            }
-            else
-            {
-                Logger.Error("RAOPSession: Error starting Audio Server");
+                string sessionId = request.Uri;
+                AudioSession session = new AudioSession(aesIV, aesKey, fmtp, controlPort, timingPort, BufferSize);
+                audioServer = new AudioServer(session, UDPPort);
+                audioServer.Buffer.BufferReady += (o, e) => OnStreamReady(new RaopEventArgs(sessionId));
+                audioServer.Buffer.BufferChanged += (o, e) =>
+                {
+                    if (!bufferStarted && e.CurrentSize > 0)
+                    {
+                        OnStreamStarting(new RaopEventArgs(sessionId));
+                        bufferStarted = true;
+                    }
+                    OnBufferChanged(e);
+                };
+
+                if (audioServer.Start())
+                {
+                    Logger.Debug("RAOPSession: Started new Audio Server");
+                    return true;
+                }
+                else
+                {
+                    Logger.Error("RAOPSession: Error starting Audio Server");
+                }
             }
             return false;
         }
 
-        void handleParameterString(string parameterString)
+        void handleParameterString(HttpRequest request)
         {
-            Dictionary<string, string> textParamaters = parameterString.AsTextParameters();
+            Dictionary<string, string> textParamaters = request.GetContentString().AsTextParameters();
             foreach (KeyValuePair<string, string> keyVal in textParamaters)
             {
                 string paramName = keyVal.Key;
@@ -466,7 +455,7 @@ namespace ShairportSharp.Raop
                 {
                     double volume = double.Parse(paramVal, CultureInfo.InvariantCulture);
                     Logger.Debug("RAOPSession: Set Volume: {0}", volume);
-                    OnVolumeChanged(new VolumeChangedEventArgs(volume, sessionId));
+                    OnVolumeChanged(new VolumeChangedEventArgs(volume, request.Uri));
                 }
                 else if (paramName == "progress")
                 {
@@ -477,7 +466,7 @@ namespace ShairportSharp.Raop
                         uint current = uint.Parse(m.Groups[2].Value, CultureInfo.InvariantCulture);
                         uint stop = uint.Parse(m.Groups[3].Value, CultureInfo.InvariantCulture);
                         Logger.Debug("RAOPSession: Set Progress: {0} / {1} / {2}", start, current, stop);
-                        OnProgressChanged(new PlaybackProgressChangedEventArgs(start, stop, current, sessionId));
+                        OnProgressChanged(new PlaybackProgressChangedEventArgs(start, stop, current, request.Uri));
                     }
                 }
             }

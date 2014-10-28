@@ -97,7 +97,6 @@ namespace ShairportSharp_Test
                 server.ArtworkChanged += server_ArtworkChanged;
                 if (allowVolumeCheckBox.Checked)
                     server.VolumeChanged += server_VolumeChange;
-                server.AudioBufferChanged += server_AudioBufferChanged;
                 server.Start();
 
                 airplay = new AirplayServer(nameTextBox.Text, passwordTextBox.Text);
@@ -312,18 +311,6 @@ namespace ShairportSharp_Test
 
             if (playerForm != null)
                 playerForm.SetVolume(e);
-        }
-        
-        void server_AudioBufferChanged(object sender, BufferChangedEventArgs e)
-        {
-            if (InvokeRequired)
-            {
-                BeginInvoke((MethodInvoker)delegate() { server_AudioBufferChanged(sender, e); });
-                return;
-            }
-
-            if (playerForm != null)
-                playerForm.SetBufferProgress(e);
         }
 
         #endregion

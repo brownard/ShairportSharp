@@ -213,16 +213,6 @@ namespace ShairportSharp.Raop
                 VolumeChanged(this, e);
         }
 
-        /// <summary>
-        /// Fired when the audio buffer level has changed.
-        /// </summary>
-        public event EventHandler<BufferChangedEventArgs> AudioBufferChanged;
-        protected virtual void OnAudioBufferChanged(BufferChangedEventArgs e)
-        {
-            if (AudioBufferChanged != null)
-                AudioBufferChanged(this, e);
-        }
-
         #endregion
 
         #region Public Methods
@@ -315,6 +305,19 @@ namespace ShairportSharp.Raop
             return null;
         }
 
+        public void GetBufferLevel(out int current, out int max)
+        {
+            lock (sessionLock)
+                if (currentSession != null)
+                {
+                    currentSession.GetBufferLevel(out current, out max);
+                    return;
+                }
+
+            current = 0;
+            max = 0;
+        }
+
         /// <summary>
         /// Sends a playback command to the client.
         /// </summary>
@@ -384,7 +387,6 @@ namespace ShairportSharp.Raop
                 raop.MetaDataChanged += raop_MetaDataChanged;
                 raop.ArtworkChanged += raop_ArtworkChanged;
                 raop.VolumeChanged += raop_VolumeChanged;
-                raop.BufferChanged += raop_BufferChanged;
                 raop.Start();
                 currentSession = raop;
             }
@@ -453,15 +455,6 @@ namespace ShairportSharp.Raop
             {
                 if (sender == currentSession)
                     OnVolumeChanged(e);
-            }
-        }
-                
-        void raop_BufferChanged(object sender, BufferChangedEventArgs e)
-        {
-            lock (sessionLock)
-            {
-                if (sender == currentSession)
-                    OnAudioBufferChanged(e);
             }
         }
 

@@ -28,8 +28,6 @@ namespace ShairportSharp.Raop
         const string DIGEST_REALM = "raop";
         byte[] hardwareAddress;
         byte[] localEndpoint;
-
-        object requestLock = new object();
         
         object remoteServerLock = new object();
         RemoteServerInfo remoteServerInfo = null;
@@ -39,8 +37,6 @@ namespace ShairportSharp.Raop
         int[] fmtp; //audio stream info
         byte[] aesKey; //audio data encryption key
         byte[] aesIV; //IV
-
-        bool bufferStarted = false;
 
         #endregion
 
@@ -116,13 +112,6 @@ namespace ShairportSharp.Raop
                 ProgressChanged(this, e);
         }
 
-        public event EventHandler<BufferChangedEventArgs> BufferChanged;
-        protected virtual void OnBufferChanged(BufferChangedEventArgs e)
-        {            
-            if (BufferChanged != null)
-                BufferChanged(this, e);
-        }
-
         #endregion
 
         #region Constructor
@@ -154,7 +143,7 @@ namespace ShairportSharp.Raop
         {
             get
             {
-                lock (requestLock)
+                lock (remoteServerLock)
                     return remoteServerInfo;
             }
         }
@@ -301,12 +290,18 @@ namespace ShairportSharp.Raop
             return null;
         }
 
-        public int BufferedPercent()
+        public void GetBufferLevel(out int current, out int max)
         {
             lock (audioServerLock)
                 if (audioServer != null)
-                    return audioServer.Buffer.CurrentBufferSize * 100 / audioServer.Buffer.MaxBufferSize;
-            return 0;
+                {
+                    current = audioServer.Buffer.CurrentBufferSize;
+                    max = audioServer.Buffer.MaxBufferSize;
+                    return;
+                }
+
+            current = 0;
+            max = 0;
         }
         
         #endregion
@@ -420,16 +415,8 @@ namespace ShairportSharp.Raop
                 string sessionId = request.Uri;
                 AudioSession session = new AudioSession(aesIV, aesKey, fmtp, controlPort, timingPort, BufferSize);
                 audioServer = new AudioServer(session, UDPPort);
+                audioServer.Buffer.BufferStarted += (o, e) => OnStreamStarting(new RaopEventArgs(sessionId));
                 audioServer.Buffer.BufferReady += (o, e) => OnStreamReady(new RaopEventArgs(sessionId));
-                audioServer.Buffer.BufferChanged += (o, e) =>
-                {
-                    if (!bufferStarted && e.CurrentSize > 0)
-                    {
-                        OnStreamStarting(new RaopEventArgs(sessionId));
-                        bufferStarted = true;
-                    }
-                    OnBufferChanged(e);
-                };
 
                 if (audioServer.Start())
                 {

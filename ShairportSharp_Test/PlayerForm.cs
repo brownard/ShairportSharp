@@ -84,6 +84,12 @@ namespace ShairportSharp_Test
                 TimeSpan current = TimeSpan.FromSeconds(player.CurrentPosition);
                 TimeSpan duration = TimeSpan.FromSeconds(player.Duration);
                 labelProgress.Text = string.Format("{0}.{1} / {2}.{3}", current.Minutes, current.Seconds.ToString("00"), duration.Minutes, duration.Seconds.ToString("00"));
+
+                int currentBuffer;
+                int maxBuffer;
+                server.GetBufferLevel(out currentBuffer, out maxBuffer);
+                if (maxBuffer > 0)
+                    bufferFill.Value = currentBuffer * 100 / maxBuffer;
             }
         }
 
@@ -138,16 +144,5 @@ namespace ShairportSharp_Test
             if (player != null)
                 player.SetVolume(e.Volume);
         }
-
-        public void SetBufferProgress(BufferChangedEventArgs e)
-        {
-            int percent = (e.CurrentSize * 100) / e.MaxSize;
-            if (percent < 0)
-                percent = 0;
-            else if (percent > 100)
-                percent = 100;
-            bufferFill.Value = percent;
-        }
-
     }
 }

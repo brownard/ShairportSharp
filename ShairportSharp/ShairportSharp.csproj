@@ -66,7 +66,7 @@
     <Compile Include="AlacDecoder\Consts.cs" />
     <Compile Include="AlacDecoder\LeadingZeros.cs" />
     <Compile Include="Audio\AudioBuffer.cs" />
-    <Compile Include="Audio\AudioBufferEventArgs.cs" />
+    <Compile Include="Audio\MissingPacketEventArgs.cs" />
     <Compile Include="Audio\AudioBufferStream.cs" />
     <Compile Include="Audio\AudioData.cs" />
     <Compile Include="Audio\AudioServer.cs" />

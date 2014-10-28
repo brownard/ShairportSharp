@@ -22,7 +22,9 @@ namespace ShairportSharp.Audio
 
         // The lock for writing/reading concurrency
         readonly object syncRoot = new object();
-        
+
+        //true if we've started receiving packets
+        bool bufferStarted = false;
         volatile bool bufferStopped = false;
 
         //Total buffer size (number of frame)
@@ -39,28 +41,19 @@ namespace ShairportSharp.Audio
         protected ushort writeIndex;
         bool decoderStopped = false; //The decoder stops 'cause the isn't enough packet. Waits till buffer is ok
         bool bufferInit = false;
-
-        DateTime lastBufferUpdate = DateTime.MinValue;
-        public event EventHandler<BufferChangedEventArgs> BufferChanged;
-        protected virtual void OnBufferChanged(BufferChangedEventArgs e, bool alwaysFire = false)
+        
+        public event EventHandler BufferStarted;
+        protected virtual void OnBufferStarted()
         {
-            if (!alwaysFire)
-            {
-                DateTime now = DateTime.Now;
-                if (now.Subtract(lastBufferUpdate).TotalMilliseconds < bufferUpdateInterval)
-                    return;
-                lastBufferUpdate = now;
-            }
-
-            if (BufferChanged != null)
-                BufferChanged(this, e);
+            if (BufferStarted != null)
+                BufferStarted(this, EventArgs.Empty);
         }
 
-        public event EventHandler<BufferChangedEventArgs> BufferReady;
-        protected virtual void OnBufferReady(BufferChangedEventArgs e)
+        public event EventHandler BufferReady;
+        protected virtual void OnBufferReady()
         {
             if (BufferReady != null)
-                BufferReady(this, e);
+                BufferReady(this, EventArgs.Empty);
         }
 
         public event EventHandler<MissingPacketEventArgs> MissingPackets;
@@ -111,6 +104,8 @@ namespace ShairportSharp.Audio
             if (bufferStopped)
                 return;
 
+            bool fireStarted = false;
+            bool fireReady = false;
             lock (syncRoot)
             {
                 if (bufferStopped)
@@ -159,21 +154,30 @@ namespace ShairportSharp.Audio
 
                 // The number of packets in buffer
                 actualBufferSize = (ushort)(writeIndex - readIndex);
-                BufferChangedEventArgs eventArgs = new BufferChangedEventArgs(actualBufferSize, maxBufferFrames);
-                OnBufferChanged(eventArgs);
+                
+                if (!bufferStarted && actualBufferSize > 0)
+                {
+                    bufferStarted = true;
+                    fireStarted = true;
+                }
 
                 if (actualBufferSize > startFill)
                 {
                     if (!bufferInit)
                     {
                         bufferInit = true;
-                        OnBufferReady(eventArgs);
+                        fireReady = true;
                         Monitor.PulseAll(syncRoot);
                     }
                     else if (decoderStopped)
                         Monitor.PulseAll(syncRoot);
                 }
             }
+
+            if (fireStarted)
+                OnBufferStarted();
+            if (fireReady)
+                OnBufferReady();
         }
 
         /// <summary>
@@ -236,7 +240,6 @@ namespace ShairportSharp.Audio
                 readIndex++;
                 actualBufferSize = (ushort)(writeIndex - readIndex);
                 OnPacketTaken();
-                OnBufferChanged(new BufferChangedEventArgs(actualBufferSize, maxBufferFrames));
 
                 return ready;
             }
@@ -259,7 +262,6 @@ namespace ShairportSharp.Audio
                 synced = false;
                 for (int i = 0; i < maxBufferFrames; i++)
                     audioBuffer[i].Ready = false;
-                OnBufferChanged(new BufferChangedEventArgs(0, maxBufferFrames), true);
             }
         }
 
@@ -272,7 +274,6 @@ namespace ShairportSharp.Audio
             lock (syncRoot)
             {
                 actualBufferSize = 0;
-                OnBufferChanged(new BufferChangedEventArgs(0, maxBufferFrames), true);
                 Monitor.PulseAll(syncRoot);
             }
             Logger.Debug("Audio Buffer: Stopped");

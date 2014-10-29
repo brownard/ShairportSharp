@@ -1,18 +1,11 @@
-/AirPlayer/bin
-/AirPlayer/obj
-/DirectShowWrapper/bin
-/DirectShowWrapper/obj
-/ShairportSharp/bin
-/ShairportSharp/obj
-/ShairportSharp_Test/bin
-/ShairportSharp_Test/obj
+[Bb]in/
+[Oo]bj/
+
+*.suo
+*.user
+
 [Pp]ackages/
 nuget.exe
-/*.suo
 
-/Airplayer.Common/bin
-/Airplayer.Common/obj
-
-/AirPlayer-MP2/obj
-/AirPlayer-MP2/bin
 Thumbs.db
+Desktop.ini

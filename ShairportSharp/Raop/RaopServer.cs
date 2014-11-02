@@ -242,7 +242,7 @@ namespace ShairportSharp.Raop
                 remoteHandler.Start();
             }
         }
-        
+
         /// <summary>
         /// Stops broadcasting and listening for new connections
         /// </summary>
@@ -268,14 +268,15 @@ namespace ShairportSharp.Raop
                     listener = null;
                 }
             }
+            RaopSession session;
             lock (sessionLock)
             {
-                if (currentSession != null)
-                {
-                    currentSession.Close();
-                    currentSession = null;
-                }
+                session = currentSession;
+                currentSession = null;
             }
+            if (session != null)
+                session.Close();
+
             Logger.Info("RAOP Server: Stopped");
         }
 
@@ -284,12 +285,15 @@ namespace ShairportSharp.Raop
         /// </summary>
         public void StopCurrentSession()
         {
+            RaopSession session = null;
             lock (sessionLock)
-                if (currentSession != null)
-                {
-                    currentSession.Close();
-                    currentSession = null;
-                }
+            {
+                session = currentSession;
+                currentSession = null;
+            }
+
+            if (session != null)
+                session.Close();
         }
 
         /// <summary>
@@ -360,102 +364,77 @@ namespace ShairportSharp.Raop
 
         void listener_SocketAccepted(object sender, SocketAcceptedEventArgs e)
         {
+            RaopSession oldSession;
             lock (sessionLock)
             {
-                if (currentSession != null)
+                oldSession = currentSession;
+                currentSession = null;
+            }
+
+            if (oldSession != null)
+            {
+                Logger.Info("RAOP Server: Stopping current connection, new connection requested");
+                oldSession.Close();
+            }
+
+            lock (sessionLock)
+            {
+                if (currentSession == null)
                 {
-                    if (AllowSubsequentConnections)
-                    {
-                        Logger.Info("RAOP Server: Stopping current connection, new connection requested");
-                        currentSession.Close();
-                    }
-                    else
-                    {
-                        Logger.Info("RAOP Server: Rejecting new connection, existing connection exists");
-                        return;
-                    }
+                    //Start a responder to handle the connection
+                    e.Handled = true;
+                    RaopSession raop = new RaopSession(macAddress, e.Socket, password);
+                    raop.UDPPort = AudioPort;
+                    raop.BufferSize = AudioBufferSize;
+                    raop.StreamStarting += streamStarting;
+                    raop.Closed += streamStopped;
+                    raop.StreamReady += raop_StreamReady;
+                    raop.ProgressChanged += raop_ProgressChanged;
+                    raop.MetaDataChanged += raop_MetaDataChanged;
+                    raop.ArtworkChanged += raop_ArtworkChanged;
+                    raop.VolumeChanged += raop_VolumeChanged;
+                    raop.Start();
+                    currentSession = raop;
                 }
-                //Start a responder to handle the connection
-                e.Handled = true;
-                RaopSession raop = new RaopSession(macAddress, e.Socket, password);
-                raop.UDPPort = AudioPort;
-                raop.BufferSize = AudioBufferSize;
-                raop.StreamStarting += streamStarting;
-                raop.Closed += streamStopped;
-                raop.StreamReady += raop_StreamReady;
-                raop.ProgressChanged += raop_ProgressChanged;
-                raop.MetaDataChanged += raop_MetaDataChanged;
-                raop.ArtworkChanged += raop_ArtworkChanged;
-                raop.VolumeChanged += raop_VolumeChanged;
-                raop.Start();
-                currentSession = raop;
             }
         }
 
         void streamStarting(object sender, RaopEventArgs e)
         {
-            lock (sessionLock)
-            {
-                if (sender == currentSession)
-                    OnStreamStarting(e);
-            }
+            OnStreamStarting(e);
         }
 
         void streamStopped(object sender, EventArgs e)
         {
+            OnStreamStopped(e);
             lock (sessionLock)
-            {
                 if (sender == currentSession)
-                {
-                    OnStreamStopped(e);
                     currentSession = null;
-                }
-            }
         }
 
         void raop_StreamReady(object sender, RaopEventArgs e)
         {
-            lock (sessionLock)
-            {
-                if (sender == currentSession)
-                    OnStreamReady(e);
-            }
+            OnStreamReady(e);
         }
 
         void raop_ProgressChanged(object sender, PlaybackProgressChangedEventArgs e)
         {
-            lock (sessionLock)
-            {
-                if (sender == currentSession)
-                    OnPlaybackProgressChanged(e);
-            }
+            OnPlaybackProgressChanged(e);
         }
 
         void raop_MetaDataChanged(object sender, MetaDataChangedEventArgs e)
         {
-            lock (sessionLock)
-            {
-                if (sender == currentSession)
-                    OnMetaDataChanged(e);
-            }
+            OnMetaDataChanged(e);
         }
 
         void raop_ArtworkChanged(object sender, ArtwokChangedEventArgs e)
         {
-            lock (sessionLock)
-            {
-                if (sender == currentSession)
-                    OnArtworkChanged(e);
-            }
+            OnArtworkChanged(e);
         }
 
         void raop_VolumeChanged(object sender, VolumeChangedEventArgs e)
         {
-            lock (sessionLock)
-            {
-                if (sender == currentSession)
-                    OnVolumeChanged(e);
-            }
+            OnVolumeChanged(e);
         }
 
         #endregion

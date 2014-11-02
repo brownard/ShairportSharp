@@ -422,9 +422,10 @@ namespace ShairportSharp.Airplay
 
         void session_Closed(object sender, EventArgs e)
         {
+            bool closed = false;
+            AirplaySession session = (AirplaySession)sender;
             lock (connectionSync)
             {
-                AirplaySession session = (AirplaySession)sender;
                 connections.Remove(session);
                 if (eventConnections.ContainsValue(session))
                 {
@@ -432,9 +433,11 @@ namespace ShairportSharp.Airplay
                     eventConnections.Remove(session.SessionId);
                     lock (photoSync)
                         photoCache.Remove(session.SessionId);
-                    OnSessionClosed(new AirplayEventArgs(session.SessionId));
+                    closed = true;
                 }
             }
+            if (closed)
+                OnSessionClosed(new AirplayEventArgs(session.SessionId));
         }
 
         #endregion

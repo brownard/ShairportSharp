@@ -20,44 +20,19 @@ namespace ShairportSharp.Http
         static readonly byte[] headerDelimiter = { 0x0D, 0x0A, 0x0D, 0x0A }; // \r\n\r\n
         static readonly Regex headerPattern = new Regex(@"^([\w-]+):\W(.+)\r\n", RegexOptions.Compiled | RegexOptions.Multiline);
         static readonly Regex requestPattern = new Regex(@"^(\w+)\W(\S+)\W(\S+)/(\S+)\r", RegexOptions.Compiled);
-        static readonly Regex responsePattern = new Regex(@"^(\w+)/(\d+[.]\d+)\W(\d+)\W([\w\s]+)\r", RegexOptions.Compiled);  
-
-        /// <summary>
-        /// Tries to parse the first complete HTTP packet from binary data. If successful parsedPacket will hold the completed packet.
-        /// If the Length property of the parsed packet is less than the length of the binary data there may be more packets to process. 
-        /// </summary>
-        /// <param name="data">The binary data to process</param>
-        /// <param name="parsedMessage">Will hold the parsed packet if successful</param>
-        /// <returns>True if a complete packet was successfully parsed</returns>
-        public static bool TryParse(byte[] data, out HttpMessage parsedMessage, out int parsedLength)
+        static readonly Regex responsePattern = new Regex(@"^(\w+)/(\d+[.]\d+)\W(\d+)\W([\w\s]+)\r", RegexOptions.Compiled);
+        
+        public static HttpMessage FromBytes(byte[] buffer, int offset, int count, out int contentLength)
         {
-            parsedMessage = null;
-            parsedLength = -1;
-            int packetLength;
-            if (!tryGetPacketLength(data, out packetLength))
-                return false; //incomplete header
-
-            string packet = Encoding.ASCII.GetString(data, 0, packetLength);
+            string packet = Encoding.ASCII.GetString(buffer, offset, count);
             Dictionary<string, string> headers = getHeaders(packet);
+            contentLength = getContentLength(headers);
 
-            int contentLength = getContentLength(headers);
-            if (data.Length - packetLength < contentLength)
-                return false; //not enough bytes after header
-
-            byte[] content = new byte[contentLength];
-            if (contentLength > 0)
-            {
-                Array.Copy(data, packetLength, content, 0, contentLength);
-                packetLength += contentLength;
-            }
-                       
-            //Once we know we have a complete packet, parse the request info
-            //Logger.Debug(packet);
             Match m = requestPattern.Match(packet);
             if (m.Success)
             {
                 string protocol = m.Groups[3].Value + "/" + m.Groups[4].Value;
-                parsedMessage = new HttpRequest(m.Groups[1].Value, m.Groups[2].Value, protocol, headers, content);
+                return new HttpRequest(m.Groups[1].Value, m.Groups[2].Value, protocol, headers);
             }
             else
             {
@@ -66,28 +41,14 @@ namespace ShairportSharp.Http
                 {
                     string protocol = m.Groups[1].Value + "/" + m.Groups[2].Value;
                     string status = m.Groups[3].Value + " " + m.Groups[4].Value;
-                    parsedMessage = new HttpResponse(status, protocol, headers, content);
+                    return new HttpResponse(status, protocol, headers);
                 }
                 else
                 {
                     Logger.Warn("Failed to parse HTTP Message start line");
-                    parsedMessage = new HttpResponse("200 OK", "HTTP/1.1", headers, content);
+                    return new HttpResponse("200 OK", "HTTP/1.1", headers);
                 }
             }
-
-            parsedLength = packetLength;
-            return true;
-        }
-
-        static bool tryGetPacketLength(byte[] data, out int packetLength)
-        {
-            packetLength = data.IndexOf(headerDelimiter);
-            if (packetLength > 0)
-            {
-                packetLength += headerDelimiter.Length; //include the delimiter in the length
-                return true;
-            }
-            return false;
         }
 
         static Dictionary<string, string> getHeaders(string packet)
@@ -117,11 +78,10 @@ namespace ShairportSharp.Http
             headers = new Dictionary<string, string>();
         }
 
-        protected HttpMessage(string protocol, Dictionary<string, string> headers, byte[] content) 
+        protected HttpMessage(string protocol, Dictionary<string, string> headers) 
         {
             Protocol = protocol;
             this.headers = headers;
-            this.content = content;
         }
 
         public abstract HttpMessageType MessageType { get; }
@@ -178,6 +138,10 @@ namespace ShairportSharp.Http
             get
             {
                 return content;
+            }
+            internal set
+            {
+                content = value;
             }
         }
 

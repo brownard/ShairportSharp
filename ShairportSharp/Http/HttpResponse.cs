@@ -13,8 +13,8 @@ namespace ShairportSharp.Http
             
         }
 
-        public HttpResponse(string status, string protocol, Dictionary<string, string> headers, byte[] content)
-            : base(protocol, headers, content)
+        public HttpResponse(string status, string protocol, Dictionary<string, string> headers)
+            : base(protocol, headers)
         {
             Status = status;
         }

@@ -18,10 +18,10 @@ namespace ShairportSharp.Http
         static readonly Encoding encoding = Encoding.ASCII;
         object socketLock = new object();
         Socket socket;
+        HttpMessageBuffer messageBuffer;
         BufferedStream inputStream;
         protected NetworkStream outputStream;
 
-        List<byte> byteBuffer;
         byte[] buffer;
 
         string password;
@@ -75,7 +75,8 @@ namespace ShairportSharp.Http
         /// </summary>
         public void Start()
         {
-            byteBuffer = new List<byte>();
+            messageBuffer = new HttpMessageBuffer();
+            messageBuffer.MessageReceived += messageBuffer_MessageReceived;
             buffer = new byte[65536];
 
             lock (socketLock)
@@ -155,44 +156,13 @@ namespace ShairportSharp.Http
                         return;
                 }
                 if (read < 1)
-                    Close();
-
-                for (int x = 0; x < read; x++)
-                    byteBuffer.Add(buffer[x]);
-
-                HttpMessage parsedMessage;
-                int parsedLength;
-                //Try and parse a complete packet from our data
-                while (socket != null && HttpMessage.TryParse(byteBuffer.ToArray(), out parsedMessage, out parsedLength))
                 {
-                    //Logger.Debug("RAOPSession:\r\n{0}", parsedPacket.ToString());
-                    //remove packet from our buffer
-                    byteBuffer.RemoveRange(0, parsedLength);
-                    HttpResponse response = null;
-                    try
-                    {
-                        if (parsedMessage.MessageType == HttpMessageType.Request)
-                            response = HandleRequest((HttpRequest)parsedMessage);
-                        else
-                            HandleResponse((HttpResponse)parsedMessage);
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.Error("HttpParser: Exception handling message -", ex);
-                        Logger.Error("HttpParser: Exception request\r\n{0}", parsedMessage);
-                    }
-
-                    if (response != null)
-                    {
-                        Send(response);
-                        if (response["Connection"] == "close")
-                        {
-                            Close();
-                            return;
-                        }
-                    }
+                    Close();
+                    return;
                 }
 
+                messageBuffer.Write(buffer, 0, read);
+                
                 lock (socketLock)
                 {
                     if (socket != null)
@@ -210,6 +180,33 @@ namespace ShairportSharp.Http
             {
                 Logger.Error("HttpParser: Error receiving requests -", ex);
                 Close();
+            }
+        }
+
+        void messageBuffer_MessageReceived(object sender, MessageReceivedEventArgs e)
+        {
+            HttpResponse response = null;
+            try
+            {
+                if (e.Message.MessageType == HttpMessageType.Request)
+                    response = HandleRequest((HttpRequest)e.Message);
+                else
+                    HandleResponse((HttpResponse)e.Message);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("HttpParser: Exception handling message -", ex);
+                Logger.Error("HttpParser: Exception request\r\n{0}", e.Message);
+            }
+
+            if (response != null)
+            {
+                Send(response);
+                if (response["Connection"] == "close")
+                {
+                    Close();
+                    return;
+                }
             }
         }
 

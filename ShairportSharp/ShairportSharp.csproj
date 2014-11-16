@@ -77,9 +77,11 @@
     <Compile Include="Constants.cs" />
     <Compile Include="Http\HttpConnectionHandler.cs" />
     <Compile Include="Http\HttpMessage.cs" />
+    <Compile Include="Http\HttpMessageBuffer.cs" />
     <Compile Include="Http\HttpParser.cs" />
     <Compile Include="Http\HttpRequest.cs" />
     <Compile Include="Http\HttpResponse.cs" />
+    <Compile Include="Http\MessageBuffer.cs" />
     <Compile Include="Log\ILog.cs" />
     <Compile Include="Log\Logger.cs" />
     <Compile Include="Raop\RaopEmitter.cs" />

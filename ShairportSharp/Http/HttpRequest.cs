@@ -14,8 +14,8 @@ namespace ShairportSharp.Http
             Uri = uri;
         }
 
-        public HttpRequest(string method, string uri, string protocol, Dictionary<string, string> headers, byte[] content)
-            : base(protocol, headers, content)
+        public HttpRequest(string method, string uri, string protocol, Dictionary<string, string> headers)
+            : base(protocol, headers)
         {
             Method = method;
             Uri = uri;

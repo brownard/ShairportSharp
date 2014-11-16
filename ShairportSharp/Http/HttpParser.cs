@@ -308,7 +308,7 @@ namespace ShairportSharp.Http
         static string md5Hash(string input, CaseType caseType)
         {
             MD5 md5 = System.Security.Cryptography.MD5.Create();
-            byte[] inputBytes = System.Text.Encoding.ASCII.GetBytes(input);
+            byte[] inputBytes = encoding.GetBytes(input);
             byte[] hash = md5.ComputeHash(inputBytes);
 
             string format = caseType == CaseType.Lower ? "x2" : "X2";

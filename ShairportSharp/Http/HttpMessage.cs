@@ -17,14 +17,16 @@ namespace ShairportSharp.Http
     public abstract class HttpMessage
     {
         #region Static Members
-        static readonly byte[] headerDelimiter = { 0x0D, 0x0A, 0x0D, 0x0A }; // \r\n\r\n
+
+        static readonly Encoding encoding = Encoding.ASCII;
+
         static readonly Regex headerPattern = new Regex(@"^([\w-]+):\W(.+)\r\n", RegexOptions.Compiled | RegexOptions.Multiline);
         static readonly Regex requestPattern = new Regex(@"^(\w+)\W(\S+)\W(\S+)/(\S+)\r", RegexOptions.Compiled);
         static readonly Regex responsePattern = new Regex(@"^(\w+)/(\d+[.]\d+)\W(\d+)\W([\w\s]+)\r", RegexOptions.Compiled);
         
         public static HttpMessage FromBytes(byte[] buffer, int offset, int count, out int contentLength)
         {
-            string packet = Encoding.ASCII.GetString(buffer, offset, count);
+            string packet = encoding.GetString(buffer, offset, count);
             Dictionary<string, string> headers = getHeaders(packet);
             contentLength = getContentLength(headers);
 
@@ -67,6 +69,7 @@ namespace ShairportSharp.Http
                 contentLength = 0;
             return contentLength;
         }
+
         #endregion
 
         byte[] content;
@@ -130,7 +133,7 @@ namespace ShairportSharp.Http
         public void SetContent(string content)
         {
             if (!string.IsNullOrEmpty(content))
-                SetContent(Encoding.ASCII.GetBytes(content));
+                SetContent(encoding.GetBytes(content));
         }
 
         public byte[] Content
@@ -149,29 +152,18 @@ namespace ShairportSharp.Http
         {
             get
             {
-                if (content == null)
-                    return 0;
-                else
-                    return content.Length;
+                return content != null ? content.Length : 0;
             }
         }
 
         public string GetContentString()
         {
             if (content != null && content.Length > 0)
-                return Encoding.ASCII.GetString(content);
+                return encoding.GetString(content);
             return "";
         }
 
-        public byte[] GetBytes()
-        {
-            List<byte> bytes = new List<byte>(Encoding.ASCII.GetBytes(HeaderToString()));
-            if (content != null && content.Length > 0)
-                bytes.AddRange(content);
-            return bytes.ToArray();
-        }
-
-        public string HeaderToString()
+        string getHeaderString()
         {
             StringBuilder sb = new StringBuilder(StartLine + "\r\n");
             foreach (KeyValuePair<string, string> keyVal in headers)
@@ -180,18 +172,30 @@ namespace ShairportSharp.Http
             return sb.ToString();
         }
 
+        public byte[] GetBytes()
+        {
+            string header = getHeaderString().ToString();
+            int byteCount = encoding.GetByteCount(header);
+            int contentLength = ContentLength;
+            byte[] buffer = new byte[byteCount + contentLength];
+            encoding.GetBytes(header, 0, header.Length, buffer, 0);
+            if (contentLength > 0)
+                Buffer.BlockCopy(content, 0, buffer, byteCount, contentLength);
+            return buffer;
+        }
+
         public override string ToString()
         {
-            StringBuilder sb = new StringBuilder(HeaderToString());
+            string message = getHeaderString();
             if (content != null && content.Length > 0)
             {
                 string contentType;
                 if (headers.TryGetValue("Content-Type", out contentType) && contentType.ToLower().StartsWith("text"))
-                    sb.AppendLine(Encoding.ASCII.GetString(content));
+                    message += encoding.GetString(content);
                 else
-                    sb.AppendLine("BINARY DATA");
+                    message += "BINARY DATA";
             }
-            return sb.ToString();
+            return message;
         }
     }
 }

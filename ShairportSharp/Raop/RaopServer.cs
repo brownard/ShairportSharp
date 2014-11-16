@@ -129,16 +129,6 @@ namespace ShairportSharp.Raop
             set;
         }
 
-        bool allowSubsequentConnections = true;
-        /// <summary>
-        /// Whether to allow new connection requests to stop an existing connection.
-        /// </summary>
-        public bool AllowSubsequentConnections
-        {
-            get { return allowSubsequentConnections; }
-            set { allowSubsequentConnections = value; }
-        }
-
         #endregion
 
         #region Events

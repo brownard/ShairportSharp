@@ -10,7 +10,7 @@ using ShairportSharp.Helpers;
 
 namespace ShairportSharp.Airplay
 {
-    class AirplaySession : HttpParser
+    public class AirplaySession : HttpParser
     {
         #region Consts
 

@@ -7,10 +7,16 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using ShairportSharp.Helpers;
+using ShairportSharp.Base;
 
 namespace ShairportSharp.Http
 {
-    public abstract class HttpParser : IDisposable
+    public class ClosedEventArgs : EventArgs
+    {
+        public bool ManualClose { get; set; }
+    }
+
+    public abstract class HttpParser : ISocketHandler, IDisposable
     {
         #region Variables
 
@@ -59,8 +65,8 @@ namespace ShairportSharp.Http
         /// <summary>
         /// Fired when the client has disconnected
         /// </summary>
-        public event EventHandler Closed;
-        protected virtual void OnClosed(EventArgs e)
+        public event EventHandler<ClosedEventArgs> Closed;
+        protected virtual void OnClosed(ClosedEventArgs e)
         {
             if (Closed != null)
                 Closed(this, e);
@@ -157,7 +163,7 @@ namespace ShairportSharp.Http
                 }
                 if (read < 1)
                 {
-                    Close();
+                    close();
                     return;
                 }
 
@@ -174,12 +180,12 @@ namespace ShairportSharp.Http
             catch (IOException)
             {
                 Logger.Debug("HttpParser: IO Exception, socket probably closed");
-                Close();
+                close();
             }
             catch (Exception ex)
             {
                 Logger.Error("HttpParser: Error receiving requests -", ex);
-                Close();
+                close();
             }
         }
 
@@ -204,7 +210,7 @@ namespace ShairportSharp.Http
                 Send(response);
                 if (response["Connection"] == "close")
                 {
-                    Close();
+                    close();
                     return;
                 }
             }
@@ -254,6 +260,11 @@ namespace ShairportSharp.Http
         /// </summary>
         public virtual void Close()
         {
+            close(true);
+        }
+
+        void close(bool manualClose = false)
+        {
             bool closed = false;
             lock (socketLock)
             {
@@ -268,7 +279,7 @@ namespace ShairportSharp.Http
                 }
             }
             if (closed)
-                OnClosed(EventArgs.Empty);
+                OnClosed(new ClosedEventArgs() { ManualClose = manualClose });
         }
 
         #endregion
@@ -324,7 +335,7 @@ namespace ShairportSharp.Http
 
         public void Dispose()
         {
-            Close();
+            close();
         }
 
         #endregion

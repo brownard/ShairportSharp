@@ -5,10 +5,11 @@ using System.Net;
 using System.Text;
 using ShairportSharp.Http;
 using ShairportSharp.Helpers;
+using ShairportSharp.Base;
 
 namespace ShairportSharp.Airplay
 {
-    public class AirplayServer
+    public class AirplayServer : Server<AirplaySession>
     {
         #region Consts
 
@@ -18,13 +19,9 @@ namespace ShairportSharp.Airplay
 
         #region Variables
 
-        object syncRoot = new object();
-        AirplayEmitter emitter;
-        HttpConnectionHandler listener;
         AirplayServerInfo serverInfo;
 
-        object connectionSync = new object();
-        List<AirplaySession> connections = new List<AirplaySession>();
+        object eventConnectionSync = new object();
         Dictionary<string, AirplaySession> eventConnections = new Dictionary<string, AirplaySession>();
 
         object photoSync = new object();
@@ -36,6 +33,7 @@ namespace ShairportSharp.Airplay
 
         public AirplayServer()
         {
+            Port = DEFAULT_PORT;
             serverInfo = new AirplayServerInfo()
             {
                 ProtocolVersion = "1.0",
@@ -52,68 +50,19 @@ namespace ShairportSharp.Airplay
         public AirplayServer(string name, string password = null)
             : this()
         {
-            this.name = name;
-            this.password = password;
+            Name = name;
+            Password = password;
         }
 
         #endregion
 
         #region Public Properties
-
-        string name;
-        /// <summary>
-        // The broadcasted name of the Airplay server. Defaults to the machine name if null or empty.
-        /// </summary>
-        public string Name
-        {
-            get { return name; }
-            set { name = value; }
-        }
-
-        string password;
-        /// <summary>
-        /// The password needed to connect. Set to null or empty to not require a password.
-        /// </summary>
-        public string Password
-        {
-            get { return password; }
-            set { password = value; }
-        }
-
-        byte[] macAddress = null;
-        /// <summary>
-        /// The MAC address used to identify this server. If null or empty the actual MAC address of this computer will be used.
-        /// Set to an alternative value to allow multiple servers on the same computer.
-        /// </summary>
-        public byte[] MacAddress
-        {
-            get { return macAddress; }
-            set { macAddress = value; }
-        }
-
-        int port = DEFAULT_PORT;
-        public int Port
-        {
-            get { return port; }
-            set { port = value.CheckValidPortNumber(DEFAULT_PORT); }
-        }
-
+        
         bool ios8Workaround;
         public bool iOS8Workaround
         {
             get { return ios8Workaround; }
             set { ios8Workaround = value; }
-        }
-
-        string modelName = Constants.DEFAULT_MODEL_NAME;
-        /// <summary>
-        /// The model of the server, should be in the format '[NAME], [VERSION]'
-        /// In most cases can be left as the default 'ShairportSharp, 1'
-        /// </summary>
-        public string ModelName
-        {
-            get { return modelName; }
-            set { modelName = value; }
         }
 
         public AirplayServerInfo ServerInfo
@@ -221,53 +170,6 @@ namespace ShairportSharp.Airplay
 
         #region Public Methods
 
-        public void Start()
-        {
-            if (macAddress == null || macAddress.Length == 0)
-                macAddress = Utils.GetMacAddress();
-            if (macAddress == null)
-                return;
-
-            lock (syncRoot)
-            {
-                if (listener != null)
-                    Stop();
-
-                serverInfo.Model = modelName;
-                serverInfo.DeviceId = macAddress.HexStringFromBytes(":");
-                Logger.Info("Airplay Server: Starting - MAC address {0}, port {1}", serverInfo.DeviceId, port);
-                listener = new HttpConnectionHandler(IPAddress.Any, port);
-                listener.SocketAccepted += listener_SocketAccepted;
-                listener.Start();
-                emitter = new AirplayEmitter(name.ComputerNameIfNullOrEmpty(), serverInfo, port, !string.IsNullOrEmpty(password), ios8Workaround);
-                emitter.Publish();
-            }
-        }
-
-        public void Stop()
-        {
-            Logger.Info("Airplay Server: Stopping");
-            lock (syncRoot)
-            {
-                if (emitter != null)
-                {
-                    emitter.Stop();
-                    emitter = null;
-                }
-                if (listener != null)
-                {
-                    listener.Stop();
-                    listener = null;
-                }
-            }
-            lock (connectionSync)
-            {
-                while(connections.Count > 0)
-                    connections[0].Close();
-            }
-            Logger.Info("Airplay Server: Stopped");
-        }
-
         public void SetPlaybackState(string sessionId, PlaybackCategory category, PlaybackState state)
         {
             if (string.IsNullOrEmpty(sessionId))
@@ -276,7 +178,7 @@ namespace ShairportSharp.Airplay
                 return;
             }
 
-            lock (connectionSync)
+            lock (eventConnectionSync)
             {
                 AirplaySession eventConnection;
                 if (eventConnections.TryGetValue(sessionId, out eventConnection))
@@ -286,23 +188,28 @@ namespace ShairportSharp.Airplay
             }
         }
 
-        public void CloseSession(string sessionId)
-        {
-            AirplaySession[] connectionsToClose;
-            lock (connectionSync)
-                connectionsToClose = connections.Where(s => s.SessionId == sessionId).ToArray();
-            foreach (AirplaySession session in connectionsToClose)
-                session.Close();
-        }
-
         #endregion
 
-        #region Event Handlers
+        #region Overrides
 
-        void listener_SocketAccepted(object sender, SocketAcceptedEventArgs e)
+        protected override void OnStarting()
         {
-            e.Handled = true;
-            AirplaySession session = new AirplaySession(e.Socket, serverInfo, password);
+            byte[] macAddress = MacAddress;
+            if (macAddress == null || macAddress.Length == 0)
+            {
+                macAddress = Utils.GetMacAddress();
+                if (macAddress == null)
+                    return;
+            }
+
+            serverInfo.Model = ModelName;
+            serverInfo.DeviceId = macAddress.HexStringFromBytes(":");
+            Emitter = new AirplayEmitter(Name.ComputerNameIfNullOrEmpty(), serverInfo, Port, !string.IsNullOrEmpty(Password), ios8Workaround);
+        }
+
+        protected override AirplaySession OnSocketAccepted(System.Net.Sockets.Socket socket)
+        {
+            AirplaySession session = new AirplaySession(socket, serverInfo, Password);
             session.EventConnection += session_EventConnection;
 
             session.PhotoReceived += session_PhotoReceived;
@@ -316,16 +223,36 @@ namespace ShairportSharp.Airplay
             session.GetPlaybackPosition += session_GetPlaybackPosition;
             session.VolumeChanged += session_VolumeChanged;
             session.Stopped += session_Stopped;
-            session.Closed += session_Closed;
-            lock (connectionSync)
-                connections.Add(session);
-            session.Start();
+
+            return session;
         }
+
+        protected override void OnConnectionClosed(AirplaySession connection)
+        {
+            bool closed = false;
+            lock (eventConnectionSync)
+            {
+                if (eventConnections.ContainsValue(connection))
+                {
+                    Logger.Debug("Airplay Server: Event connection closed, '{0}'", connection.SessionId);
+                    eventConnections.Remove(connection.SessionId);
+                    lock (photoSync)
+                        photoCache.Remove(connection.SessionId);
+                    closed = true;
+                }
+            }
+            if (closed)
+                OnSessionClosed(new AirplayEventArgs(connection.SessionId));
+        }
+
+        #endregion
+
+        #region Event Handlers
 
         void session_EventConnection(object sender, AirplayEventArgs e)
         {
             Logger.Debug("Airplay Server: Event connection received, '{0}'", e.SessionId);
-            lock (connectionSync)
+            lock (eventConnectionSync)
                 eventConnections[e.SessionId] = (AirplaySession)sender;
         }
 
@@ -418,26 +345,6 @@ namespace ShairportSharp.Airplay
         void session_Stopped(object sender, AirplayEventArgs e)
         {
             OnSessionStopped(e);
-        }
-
-        void session_Closed(object sender, EventArgs e)
-        {
-            bool closed = false;
-            AirplaySession session = (AirplaySession)sender;
-            lock (connectionSync)
-            {
-                connections.Remove(session);
-                if (eventConnections.ContainsValue(session))
-                {
-                    Logger.Debug("Airplay Server: Event connection closed, '{0}'", session.SessionId);
-                    eventConnections.Remove(session.SessionId);
-                    lock (photoSync)
-                        photoCache.Remove(session.SessionId);
-                    closed = true;
-                }
-            }
-            if (closed)
-                OnSessionClosed(new AirplayEventArgs(session.SessionId));
         }
 
         #endregion

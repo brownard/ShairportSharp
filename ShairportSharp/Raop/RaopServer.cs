@@ -10,7 +10,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Windows.Forms;
 using ShairportSharp.Http;
-using ShairportSharp.Bonjour;
+using ShairportSharp.Base;
 using ShairportSharp.Helpers;
 
 namespace ShairportSharp.Raop
@@ -18,7 +18,7 @@ namespace ShairportSharp.Raop
     /// <summary>
     /// The main class used for broadcasting and listening for new connections
     /// </summary>
-    public class RaopServer
+    public class RaopServer : Server<RaopSession>
     {
         #region Consts
 
@@ -28,11 +28,8 @@ namespace ShairportSharp.Raop
 
         #region Variables
 
-        BonjourEmitter bonjour;
-        object listenerLock = new object();
-        HttpConnectionHandler listener = null;
         object sessionLock = new object();
-        RaopSession currentSession = null;
+        RaopSession currentSession;
         RemoteHandler remoteHandler;
 
         #endregion
@@ -42,7 +39,10 @@ namespace ShairportSharp.Raop
         /// <summary>
         /// Create a server using the machine name and no password
         /// </summary>
-        public RaopServer() { }
+        public RaopServer() 
+        {
+            Port = DEFAULT_PORT;
+        }
 
         /// <summary>
         /// Create a server with the specified name and optional password
@@ -50,66 +50,15 @@ namespace ShairportSharp.Raop
         /// <param name="name">The broadcasted name of the server</param>
         /// <param name="password">The password to use (use null or empty for no password)</param>
         public RaopServer(string name, string password = null)
+            : this()
         {
-            this.name = name;
-            this.password = password;
+            Name = name;
+            Password = password;
         }
 
         #endregion
 
         #region Properties
-
-        string name;
-        /// <summary>
-        // The broadcasted name of the Airplay server. Defaults to the machine name if null or empty.
-        /// </summary>
-        public string Name
-        {
-            get { return name; }
-            set { name = value; }
-        }
-
-        string password;
-        /// <summary>
-        /// The password needed to connect. Set to null or empty to not require a password.
-        /// </summary>
-        public string Password
-        {
-            get { return password; }
-            set { password = value; }
-        }
-
-        byte[] macAddress = null;
-        /// <summary>
-        /// The MAC address used to identify this server. If null or empty the actual MAC address of this computer will be used.
-        /// Set to an alternative value to allow multiple servers on the same computer.
-        /// </summary>
-        public byte[] MacAddress
-        {
-            get { return macAddress; }
-            set { macAddress = value; }
-        }
-
-        int port = DEFAULT_PORT;
-        /// <summary>
-        /// The port to listen on for RTSP packets. Defaults to 5000.
-        /// </summary>
-        public int Port
-        {
-            get { return port; }
-            set { port = value.CheckValidPortNumber(DEFAULT_PORT); }
-        }
-
-        string modelName = Constants.DEFAULT_MODEL_NAME;
-        /// <summary>
-        /// The model of the server, should be in the format '[NAME], [VERSION]'
-        /// In most cases can be left as the default 'ShairportSharp, 1'
-        /// </summary>
-        public string ModelName
-        {
-            get { return modelName; }
-            set { modelName = value; }
-        }
 
         /// <summary>
         /// The port to listen on for audio packets. Defaults to 6000.
@@ -207,67 +156,45 @@ namespace ShairportSharp.Raop
 
         #region Public Methods
 
-        /// <summary>
-        /// Start broadcasting and listening for new connections
-        /// </summary>
-        public void Start()
+        protected override void OnStarting()
         {
-            //We need the mac address as part of the authentication response
-            //and it also prefixes the name of the server in bonjour
-            if (macAddress == null || macAddress.Length == 0)
-                macAddress = Utils.GetMacAddress();
-            if (macAddress == null)
-                return;
-
-            lock (listenerLock)
+            if (MacAddress == null || MacAddress.Length == 0)
             {
-                if (listener != null)
-                    Stop();
+                MacAddress = Utils.GetMacAddress();
+                if (MacAddress == null)
+                    return;
+            }
 
-                Logger.Info("RAOP Server: Starting - MAC address {0}, port {1}", macAddress.HexStringFromBytes(":"), port);
-                //Start broadcasting the bonjour service
-                publishBonjour();
-                startListener();
-                remoteHandler = new RemoteHandler();
-                remoteHandler.Start();
+            Emitter = new RaopEmitter(Name.ComputerNameIfNullOrEmpty(), MacAddress.HexStringFromBytes(), Port, ModelName, !string.IsNullOrEmpty(Password));
+            remoteHandler = new RemoteHandler();
+            remoteHandler.Start();
+        }
+
+        protected override void OnStopping()
+        {
+            if (remoteHandler != null)
+            {
+                remoteHandler.Stop();
+                remoteHandler = null;
             }
         }
 
-        /// <summary>
-        /// Stops broadcasting and listening for new connections
-        /// </summary>
-        public void Stop()
+        protected override RaopSession OnSocketAccepted(Socket socket)
         {
-            Logger.Info("RAOP Server: Stopping");
-            lock (listenerLock)
-            {
-                if (bonjour != null)
-                {
-                    bonjour.Stop();
-                    bonjour = null;
-                }
-                if (remoteHandler != null)
-                {
-                    remoteHandler.Stop();
-                    remoteHandler = null;
-                }
-
-                if (listener != null)
-                {
-                    listener.Stop();
-                    listener = null;
-                }
-            }
-            RaopSession session;
+            CloseConnections();
+            RaopSession raop = new RaopSession(MacAddress, socket, Password);
+            raop.UDPPort = AudioPort;
+            raop.BufferSize = AudioBufferSize;
+            raop.StreamStarting += streamStarting;
+            raop.Closed += streamStopped;
+            raop.StreamReady += raop_StreamReady;
+            raop.ProgressChanged += raop_ProgressChanged;
+            raop.MetaDataChanged += raop_MetaDataChanged;
+            raop.ArtworkChanged += raop_ArtworkChanged;
+            raop.VolumeChanged += raop_VolumeChanged;
             lock (sessionLock)
-            {
-                session = currentSession;
-                currentSession = null;
-            }
-            if (session != null)
-                session.Close();
-
-            Logger.Info("RAOP Server: Stopped");
+                currentSession = raop;
+            return raop;
         }
 
         /// <summary>
@@ -275,15 +202,7 @@ namespace ShairportSharp.Raop
         /// </summary>
         public void StopCurrentSession()
         {
-            RaopSession session = null;
-            lock (sessionLock)
-            {
-                session = currentSession;
-                currentSession = null;
-            }
-
-            if (session != null)
-                session.Close();
+            CloseConnections();
         }
 
         /// <summary>
@@ -325,7 +244,7 @@ namespace ShairportSharp.Raop
 
             if (serverInfo != null)
             {
-                lock (listenerLock)
+                lock (SyncRoot)
                 {
                     if (remoteHandler != null)
                         remoteHandler.SendCommand(serverInfo, command);
@@ -336,58 +255,6 @@ namespace ShairportSharp.Raop
         #endregion
 
         #region Private Methods
-
-        void publishBonjour()
-        {
-            bonjour = new RaopEmitter(name.ComputerNameIfNullOrEmpty(), macAddress.HexStringFromBytes(), port, modelName, !string.IsNullOrEmpty(password));
-            bonjour.Publish();
-        }
-
-        void startListener()
-        {
-            //Create a TCPListener on the specified port
-            listener = new HttpConnectionHandler(IPAddress.Any, port);
-            listener.SocketAccepted += listener_SocketAccepted;
-            if (!listener.Start())
-                Stop();
-        }
-
-        void listener_SocketAccepted(object sender, SocketAcceptedEventArgs e)
-        {
-            RaopSession oldSession;
-            lock (sessionLock)
-            {
-                oldSession = currentSession;
-                currentSession = null;
-            }
-
-            if (oldSession != null)
-            {
-                Logger.Info("RAOP Server: Stopping current connection, new connection requested");
-                oldSession.Close();
-            }
-
-            lock (sessionLock)
-            {
-                if (currentSession == null)
-                {
-                    //Start a responder to handle the connection
-                    e.Handled = true;
-                    RaopSession raop = new RaopSession(macAddress, e.Socket, password);
-                    raop.UDPPort = AudioPort;
-                    raop.BufferSize = AudioBufferSize;
-                    raop.StreamStarting += streamStarting;
-                    raop.Closed += streamStopped;
-                    raop.StreamReady += raop_StreamReady;
-                    raop.ProgressChanged += raop_ProgressChanged;
-                    raop.MetaDataChanged += raop_MetaDataChanged;
-                    raop.ArtworkChanged += raop_ArtworkChanged;
-                    raop.VolumeChanged += raop_VolumeChanged;
-                    raop.Start();
-                    currentSession = raop;
-                }
-            }
-        }
 
         void streamStarting(object sender, RaopEventArgs e)
         {

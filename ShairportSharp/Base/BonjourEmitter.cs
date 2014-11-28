@@ -6,9 +6,9 @@ using System.Net.Sockets;
 using System.Text;
 using ZeroconfService;
 
-namespace ShairportSharp.Bonjour
+namespace ShairportSharp.Base
 {
-    abstract class BonjourEmitter
+    public abstract class BonjourEmitter
     {
         public event NetService.ServicePublished DidPublishService;
         public event NetService.ServiceNotPublished DidNotPublishService;

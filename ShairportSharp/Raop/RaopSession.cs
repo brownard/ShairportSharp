@@ -21,7 +21,7 @@ using ShairportSharp.Helpers;
 
 namespace ShairportSharp.Raop
 {    
-    class RaopSession : HttpParser
+    public class RaopSession : HttpParser
     {        
         #region Private Variables
                 

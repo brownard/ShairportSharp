@@ -160,15 +160,23 @@ namespace ShairportSharp.Http
                     }
 
                     socket = listener.EndAcceptSocket(result);
-                    if (socket != null)
-                    {
-                        //Logger.Debug("TCP Listener: New connection");
-                        SocketAcceptedEventArgs e = new SocketAcceptedEventArgs(socket);
-                        OnSocketAccepted(e);
-                        if (!e.Handled)
-                            socket.Close();
-                    }
-                    listener.BeginAcceptSocket(acceptSocket, null);
+                }
+
+                if (socket != null)
+                {
+                    //Logger.Debug("TCP Listener: New connection");
+                    SocketAcceptedEventArgs e = new SocketAcceptedEventArgs(socket);
+                    OnSocketAccepted(e);
+                    if (!e.Handled)
+                        socket.Close();
+                }
+
+                lock (syncRoot)
+                {
+                    if (listener != null)
+                        listener.BeginAcceptSocket(acceptSocket, null);
+                    else
+                        Logger.Debug("TCP Listener: Stopped");
                 }
             }
             catch (SocketException)

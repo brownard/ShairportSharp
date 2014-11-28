@@ -203,9 +203,10 @@ namespace ShairportSharp.Raop
             }
             else if (requestType == "SETUP")
             {
-                if (setupAudioServer(request))
+                int port;
+                if (setupAudioServer(request, out port))
                 {
-                    response.SetHeader("Transport", request.GetHeader("Transport") + ";server_port=" + audioServer.Port);
+                    response.SetHeader("Transport", request.GetHeader("Transport") + ";server_port=" + port);
                     response.SetHeader("Session", "DEADBEEF");
                 }
             }
@@ -383,10 +384,11 @@ namespace ShairportSharp.Raop
             }
         }
 
-        bool setupAudioServer(HttpRequest request)
+        bool setupAudioServer(HttpRequest request, out int port)
         {
             int controlPort = 0;
             int timingPort = 0;
+            port = 0;
 
             string value = request.GetHeader("Transport");
             // Control port
@@ -421,6 +423,7 @@ namespace ShairportSharp.Raop
                 if (audioServer.Start())
                 {
                     Logger.Debug("RAOPSession: Started new Audio Server");
+                    port = audioServer.Port;
                     return true;
                 }
                 else

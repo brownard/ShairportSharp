@@ -163,7 +163,7 @@ namespace ShairportSharp.Http
                 }
                 if (read < 1)
                 {
-                    close();
+                    Close(false);
                     return;
                 }
 
@@ -180,12 +180,12 @@ namespace ShairportSharp.Http
             catch (IOException)
             {
                 Logger.Debug("HttpParser: IO Exception, socket probably closed");
-                close();
+                Close(false);
             }
             catch (Exception ex)
             {
                 Logger.Error("HttpParser: Error receiving requests -", ex);
-                close();
+                Close(false);
             }
         }
 
@@ -210,7 +210,7 @@ namespace ShairportSharp.Http
                 Send(response);
                 if (response["Connection"] == "close")
                 {
-                    close();
+                    Close(false);
                     return;
                 }
             }
@@ -260,10 +260,10 @@ namespace ShairportSharp.Http
         /// </summary>
         public virtual void Close()
         {
-            close(true);
+            Close(true);
         }
 
-        void close(bool manualClose = false)
+        protected virtual void Close(bool manualClose)
         {
             bool closed = false;
             lock (socketLock)
@@ -335,7 +335,7 @@ namespace ShairportSharp.Http
 
         public void Dispose()
         {
-            close();
+            Close(false);
         }
 
         #endregion

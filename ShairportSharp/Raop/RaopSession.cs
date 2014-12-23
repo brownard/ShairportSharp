@@ -155,7 +155,7 @@ namespace ShairportSharp.Raop
         /// <summary>
         /// Stops listening for new packets and closes the underlying socket and audio server.
         /// </summary>
-        public override void Close()
+        protected override void Close(bool manualClose)
         {
             lock (audioServerLock)
             {
@@ -166,7 +166,7 @@ namespace ShairportSharp.Raop
                     Logger.Debug("RAOPSession: Stopped audio server");
                 }
             }
-            base.Close();
+            base.Close(manualClose);
         }
 
         protected override HttpResponse HandleRequest(HttpRequest request)

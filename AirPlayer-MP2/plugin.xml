@@ -29,21 +29,24 @@
     <VideoPlayerMimeTypeMapping Id="airplay" ClassName="AirPlayer.MediaPortal2.Players.AirplayVideoPlayer" MimeType="video/airplayer"/>
   </Register>
 
+  <Register Location="/Resources/Language">
+    <Resource Id="AirPlayerLanguage" Directory="Language" Type="Language"/>
+  </Register>
+  
   --> 
   <!--Registration of our configuration section--> 
   <Register Location="/Configuration/Settings/Plugins">
     <ConfigSection
         Id="AirPlayer"
-        Redundant="true"
-        Text="AirPlayer"/>
+        Text="[Settings.Plugins.AirPlayer]"/>
   </Register>
 
   <!-- Contents of '/Plugins/AirPlayer' section -->  
   <Register Location="/Configuration/Settings/Plugins/AirPlayer">
     <ConfigSetting
         Id="AirPlayerServerName"
-        Text="Server name"
-        HelpText="The display name of the server"
+        Text="[AirPlayer.ServerName]"
+        HelpText="[AirPlayer.ServerName.Help]"
         ClassName="AirPlayer.MediaPortal2.Configuration.ServerName"/>
     <ConfigSetting
         Id="AirPlayerPassword"
@@ -52,48 +55,48 @@
         ClassName="AirPlayer.MediaPortal2.Configuration.Password"/>
     <ConfigSetting
         Id="AirPlayerUseDummyIdentifier"
-        Text="Use dummy identifier"
-        HelpText="Use a custom identifier, allows multiple airplay servers on the same machine"
+        Text="[AirPlayer.DummyIdent]"
+        HelpText="[AirPlayer.DummyIdent.Help]"
         ClassName="AirPlayer.MediaPortal2.Configuration.DummyIdentifier"/>
     <ConfigSetting
         Id="iOS8Workaround"
-        Text="Enable iOS 8 workaround"
-        HelpText="Enable experimental support for iOS 8"
+        Text="[AirPlayer.iOS8Workaround]"
+        HelpText="[AirPlayer.iOS8Workaround.Help]"
         ClassName="AirPlayer.MediaPortal2.Configuration.iOS8Workaround"/>
     <ConfigSetting
         Id="AirPlayerRtspPort"
-        Text="RTSP port"
-        HelpText="The TCP port used to receive audio stream information"
+        Text="[AirPlayer.RtspPort]"
+        HelpText="[AirPlayer.RtspPort.Help]"
         ClassName="AirPlayer.MediaPortal2.Configuration.RtspPort"/>
     <ConfigSetting
         Id="AirPlayerUdpPort"
-        Text="UDP port"
-        HelpText="The UDP port used to receive audio data"
+        Text="[AirPlayer.UdpPort]"
+        HelpText="[AirPlayer.UdpPort.Help]"
         ClassName="AirPlayer.MediaPortal2.Configuration.UdpPort"/>
     <ConfigSetting
         Id="AirPlayerAudioBuffer"
-        Text="Audio buffer size (seconds)"
-        HelpText="The amount of audio to buffer before starting playback"
+        Text="[AirPlayer.AudioBuffer]"
+        HelpText="[AirPlayer.AudioBuffer.Help]"
         ClassName="AirPlayer.MediaPortal2.Configuration.AudioBuffer"/>
     <ConfigSetting
         Id="AirPlayerAllowVolume"
-        Text="Allow client to control volume"
-        HelpText="Whether to allow the client to control MediaPortal's volume"
+        Text="[AirPlayer.AllowVolume]"
+        HelpText="[AirPlayer.AllowVolume.Help]"
         ClassName="AirPlayer.MediaPortal2.Configuration.AllowVolume"/>
     <ConfigSetting
         Id="AirPlayerSendAudioCommands"
-        Text="Send playback commands to client"
-        HelpText="Whether to send Play/Pause/Prev/Next commands to the client"
+        Text="[AirPlayer.SendCommands]"
+        HelpText="[AirPlayer.SendCommands.Help]"
         ClassName="AirPlayer.MediaPortal2.Configuration.SendAudioCommands"/>
     <ConfigSetting
         Id="AirPlayerAirplayPort"
-        Text="Video port"
-        HelpText="The TCP port used to receive photo and video information"
+        Text="[AirPlayer.VideoPort]"
+        HelpText="[AirPlayer.VideoPort.Help]"
         ClassName="AirPlayer.MediaPortal2.Configuration.AirplayPort"/>
     <ConfigSetting
         Id="AirPlayerAllowHD"
-        Text="Allow HD streams"
-        HelpText="Allow HD stream selection if available"
+        Text="[AirPlayer.AllowHD]"
+        HelpText="[AirPlayer.AllowHD.Help]"
         ClassName="AirPlayer.MediaPortal2.Configuration.AllowHDStreams"/>
   </Register>  
 </Plugin>

@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<resources>
+  <string name="Settings.Plugins.AirPlayer">AirPlayer</string>
+  <string name="AirPlayer.ServerName">Server name</string>
+  <string name="AirPlayer.ServerName.Help">The display name of the server</string>
+  <string name="AirPlayer.Password">Password</string>
+  <string name="AirPlayer.Password.Help">The password used to connect to the server, leave blank for no password</string>
+  <string name="AirPlayer.DummyIdent">Use dummy identifier</string>
+  <string name="AirPlayer.DummyIdent.Help">Use a custom identifier, allows multiple airplay servers on the same machine</string>
+  <string name="AirPlayer.iOS8Workaround">Enable iOS 8 workaround</string>
+  <string name="AirPlayer.iOS8Workaround.Help">Enable experimental support for iOS 8</string>
+  <string name="AirPlayer.RtspPort">RTSP port</string>
+  <string name="AirPlayer.RtspPort.Help">The TCP port used to receive audio stream information</string>
+  <string name="AirPlayer.UdpPort">UDP port</string>
+  <string name="AirPlayer.UdpPort.Help">The UDP port used to receive audio data</string>
+  <string name="AirPlayer.AudioBuffer">Audio buffer size (seconds)</string>
+  <string name="AirPlayer.AudioBuffer.Help">The amount of audio to buffer before starting playback</string>
+  <string name="AirPlayer.AllowVolume">Allow client to control volume</string>
+  <string name="AirPlayer.AllowVolume.Help">Whether to allow the client to control MediaPortal's volume</string>
+  <string name="AirPlayer.SendCommands">Send playback commands to client</string>
+  <string name="AirPlayer.SendCommands.Help">Whether to send Play/Pause/Prev/Next commands to the client</string>
+  <string name="AirPlayer.VideoPort">Video port</string>
+  <string name="AirPlayer.VideoPort.Help">The TCP port used to receive photo and video information</string>
+  <string name="AirPlayer.AllowHD">Allow HD streams</string>
+  <string name="AirPlayer.AllowHD.Help">Allow HD stream selection if available</string>
+</resources>

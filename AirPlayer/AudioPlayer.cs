@@ -193,9 +193,10 @@ namespace AirPlayer
         {
             if (m_state != PlayState.Init)
             {
-                Logger.Instance.Debug("AirplayerAudioPlayer: Stop");
+                Logger.Instance.Debug("AirplayerAudioPlayer: Stopping");
                 mediaCtrl.StopWhenReady();
                 MovieEnded(true);
+                Logger.Instance.Debug("AirplayerAudioPlayer: Stopped");
             }
         }
 

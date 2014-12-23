@@ -214,7 +214,7 @@
             this.udpPortUpDown.Name = "udpPortUpDown";
             this.udpPortUpDown.Size = new System.Drawing.Size(56, 20);
             this.udpPortUpDown.TabIndex = 16;
-            this.toolTip.SetToolTip(this.udpPortUpDown, "The port used to receive audio data.\r");
+            this.toolTip.SetToolTip(this.udpPortUpDown, "The port used to receive audio data.");
             this.udpPortUpDown.Value = new decimal(new int[] {
             50510,
             0,

@@ -206,8 +206,8 @@ namespace ShairportSharp.Raop
                 int port;
                 if (setupAudioServer(request, out port))
                 {
-                    response.SetHeader("Transport", request.GetHeader("Transport") + ";server_port=" + port);
-                    response.SetHeader("Session", "DEADBEEF");
+                    response.SetHeader("Transport", string.Format("RTP/AVP/UDP;unicast;mode=record;x-events;server_port={0};control_port={0};timing_port={0}", port));
+                    response.SetHeader("Session", "1");
                 }
             }
             else if (requestType == "RECORD")

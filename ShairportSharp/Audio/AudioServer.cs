@@ -15,10 +15,6 @@ namespace ShairportSharp.Audio
         object socketLock = new object();
         UdpClient audioSocket;
         UdpListener audioListener;
-        UdpClient controlSocket;
-        UdpListener controlListener;
-        UdpClient timingSocket;
-        UdpListener timingListener;
 
         // client address
         IPAddress clientAddress;
@@ -68,12 +64,10 @@ namespace ShairportSharp.Audio
                     try
                     {
                         audioSocket = new UdpClient(port);
-                        controlSocket = new UdpClient(port + 1);
-                        timingSocket = new UdpClient(port + 2);
                     }
                     catch (SocketException)
                     {
-                        port = port + 3;
+                        port++;
                         tries++;
                         continue;
                     }
@@ -87,14 +81,6 @@ namespace ShairportSharp.Audio
                     audioListener = new UdpListener(audioSocket);
                     audioListener.OnPacketReceived += packetReceived;
                     audioListener.Start();
-
-                    controlListener = new UdpListener(controlSocket);
-                    controlListener.OnPacketReceived += packetReceived;
-                    controlListener.Start();
-
-                    timingListener = new UdpListener(timingSocket);
-                    timingListener.OnPacketReceived += packetReceived;
-                    timingListener.Start();
                 }
                 else
                 {
@@ -103,16 +89,6 @@ namespace ShairportSharp.Audio
                     {
                         audioSocket.Close();
                         audioSocket = null;
-                    }
-                    if (controlSocket != null)
-                    {
-                        controlSocket.Close();
-                        controlSocket = null;
-                    }
-                    if (timingSocket != null)
-                    {
-                        timingSocket.Close();
-                        timingSocket = null;
                     }
                     return false;
                 }
@@ -138,26 +114,6 @@ namespace ShairportSharp.Audio
                     audioSocket.Close();
                     audioSocket = null;
                 }
-                if (controlListener != null)
-                {
-                    controlListener.Stop();
-                    controlListener = null;
-                }
-                if (controlSocket != null)
-                {
-                    controlSocket.Close();
-                    controlSocket = null;
-                }
-                if (timingListener != null)
-                {
-                    timingListener.Stop();
-                    timingListener = null;
-                }
-                if (timingSocket != null)
-                {
-                    timingSocket.Close();
-                    timingSocket = null;
-                }
             }
         }
 
@@ -170,16 +126,10 @@ namespace ShairportSharp.Audio
         void packetReceived(UdpClient socket, byte[] packet, IPEndPoint remoteEndPoint)
         {
             this.clientAddress = remoteEndPoint.Address; //The client address
-
             int type = packet[1] & ~0x80;
-            int lType = packet[1];
-            if (type != 0x60)
-            {
-            }
-
             if (type == 0x60 || type == 0x56)
             { 	// audio data / resend
-                // additional 4 bytes 
+                // additional 4 bytes
                 int offset = 0;
                 if (type == 0x56)
                     offset = 4;
@@ -203,18 +153,15 @@ namespace ShairportSharp.Audio
                     audioBuffer.PutPacketInBuffer(seqno, timeStamp, pktp);
                 }
             }
-            else
-            {
-                if (type == 0x54)
-                {
-                    //sync packet
-                    int packetLength = packet.Length - 12;
-                    if (packetLength > 0)
-                    {
-
-                    }
-                }
-            }
+            //else if (type == 0x54)
+            //{
+            //    //sync packet
+            //    int packetLength = packet.Length - 12;
+            //    if (packetLength > 0)
+            //    {
+            //        Logger.Debug("Got sync packet");
+            //    }
+            //}
         }
 
 
@@ -233,11 +180,11 @@ namespace ShairportSharp.Audio
 
             lock (socketLock)
             {
-                if (controlSocket != null)
+                if (audioSocket != null)
                 {
                     try
                     {
-                        controlSocket.Send(request, request.Length, clientAddress.ToString(), audioSession.ControlPort);
+                        audioSocket.Send(request, request.Length, clientAddress.ToString(), audioSession.ControlPort);
                     }
                     catch (SocketException) { }
                 }

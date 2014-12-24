@@ -56,6 +56,16 @@ namespace AirPlayer.MediaPortal2.Players
             }
         }
 
+        public override bool CanSeekBackwards
+        {
+            get { return false; }
+        }
+
+        public override bool CanSeekForwards
+        {
+            get { return false; }
+        }
+
         public override TimeSpan CurrentTime
         {
             get

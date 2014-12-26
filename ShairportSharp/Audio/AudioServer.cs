@@ -77,14 +77,14 @@ namespace ShairportSharp.Audio
 
                 if (result)
                 {
-                    Logger.Debug("Audio Server: Using ports {0} - {1}", port, port + 2);
+                    Logger.Debug("Audio Server: Using port {0}", port);
                     audioListener = new UdpListener(audioSocket);
                     audioListener.OnPacketReceived += packetReceived;
                     audioListener.Start();
                 }
                 else
                 {
-                    Logger.Error("Audio Server: Failed to locate an available port range");
+                    Logger.Error("Audio Server: Failed to locate an available port");
                     if (audioSocket != null)
                     {
                         audioSocket.Close();

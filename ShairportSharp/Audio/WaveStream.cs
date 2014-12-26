@@ -15,7 +15,7 @@ namespace ShairportSharp.Audio
         long fixVolume = 0x10000;
         short randomA, randomB;
         Random random = new Random();
-
+        readonly byte[] silence; 
         AudioSession audioSession;
         bool manageBuffer;
 
@@ -25,6 +25,7 @@ namespace ShairportSharp.Audio
             : base(audioBuffer, audioSession)
         {
             this.audioSession = audioSession;
+            silence = new byte[audioSession.FrameSize * 4];
             this.manageBuffer = manageBuffer;
             Header = new WaveHeader(audioSession.SampleRate, audioSession.SampleSize, audioSession.Channels);
         }
@@ -39,7 +40,7 @@ namespace ShairportSharp.Audio
         byte[] processPacket(byte[] alacFrame)
         {
             if (alacFrame == null)
-                return new byte[audioSession.FrameSize * 4];
+                return silence;        
 
             int[] outBuffer = new int[(audioSession.FrameSize + 3) * 2];
             int outputsize = AlacDecodeUtils.DecodeFrame(audioSession.AlacFile, alacFrame, outBuffer);

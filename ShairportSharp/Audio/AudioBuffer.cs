@@ -131,7 +131,7 @@ namespace ShairportSharp.Audio
                 {
                     //Too early, missed packets between writeIndex and seqno
                     //Logger.Debug("Audio Buffer: Received packet early. Expected: {0}, Received: {1}", writeIndex, seqno);
-                    OnMissingPackets(new MissingPacketEventArgs(writeIndex, seqno)); //ask to resend
+                    //OnMissingPackets(new MissingPacketEventArgs(writeIndex, seqno)); //ask to resend
                     buffer.Data = data;
                     buffer.TimeStamp = timestamp;
                     buffer.Ready = true;
@@ -145,11 +145,13 @@ namespace ShairportSharp.Audio
                     buffer.Data = data;
                     buffer.TimeStamp = timestamp;
                     buffer.Ready = true;
+                    return;
                 }
                 else
                 {
                     //Already played 
                     Logger.Warn("Audio Buffer: Received packet late. Expected: {0}, Received: {1}", writeIndex, seqno);
+                    return;
                 }
 
                 // The number of packets in buffer
@@ -214,7 +216,6 @@ namespace ShairportSharp.Audio
                     Logger.Debug("Audio Buffer: New packet received");
                     decoderStopped = false;
                     OnBufferRestart();
-                    return false;
                 }
 
                 // Overrunning. Restart at a sane distance
@@ -222,6 +223,13 @@ namespace ShairportSharp.Audio
                 {
                     Logger.Debug("Buffer overrun");
                     readIndex = (ushort)(writeIndex - startFill);
+                }
+
+                for (int i = 16; i < (startFill / 2); i = i * 2)
+                {
+                    int next = readIndex + i;
+                    if (!audioBuffer[next % maxBufferFrames].Ready)
+                        OnMissingPackets(new MissingPacketEventArgs(next, next + 1));
                 }
 
                 AudioData buffer = audioBuffer[readIndex % maxBufferFrames];

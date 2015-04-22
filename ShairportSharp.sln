@@ -1,6 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+# Visual Studio 2013
+VisualStudioVersion = 12.0.31101.0
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShairportSharp", "ShairportSharp\ShairportSharp.csproj", "{8AF9A8A8-7ABE-4D55-8CB4-10D651B1BDA5}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShairportSharp_Test", "ShairportSharp_Test\ShairportSharp_Test.csproj", "{EA54F977-97BE-44CC-AD9C-DC318FB9FC54}"
@@ -19,6 +21,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AirPlayer.Common", "Airplayer.Common\AirPlayer.Common.csproj", "{5B98C320-4DE1-483B-81AB-F3D7394827B4}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AirPlayer.MediaPortal2", "AirPlayer-MP2\AirPlayer.MediaPortal2.csproj", "{9B641272-64F7-45B7-87EB-A52BF4632865}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Arm7", "Arm7\Arm7.csproj", "{32F1F23B-F262-4DA0-B798-43C048B68A65}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -57,6 +61,7 @@ Global
 		{EA54F977-97BE-44CC-AD9C-DC318FB9FC54}.Release|Win32.ActiveCfg = Release|Any CPU
 		{EA54F977-97BE-44CC-AD9C-DC318FB9FC54}.Release|x86.ActiveCfg = Release|Any CPU
 		{C4A45FA7-BCD1-4B14-B6D5-051A780EB83B}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{C4A45FA7-BCD1-4B14-B6D5-051A780EB83B}.Debug|Any CPU.Build.0 = Debug|x86
 		{C4A45FA7-BCD1-4B14-B6D5-051A780EB83B}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
 		{C4A45FA7-BCD1-4B14-B6D5-051A780EB83B}.Debug|Mixed Platforms.Build.0 = Debug|x86
 		{C4A45FA7-BCD1-4B14-B6D5-051A780EB83B}.Debug|Win32.ActiveCfg = Debug|x86
@@ -106,6 +111,18 @@ Global
 		{9B641272-64F7-45B7-87EB-A52BF4632865}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{9B641272-64F7-45B7-87EB-A52BF4632865}.Release|Win32.ActiveCfg = Release|Any CPU
 		{9B641272-64F7-45B7-87EB-A52BF4632865}.Release|x86.ActiveCfg = Release|Any CPU
+		{32F1F23B-F262-4DA0-B798-43C048B68A65}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{32F1F23B-F262-4DA0-B798-43C048B68A65}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{32F1F23B-F262-4DA0-B798-43C048B68A65}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{32F1F23B-F262-4DA0-B798-43C048B68A65}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{32F1F23B-F262-4DA0-B798-43C048B68A65}.Debug|Win32.ActiveCfg = Debug|Any CPU
+		{32F1F23B-F262-4DA0-B798-43C048B68A65}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{32F1F23B-F262-4DA0-B798-43C048B68A65}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{32F1F23B-F262-4DA0-B798-43C048B68A65}.Release|Any CPU.Build.0 = Release|Any CPU
+		{32F1F23B-F262-4DA0-B798-43C048B68A65}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{32F1F23B-F262-4DA0-B798-43C048B68A65}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{32F1F23B-F262-4DA0-B798-43C048B68A65}.Release|Win32.ActiveCfg = Release|Any CPU
+		{32F1F23B-F262-4DA0-B798-43C048B68A65}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

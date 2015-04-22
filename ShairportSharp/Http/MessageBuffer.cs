@@ -6,25 +6,25 @@ using System.Text;
 
 namespace ShairportSharp.Http
 {
-    abstract class MessageBuffer
+    public abstract class MessageBuffer
     {
+        const int BUFFER_SIZE = 131072;
         byte[] backBuffer;
         int bufferOffset;
-
-        byte[] messageDelimiter;
-        int delimeterIndex;
         int contentLength;
-
-        public MessageBuffer(byte[] messageDelimiter)
+        
+        public MessageBuffer()
         {
-            this.messageDelimiter = messageDelimiter;
-            backBuffer = new byte[131072];
+            backBuffer = new byte[BUFFER_SIZE];
         }
+
+        protected abstract bool IsEndOfHeader(byte b);
+        protected abstract int OnMessage(byte[] messageData);
+        protected abstract void OnContent(byte[] content);
 
         public void Write(byte[] buffer, int offset, int count)
         {
             checkBufferSize(count);
-
             for (int i = 0; i < count; i++)
             {
                 byte b = buffer[offset + i];
@@ -37,21 +37,9 @@ namespace ShairportSharp.Http
                         contentLength = 0;
                     }
                 }
-                else if (b == messageDelimiter[delimeterIndex])
+                else if (IsEndOfHeader(b))
                 {
-                    if (delimeterIndex == messageDelimiter.Length - 1)
-                    {
-                        contentLength = OnMessage(getAndResetBuffer());
-                        delimeterIndex = 0;
-                    }
-                    else
-                    {
-                        delimeterIndex++;
-                    }
-                }
-                else
-                {
-                    delimeterIndex = 0;
+                    contentLength = OnMessage(getAndResetBuffer());
                 }
             }
         }
@@ -78,8 +66,5 @@ namespace ShairportSharp.Http
             bufferOffset = 0;
             return buffer;
         }
-
-        protected abstract int OnMessage(byte[] messageData);
-        protected abstract void OnContent(byte[] content);
     }
 }

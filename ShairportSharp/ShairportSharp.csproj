@@ -58,6 +58,14 @@
     <Compile Include="Airplay\AirplayServer.cs" />
     <Compile Include="Airplay\AirplaySession.cs" />
     <Compile Include="Airplay\IPlistResponse.cs" />
+    <Compile Include="Http\HttpUtils.cs" />
+    <Compile Include="Mirroring\H264CodecData.cs" />
+    <Compile Include="Mirroring\MirroringInfo.cs" />
+    <Compile Include="Mirroring\MirroringMessage.cs" />
+    <Compile Include="Mirroring\MirroringServer.cs" />
+    <Compile Include="Mirroring\MirroringSession.cs" />
+    <Compile Include="Mirroring\MirroringSetup.cs" />
+    <Compile Include="Mirroring\MirroringStream.cs" />
     <Compile Include="Airplay\PlaybackInfo.cs" />
     <Compile Include="Airplay\PlaybackStateInfo.cs" />
     <Compile Include="Airplay\Plist.cs" />
@@ -78,6 +86,7 @@
     <Compile Include="Base\Server.cs" />
     <Compile Include="Base\BonjourEmitter.cs" />
     <Compile Include="Constants.cs" />
+    <Compile Include="Helpers\Aes128CounterMode.cs" />
     <Compile Include="Http\HttpConnectionHandler.cs" />
     <Compile Include="Http\HttpMessage.cs" />
     <Compile Include="Http\HttpMessageBuffer.cs" />
@@ -85,8 +94,10 @@
     <Compile Include="Http\HttpRequest.cs" />
     <Compile Include="Http\HttpResponse.cs" />
     <Compile Include="Http\MessageBuffer.cs" />
+    <Compile Include="Mirroring\MirroringMessageBuffer.cs" />
     <Compile Include="Log\ILog.cs" />
     <Compile Include="Log\Logger.cs" />
+    <Compile Include="Mirroring\NaluParser.cs" />
     <Compile Include="Raop\RaopEmitter.cs" />
     <Compile Include="Raop\RSAKey.cs" />
     <Compile Include="Raop\DmapData.cs" />
@@ -102,10 +113,19 @@
     <Compile Include="Raop\RaopServer.cs" />
     <Compile Include="Audio\UdpListener.cs" />
     <Compile Include="Helpers\Utils.cs" />
+    <Compile Include="Sap\SapHandler.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <EmbeddedResource Include="Sap\airtunesd" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Arm7\Arm7.csproj">
+      <Project>{32f1f23b-f262-4da0-b798-43c048b68a65}</Project>
+      <Name>Arm7</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>

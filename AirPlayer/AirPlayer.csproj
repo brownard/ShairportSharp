@@ -68,6 +68,7 @@
   <ItemGroup>
     <Compile Include="Cornerstone.MP\AsyncImageResource.cs" />
     <Compile Include="Cornerstone.MP\ImageSwapper.cs" />
+    <Compile Include="MirroringPlayer.cs" />
     <Compile Include="MPUrlSourceFilter\IFilterState.cs" />
     <Compile Include="GUI\PhotoWindow.cs" />
     <Compile Include="MPUrlSourceFilter\MPUrlSourceSplitterError.cs" />

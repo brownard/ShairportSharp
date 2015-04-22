@@ -42,11 +42,11 @@ namespace DirectShow.Helper
 #if DEBUG
         public static void _TRACE(string _message) { if (!string.IsNullOrEmpty(_message)) Trace.WriteLine(_message); }
         public static void TRACE(string _message) { if (!string.IsNullOrEmpty(_message)) { _message += "\n"; API.OutputDebugString(_message); } }
-        
-        public static void TRACE_ENTER() 
-        { 
-            MethodBase _method = (new StackTrace(1,false)).GetFrame(0).GetMethod();
-            TRACE(string.Format("{0}::{1}", _method.ReflectedType.Name, _method.Name)); 
+
+        public static void TRACE_ENTER()
+        {
+            MethodBase _method = (new StackTrace(1, false)).GetFrame(0).GetMethod();
+            TRACE(string.Format("{0}::{1}", _method.ReflectedType.Name, _method.Name));
         }
         public static void ASSERT(object _object) { if (_object is BOOL) Debug.Assert((bool)_object); if (_object is HRESULT) Debug.Assert((bool)_object); else if (_object is bool) Debug.Assert((bool)_object); else Debug.Assert(_object != null); }
 #else
@@ -77,26 +77,26 @@ namespace DirectShow.Helper
         public const int SUBLANG_CUSTOM_UNSPECIFIED = 0x04;
         public const int SUBLANG_UI_CUSTOM_DEFAULT = 0x05;
 
-        public const int SORT_DEFAULT         = 0x0;
-        public const int SORT_INVARIANT_MATH  = 0x1;
+        public const int SORT_DEFAULT = 0x0;
+        public const int SORT_INVARIANT_MATH = 0x1;
 
-        public static int LANG_SYSTEM_DEFAULT { get { return (MAKELANGID(LANG_NEUTRAL, SUBLANG_SYS_DEFAULT)); }}
-        public static int LANG_USER_DEFAULT { get { return (MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT)); }}
+        public static int LANG_SYSTEM_DEFAULT { get { return (MAKELANGID(LANG_NEUTRAL, SUBLANG_SYS_DEFAULT)); } }
+        public static int LANG_USER_DEFAULT { get { return (MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT)); } }
 
-        public static int LOCALE_SYSTEM_DEFAULT { get { return (MAKELCID(LANG_SYSTEM_DEFAULT, SORT_DEFAULT)); }}
-        public static int LOCALE_USER_DEFAULT { get { return (MAKELCID(LANG_USER_DEFAULT, SORT_DEFAULT)); }}
-        public static int LOCALE_CUSTOM_DEFAULT { get { return (MAKELCID(MAKELANGID(LANG_NEUTRAL, SUBLANG_CUSTOM_DEFAULT), SORT_DEFAULT)); }}
-        public static int LOCALE_CUSTOM_UNSPECIFIED { get { return (MAKELCID(MAKELANGID(LANG_NEUTRAL, SUBLANG_CUSTOM_UNSPECIFIED), SORT_DEFAULT)); }}
-        public static int LOCALE_CUSTOM_UI_DEFAULT { get { return (MAKELCID(MAKELANGID(LANG_NEUTRAL, SUBLANG_UI_CUSTOM_DEFAULT), SORT_DEFAULT)); }}
-        public static int LOCALE_NEUTRAL { get { return (MAKELCID(MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), SORT_DEFAULT)); }}
+        public static int LOCALE_SYSTEM_DEFAULT { get { return (MAKELCID(LANG_SYSTEM_DEFAULT, SORT_DEFAULT)); } }
+        public static int LOCALE_USER_DEFAULT { get { return (MAKELCID(LANG_USER_DEFAULT, SORT_DEFAULT)); } }
+        public static int LOCALE_CUSTOM_DEFAULT { get { return (MAKELCID(MAKELANGID(LANG_NEUTRAL, SUBLANG_CUSTOM_DEFAULT), SORT_DEFAULT)); } }
+        public static int LOCALE_CUSTOM_UNSPECIFIED { get { return (MAKELCID(MAKELANGID(LANG_NEUTRAL, SUBLANG_CUSTOM_UNSPECIFIED), SORT_DEFAULT)); } }
+        public static int LOCALE_CUSTOM_UI_DEFAULT { get { return (MAKELCID(MAKELANGID(LANG_NEUTRAL, SUBLANG_UI_CUSTOM_DEFAULT), SORT_DEFAULT)); } }
+        public static int LOCALE_NEUTRAL { get { return (MAKELCID(MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), SORT_DEFAULT)); } }
         public static int LOCALE_INVARIANT { get { return (MAKELCID(MAKELANGID(LANG_INVARIANT, SUBLANG_NEUTRAL), SORT_DEFAULT)); } }
 
         public static int MAKELANGID(int p, int s) { return ((((ushort)(s)) << 10) | (ushort)(p)); }
         public static int PRIMARYLANGID(int lgid) { return ((ushort)(lgid) & 0x3ff); }
-        public static int SUBLANGID(int lgid) { return ((ushort )(lgid) >> 10); } 
-        public static int MAKELCID(int lgid,int srtid)  { return ((int)((((int)((ushort )(srtid))) << 16) | ((int)((ushort)(lgid))))); } 
-        public static int MAKESORTLCID(int lgid,int  srtid,int  ver) { return ((int)((MAKELCID(lgid, srtid)) | (((int)((ushort)(ver))) << 20))); }
-        public static int LANGIDFROMLCID(int lcid) { return ((ushort  )(lcid)); } 
+        public static int SUBLANGID(int lgid) { return ((ushort)(lgid) >> 10); }
+        public static int MAKELCID(int lgid, int srtid) { return ((int)((((int)((ushort)(srtid))) << 16) | ((int)((ushort)(lgid))))); }
+        public static int MAKESORTLCID(int lgid, int srtid, int ver) { return ((int)((MAKELCID(lgid, srtid)) | (((int)((ushort)(ver))) << 20))); }
+        public static int LANGIDFROMLCID(int lcid) { return ((ushort)(lcid)); }
         public static int SORTIDFROMLCID(int lcid) { return ((ushort)((((int)(lcid)) >> 16) & 0xf)); }
         public static int SORTVERSIONFROMLCID(int lcid) { return ((ushort)((((int)(lcid)) >> 20) & 0xf)); }
 
@@ -119,9 +119,9 @@ namespace DirectShow.Helper
 
         #region HRESULT
 
-        public static HRESULT S_OK  { get { return (HRESULT)0; } }
+        public static HRESULT S_OK { get { return (HRESULT)0; } }
         public static HRESULT S_FALSE { get { return (HRESULT)1; } }
-        public static HRESULT NOERROR { get { return S_OK; } } 
+        public static HRESULT NOERROR { get { return S_OK; } }
         public static HRESULT E_INVALIDARG { get { unchecked { return (HRESULT)0x80070057; } } }
         public static HRESULT E_NOINTERFACE { get { unchecked { return (HRESULT)0x80004002; } } }
         public static HRESULT E_NOTIMPL { get { unchecked { return (HRESULT)0x80004001; } } }
@@ -199,7 +199,7 @@ namespace DirectShow.Helper
 
             [DllImport("kernel32.dll", EntryPoint = "RtlMoveMemory")]
             public static extern void CopyMemory(IntPtr Destination, IntPtr Source, [MarshalAs(UnmanagedType.U4)] int Length);
-            
+
             [DllImport("ole32.dll")]
             public static extern int CreateBindCtx(int reserved, out IBindCtx ppbc);
 
@@ -236,7 +236,7 @@ namespace DirectShow.Helper
     }
 
     [ComVisible(false)]
-    public sealed class BOOL : COMHelper,IComparable,ICloneable
+    public sealed class BOOL : COMHelper, IComparable, ICloneable
     {
         #region Variables
 
@@ -406,7 +406,7 @@ namespace DirectShow.Helper
     }
 
     [ComVisible(false)]
-    public class HRESULT : COMHelper,IComparable,ICloneable
+    public class HRESULT : COMHelper, IComparable, ICloneable
     {
         #region Variables
 
@@ -534,20 +534,20 @@ namespace DirectShow.Helper
 
         public void Throw()
         {
-          if (FAILED(m_Result))
-          {
-            // If a string is returned, build a com error from it
-            string s = Text;
-            if (!string.IsNullOrEmpty(s))
+            if (FAILED(m_Result))
             {
-              throw new COMException(s, m_Result);
+                // If a string is returned, build a com error from it
+                string s = Text;
+                if (!string.IsNullOrEmpty(s))
+                {
+                    throw new COMException(s, m_Result);
+                }
+                else
+                {
+                    // No string, just use standard com error
+                    Marshal.ThrowExceptionForHR(m_Result);
+                }
             }
-            else
-            {
-              // No string, just use standard com error
-              Marshal.ThrowExceptionForHR(m_Result);
-            }
-          }
         }
 
         public void TraceWrite()
@@ -558,13 +558,13 @@ namespace DirectShow.Helper
                 MethodBase _method = _frame.GetMethod();
                 string _file = _frame.GetFileName();
                 _file = !string.IsNullOrEmpty(_file) ? Path.GetFileName(_file) : "";
-                TRACE(string.Format("-- ASSERT -- Method {0}::{1}, HRESULT : {2},File : {3} Line : {4} ", 
-                    _method.ReflectedType.Name, 
+                TRACE(string.Format("-- ASSERT -- Method {0}::{1}, HRESULT : {2},File : {3} Line : {4} ",
+                    _method.ReflectedType.Name,
                     _method.Name,
                     ToString(),
                     _file,
                     _frame.GetFileLineNumber()
-                    )); 
+                    ));
             }
         }
 
@@ -573,7 +573,7 @@ namespace DirectShow.Helper
         #region Imports
 
         [DllImport("quartz.dll", EntryPoint = "AMGetErrorText", CharSet = CharSet.Auto)]
-        private static extern uint AMGetErrorText(int hr,IntPtr sText,[In] uint _length);
+        private static extern uint AMGetErrorText(int hr, IntPtr sText, [In] uint _length);
 
         #endregion
 
@@ -655,19 +655,19 @@ namespace DirectShow.Helper
         }
 
         public FOURCC(uint _value)
-		{
+        {
             m_uiFourcc = _value;
-		}
+        }
 
-		public FOURCC(Guid _guid)
-		{
+        public FOURCC(Guid _guid)
+        {
             byte[] _data = _guid.ToByteArray();
             byte[] _result = { _data[0], _data[1], _data[2], _data[3] };
             m_uiFourcc = BitConverter.ToUInt32(_result, 0);
-		}
+        }
 
-		public FOURCC(string _value)
-		{
+        public FOURCC(string _value)
+        {
             byte[] _data = new byte[4];
             for (int i = 0; i < _data.Length; i++)
             {
@@ -681,10 +681,10 @@ namespace DirectShow.Helper
                 }
             }
             m_uiFourcc = BitConverter.ToUInt32(_data, 0);
-		}
+        }
 
         public FOURCC(byte[] _value)
-		{
+        {
             byte[] _data = new byte[4];
             for (int i = 0; i < _data.Length; i++)
             {
@@ -697,8 +697,8 @@ namespace DirectShow.Helper
                     _data[i] = 0;
                 }
             }
-            m_uiFourcc = BitConverter.ToUInt32(_data,0);
-		}
+            m_uiFourcc = BitConverter.ToUInt32(_data, 0);
+        }
 
         public FOURCC(char[] _value)
         {
@@ -723,9 +723,9 @@ namespace DirectShow.Helper
             m_uiFourcc = BitConverter.ToUInt32(_data, 0);
         }
 
-        public FOURCC(byte a1,byte a2,byte a3,byte a4)
+        public FOURCC(byte a1, byte a2, byte a3, byte a4)
         {
-            byte[] _data = new byte[] { a1,a2,a3,a4 };
+            byte[] _data = new byte[] { a1, a2, a3, a4 };
             m_uiFourcc = BitConverter.ToUInt32(_data, 0);
         }
 
@@ -1013,7 +1013,7 @@ namespace DirectShow.Helper
         protected VTableInterface(object _object, Type _type)
             : this(_object, _type.GUID)
         {
-            
+
         }
 
         ~VTableInterface()
@@ -1047,7 +1047,7 @@ namespace DirectShow.Helper
             if (m_pUnknown == IntPtr.Zero) return 0;
 
             AddRefProc _Proc = GetProcDelegate<AddRefProc>(1);
-            
+
             if (_Proc == null) return 0;
             return _Proc(m_pUnknown);
         }
@@ -1096,7 +1096,7 @@ namespace DirectShow.Helper
         public T GetInterfaceImpl<T>(Guid _guid) where T : VTableInterface, new()
         {
             IntPtr pUnknown;
-            if (SUCCEEDED(_QueryInterface(ref _guid,out pUnknown)))
+            if (SUCCEEDED(_QueryInterface(ref _guid, out pUnknown)))
             {
                 T pT = new T();
                 VTableInterface _interface = (VTableInterface)pT;
@@ -1171,7 +1171,7 @@ namespace DirectShow.Helper
         #region Constructor
 
         public IUnknownImpl(IntPtr pUnknown)
-            : base(pUnknown,false)
+            : base(pUnknown, false)
         {
 
         }

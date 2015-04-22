@@ -24,8 +24,8 @@ namespace ShairportSharp.Http
         static readonly Encoding encoding = Encoding.ASCII;
         object socketLock = new object();
         Socket socket;
-        HttpMessageBuffer messageBuffer;
         BufferedStream inputStream;
+        protected HttpMessageBuffer messageBuffer;
         protected NetworkStream outputStream;
 
         byte[] buffer;
@@ -81,7 +81,7 @@ namespace ShairportSharp.Http
         /// </summary>
         public void Start()
         {
-            messageBuffer = new HttpMessageBuffer();
+            messageBuffer = messageBuffer ?? new HttpMessageBuffer();
             messageBuffer.MessageReceived += messageBuffer_MessageReceived;
             buffer = new byte[65536];
 

@@ -5,17 +5,35 @@ using System.Text;
 
 namespace ShairportSharp.Http
 {
-    class HttpMessageBuffer : MessageBuffer
+    public class HttpMessageBuffer : MessageBuffer
     {
         static readonly byte[] headerDelimiter = { 0x0D, 0x0A, 0x0D, 0x0A }; // \r\n\r\n
+        
+        int delimeterIndex;
+        HttpMessage partialMessage;
 
         public event EventHandler<MessageReceivedEventArgs> MessageReceived;
 
-        HttpMessage partialMessage;
-
-        public HttpMessageBuffer()
-            : base(headerDelimiter)
-        { }
+        protected override bool IsEndOfHeader(byte b)
+        {
+            if (b == headerDelimiter[delimeterIndex])
+            {
+                if (delimeterIndex == headerDelimiter.Length - 1)
+                {
+                    delimeterIndex = 0;
+                    return true;
+                }
+                else
+                {
+                    delimeterIndex++;
+                }
+            }
+            else
+            {
+                delimeterIndex = 0;
+            }
+            return false;
+        }
 
         protected override int OnMessage(byte[] messageData)
         {
@@ -41,7 +59,7 @@ namespace ShairportSharp.Http
         }
     }
 
-    class MessageReceivedEventArgs : EventArgs
+    public class MessageReceivedEventArgs : EventArgs
     {
         public MessageReceivedEventArgs(HttpMessage message)
         {

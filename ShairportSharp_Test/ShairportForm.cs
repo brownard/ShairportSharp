@@ -12,6 +12,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using ShairportSharp.Airplay;
+using ShairportSharp.Mirroring;
 
 namespace ShairportSharp_Test
 {
@@ -36,6 +37,7 @@ namespace ShairportSharp_Test
             Log log = new Log();
             log.NewLog += logToTextBox;
             Logger.SetLogger(log);
+            AirPlayer.Common.Logger.SetLogger(log);
             nameTextBox.Text = SystemInformation.ComputerName;
         }
 
@@ -108,6 +110,7 @@ namespace ShairportSharp_Test
                 airplay.PlaybackRateChanged += airplay_PlaybackRateChanged;
                 airplay.SessionStopped += airplay_SessionStopped;
                 airplay.SessionClosed += airplay_SessionClosed;
+                airplay.MirroringServer.Started += MirroringServer_Started;
                 airplay.Start();
 
                 panelSettings.Enabled = false;
@@ -125,6 +128,20 @@ namespace ShairportSharp_Test
                 panelSettings.Enabled = true;
                 buttonStart.Text = "Start";
             }
+        }
+
+        void MirroringServer_Started(object sender, MirroringStartedEventArgs e)
+        {
+            BeginInvoke((MethodInvoker)delegate()
+            {
+                if (videoForm == null)
+                {
+                    videoForm = new VideoForm(airplay, e.Stream, "");
+                    videoForm.FormClosed += videoForm_FormClosed;
+                    videoForm.Show();
+                    videoForm.Start();
+                }
+            });
         }
 
         #endregion

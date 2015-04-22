@@ -186,12 +186,28 @@ namespace AirPlayer
             if (allowVolumeControl)
                 airplayServer.VolumeChanged += airplayServer_VolumeChanged;
             airplayServer.SessionStopped += airplayServer_SessionStopped;
+
+            airplayServer.MirroringServer.Started += MirroringServer_Started;
+
             airplayServer.Start();
 
             g_Player.PlayBackChanged += g_Player_PlayBackChanged;
             g_Player.PlayBackStopped += g_Player_PlayBackStopped;
             g_Player.PlayBackEnded += g_Player_PlayBackEnded;
             GUIWindowManager.OnNewAction += GUIWindowManager_OnNewAction;
+        }
+
+        void MirroringServer_Started(object sender, ShairportSharp.Mirroring.MirroringStartedEventArgs e)
+        {
+            invoke(() =>
+                {
+                    stopCurrentItem();
+                    IPlayer player = new MirroringPlayer(e.Stream);
+                    IPlayerFactory savedFactory = g_Player.Factory;
+                    g_Player.Factory = new PlayerFactory(player);
+                    g_Player.Play(MirroringPlayer.DUMMY_URL, g_Player.MediaType.Video);
+                    g_Player.Factory = savedFactory;
+                }, false);
         }
         
         public void Stop()

@@ -1,7 +1,10 @@
 ﻿using AirPlayer.Common.DirectShow;
 using DirectShow;
 using DirectShow.Helper;
+using MediaPortal.UI.Players.Video.Tools;
+using ShairportSharp.Airplay;
 using ShairportSharp.Audio;
+using ShairportSharp.Mirroring;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,15 +16,16 @@ namespace ShairportSharp_Test
 {
     class WaveStreamPlayer : StreamSourcePlayer
     {
-        WaveHeader header;
+        WaveStream source;
         public WaveStreamPlayer(WaveStream source)
             : base(source)
         {
-            header = source.Header;
+            this.source = source;
         }
 
         protected override AMMediaType GetMediaType()
         {
+            WaveHeader header = source.Header;
             WaveFormatEx w = new WaveFormatEx();
             w.wBitsPerSample = (ushort)header.BitsPerSample;
             w.cbSize = 0;
@@ -39,7 +43,21 @@ namespace ShairportSharp_Test
             amt.SetFormat(w);
             amt.fixedSizeSamples = true;
             amt.sampleSize = 4;
+            
             return amt;
+        }
+
+        public override double CurrentPosition
+        {
+            get
+            {
+                uint currentTimeStamp = source.CurrentTimestamp;
+                double position;
+                lock (positionLock)
+                    position = currentTimeStamp < startStamp ? 0 : (currentTimeStamp - startStamp) / 44100.0;
+
+                return position;
+            }
         }
     }
 
@@ -49,12 +67,13 @@ namespace ShairportSharp_Test
         protected IGraphBuilder _graphBuilder;
         protected DsROTEntry _rot;
 
-        AudioBufferStream source;
-        uint startStamp, stopStamp;
-        double duration;
-        object positionLock = new object();
+        Stream source;
+        protected uint startStamp;
+        protected uint stopStamp;
+        protected double duration;
+        protected object positionLock = new object();
 
-        public StreamSourcePlayer(AudioBufferStream source)
+        public StreamSourcePlayer(Stream source)
         {
             this.source = source;
         }
@@ -72,6 +91,7 @@ namespace ShairportSharp_Test
             var sourceFilter = new GenericPushSourceFilter(source, GetMediaType());
             int hr = _graphBuilder.AddFilter(sourceFilter, sourceFilter.Name);
             new HRESULT(hr).Throw();
+            AddFilters();
             DSFilter source2 = new DSFilter(sourceFilter);
             hr = source2.OutputPin.Render();
             new HRESULT(hr).Throw();
@@ -82,6 +102,8 @@ namespace ShairportSharp_Test
         }
 
         protected abstract AMMediaType GetMediaType();
+        protected virtual void AddFilters() { }
+
         public void Stop()
         {
             if (_graphBuilder != null)
@@ -119,17 +141,9 @@ namespace ShairportSharp_Test
             }
         }
 
-        public double CurrentPosition
+        public virtual double CurrentPosition
         {
-            get
-            {
-                uint currentTimeStamp = source.CurrentTimestamp;
-                double position;
-                lock (positionLock)
-                    position = currentTimeStamp < startStamp ? 0 : (currentTimeStamp - startStamp) / 44100.0;
-
-                return position;
-            }
+            get { return 0; }
         }
 
         public void Dispose()

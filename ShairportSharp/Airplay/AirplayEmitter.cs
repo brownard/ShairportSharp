@@ -44,10 +44,10 @@ namespace ShairportSharp.Airplay
             Logger.Debug("AirplayEmitter: {0}, {1}, {2}", name, identifier, port);
             txtRecord = new Dictionary<string, object>();
             txtRecord.Add("txtvers", "1");
-            txtRecord.Add("model", model);
+            txtRecord.Add("model", "AppleTV3,2");//model);
             txtRecord.Add("deviceid", identifier);
-            txtRecord.Add("srcvers", "130.14");
-            txtRecord.Add("features", ios8Workaround ? "0x20F7" : features);
+            txtRecord.Add("srcvers", Constants.VERSION); //"130.14");
+            txtRecord.Add("features", "0x100029ff"); //ios8Workaround ? "0x20F7" : features);
             if (pass) txtRecord.Add("pw", "1");
 
             NetService service = new NetService("", TYPE, name, port);
@@ -70,8 +70,8 @@ namespace ShairportSharp.Airplay
 
         protected override void OnDidPublishService(NetService service)
         {
-            lock (timerSync)
-                timer = new Timer(timerCallback, null, INITIAL_DELAY, INTERVAL);
+            //lock (timerSync)
+                //timer = new Timer(timerCallback, null, INITIAL_DELAY, INTERVAL);
             base.OnDidPublishService(service);
         }        
 

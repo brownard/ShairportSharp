@@ -9,38 +9,20 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using ShairportSharp.Airplay;
 using DirectShow.Helper;
+using System.IO;
+using DirectShow;
+using System.Runtime.InteropServices;
+using AirPlayer.Common.DirectShow;
+using MediaPortal.UI.Players.Video.Tools;
+using ShairportSharp.Mirroring;
 
 namespace ShairportSharp_Test
 {
-    public class rotPlayer : DSFilePlayback
-    {
-        DirectShow.DsROTEntry _rot = null;
-        protected override HRESULT OnInitInterfaces()
-        {
-            _rot = new DirectShow.DsROTEntry(m_GraphBuilder);
-            return base.OnInitInterfaces();
-        }
-
-        public override void Dispose()
-        {
-            if (_rot != null)
-            {
-                try
-                {
-                    _rot.Dispose();
-                }
-                catch { }
-                _rot = null;
-            }
-            base.Dispose();
-        }
-    }
-
     public partial class VideoForm : Form
     {
         AirplayServer server;
         string sessionId;
-        rotPlayer m_Playback = null;
+        DSFilePlayback m_Playback = null;
         bool hasStarted = false;
         bool hasFinished = false;
 
@@ -56,6 +38,18 @@ namespace ShairportSharp_Test
             m_Playback.OnPlaybackPause += Playback_OnPlaybackPause;
         }
 
+        public VideoForm(AirplayServer server, MirroringStream stream, string sessionId)
+        {
+            InitializeComponent();
+            this.server = server;
+            m_Playback = new MirrorPlayer(stream);
+            m_Playback.VideoControl = this.videoControl;
+            m_Playback.OnPlaybackStart += Playback_OnPlaybackStart;
+            m_Playback.OnPlaybackStop += Playback_OnPlaybackStop;
+            m_Playback.OnPlaybackReady += Playback_OnPlaybackReady;
+            m_Playback.OnPlaybackPause += Playback_OnPlaybackPause;
+        }
+
         public void LoadVideo(VideoEventArgs e)
         {
             hasStarted = false;
@@ -64,6 +58,11 @@ namespace ShairportSharp_Test
             server.SetPlaybackState(sessionId, PlaybackCategory.Video, PlaybackState.Loading);
             m_Playback.Stop();
             m_Playback.FileName = e.ContentLocation;
+        }
+
+        public void Start()
+        {
+            m_Playback.Start();
         }
 
         public void GetProgress(GetPlaybackPositionEventArgs e)

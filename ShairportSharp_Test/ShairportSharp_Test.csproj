@@ -76,6 +76,7 @@
     <Compile Include="VideoForm.Designer.cs">
       <DependentUpon>VideoForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="VideoPlayer.cs" />
     <EmbeddedResource Include="PhotoForm.resx">
       <DependentUpon>PhotoForm.cs</DependentUpon>
     </EmbeddedResource>

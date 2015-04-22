@@ -1208,12 +1208,12 @@ namespace DirectShow
         public uint dwProfile;
         public uint dwLevel;
         public uint dwFlags;
-        public byte[] dwSequenceHeader;
+        public uint dwSequenceHeader;// byte[] dwSequenceHeader;
 
         public Mpeg2VideoInfo()
         {
             hdr = new VideoInfoHeader2();
-            dwSequenceHeader = null;
+            dwSequenceHeader = 0; // null;
             dwStartTimeCode = 0;
             cbSequenceHeader = 0;
             dwProfile = 0;

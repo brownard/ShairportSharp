@@ -18,6 +18,7 @@ using ShairportSharp.Http;
 using ShairportSharp.Remote;
 using System.Globalization;
 using ShairportSharp.Helpers;
+using ShairportSharp.Sap;
 
 namespace ShairportSharp.Raop
 {    
@@ -37,6 +38,8 @@ namespace ShairportSharp.Raop
         int[] fmtp; //audio stream info
         byte[] aesKey; //audio data encryption key
         byte[] aesIV; //IV
+
+        SapHandler sapHandler;
 
         #endregion
 
@@ -181,6 +184,7 @@ namespace ShairportSharp.Raop
             {
                 response.Status = "200 OK";
                 response.SetHeader("Audio-Jack-Status", "connected; type=analog");
+                response.SetHeader("Server", "Airtunes/" + Constants.VERSION);
                 response.SetHeader("CSeq", request.GetHeader("CSeq"));
             }
             else
@@ -194,7 +198,12 @@ namespace ShairportSharp.Raop
             string requestType = request.Method;
             if (requestType == "OPTIONS")
             {
-                response.SetHeader("Public", "ANNOUNCE, SETUP, RECORD, PAUSE, FLUSH, TEARDOWN, OPTIONS, GET_PARAMETER, SET_PARAMETER");
+                response.SetHeader("Public", "ANNOUNCE, SETUP, PLAY, DESCRIBE, REDIRECT, RECORD, PAUSE, FLUSH, TEARDOWN, OPTIONS, GET_PARAMETER, SET_PARAMETER, POST, GET");
+            }
+            else if (requestType == "POST" && request.Uri == "/fp-setup")
+            {
+                byte[] fpResponse = getFPResponse(request);
+                response.SetContent(fpResponse);
             }
             else if (requestType == "ANNOUNCE")
             {
@@ -203,11 +212,18 @@ namespace ShairportSharp.Raop
             }
             else if (requestType == "SETUP")
             {
-                int port;
-                if (setupAudioServer(request, out port))
+                if (request.Uri.EndsWith("video"))
                 {
-                    response.SetHeader("Transport", string.Format("RTP/AVP/UDP;unicast;mode=record;x-events;server_port={0};control_port={0};timing_port={0}", port));
-                    response.SetHeader("Session", "1");
+                    Logger.Debug("RaopSession: Received video setup - {0}", request);
+                }
+                else
+                {
+                    int port;
+                    if (setupAudioServer(request, out port))
+                    {
+                        response.SetHeader("Transport", string.Format("RTP/AVP/UDP;unicast;mode=record;server_port={0};control_port={0};timing_port={0}", port)); //string.Format("RTP/AVP/UDP;unicast;mode=record;x-events;server_port={0};control_port={0};timing_port={0}", port));
+                        response.SetHeader("Session", "DEADBEEF");
+                    }
                 }
             }
             else if (requestType == "RECORD")
@@ -342,6 +358,27 @@ namespace ShairportSharp.Raop
             return null;
         }
 
+        byte[] getFPResponse(HttpRequest request)
+        {
+            byte[] fpResponse;
+            if (sapHandler == null)
+            {
+                sapHandler = new SapHandler();
+                Logger.Debug("RaopSession: Init SAP");
+                sapHandler.Init();
+                Logger.Debug("RaopSession: SAP challenge 1");
+                fpResponse = sapHandler.Challenge(request.Content, 0);
+                //Logger.Debug("RaopSession: SAP response 1 - {0}", fpResponse.HexStringFromBytes());
+            }
+            else
+            {
+                Logger.Debug("RaopSession: SAP challenge 2");
+                fpResponse = sapHandler.Challenge(request.Content, 1);
+                //Logger.Debug("RaopSession: SAP response 2 - {0}", fpResponse.HexStringFromBytes());
+            }
+            return fpResponse;
+        }
+
         void getSessionParams(HttpRequest request)
         {
             MatchCollection matches = Regex.Matches(request.GetContentString(), "^a=([^:]+):(.+)", RegexOptions.Multiline);
@@ -355,13 +392,32 @@ namespace ShairportSharp.Raop
                         string[] temp = m.Groups[2].Value.Split(' ');
                         fmtp = new int[temp.Length];
                         for (int i = 0; i < temp.Length; i++)
-                            fmtp[i] = int.Parse(temp[i], CultureInfo.InvariantCulture);
+                        {
+                            int j;
+                            if (int.TryParse(temp[i], NumberStyles.Any, CultureInfo.InvariantCulture, out j))
+                            {
+                                fmtp[i] = j; // int.Parse(temp[i], CultureInfo.InvariantCulture);
+                            }
+                            else
+                            {
+                                fmtp = null;
+                                break;
+                            }
+                        }
                         Logger.Debug("RAOPSession: Received audio info - '{0}'", m.Groups[2].Value);
                     }
                     else if (m.Groups[1].Value == "rsaaeskey")
                     {
                         aesKey = decryptRSA(decodeBase64(m.Groups[2].Value));
                         Logger.Debug("RAOPSession: Received AES Key - '{0}'", m.Groups[2].Value);
+                    }
+                    else if (m.Groups[1].Value == "fpaeskey")
+                    {
+                        byte[] encryptedKey = decodeBase64(m.Groups[2].Value);
+                        Logger.Debug("RaopSession: Decrypting FP AES key");
+                        byte[] lKey = sapHandler.DecryptKey(encryptedKey);
+                        //Logger.Debug("RaopSession: Received AES Key - {0}", encryptedKey.HexStringFromBytes());
+                        aesKey = lKey;
                     }
                     else if (m.Groups[1].Value == "aesiv")
                     {
@@ -411,7 +467,9 @@ namespace ShairportSharp.Raop
                 if (fmtp == null)
                 {
                     Logger.Warn("RAOPSession: Unable to create Audio Server, received SETUP before ANNOUNCE");
-                    return false;
+                    fmtp = new int[12];
+                    //port = UDPPort;
+                    //return true;
                 }
 
                 string sessionId = request.Uri;

@@ -38,13 +38,14 @@ namespace ShairportSharp.Raop
             txtRecord.Add("sm", "false");
             txtRecord.Add("sv", "false");
             txtRecord.Add("ek", "1");
-            txtRecord.Add("et", "0,1");
-            txtRecord.Add("cn", "0,1");
+            txtRecord.Add("et", "0,1,3");
+            txtRecord.Add("cn", "0,1,2,3");
             txtRecord.Add("vn", "3");
             txtRecord.Add("md", "0,1,2");
             txtRecord.Add("da", "true");
-            txtRecord.Add("am", model);
-            txtRecord.Add("vs", "130.14");
+            txtRecord.Add("am", "AppleTV3,2");//model);
+            txtRecord.Add("vs", Constants.VERSION); //"130.14");
+            txtRecord.Add("sf", "0x4");
 
             NetService service = new NetService("", TYPE, identifier + "@" + name, port);
             service.TXTRecordData = NetService.DataFromTXTRecordDictionary(txtRecord);

@@ -1,11 +1,11 @@
-﻿using System;
+﻿using DirectShow;
+using DirectShow.BaseClasses;
+using DirectShow.Helper;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using DirectShow.BaseClasses;
-using DirectShow.Helper;
-using DirectShow;
 
 namespace AirPlayer.Common.DirectShow
 {
@@ -17,7 +17,7 @@ namespace AirPlayer.Common.DirectShow
             ((GenericFileParser)m_Parsers[0]).SetSource(stream, pmt);
             m_sFileName = "Shairport.m4a";
             Load(m_sFileName, pmt);
-        }        
+        }
     }
 
     public class GenericFileParser : FileParser
@@ -25,7 +25,8 @@ namespace AirPlayer.Common.DirectShow
         protected Stream stream;
         protected AMMediaType pmt;
 
-        public GenericFileParser() : base(false) 
+        public GenericFileParser()
+            : base(false)
         {
         }
 
@@ -74,6 +75,7 @@ namespace AirPlayer.Common.DirectShow
                 PacketData packetData = new PacketData();
                 packetData.Buffer = buffer;
                 packetData.Size = read;
+                packetData.SyncPoint = true;
                 return packetData;
             }
             return null;

@@ -34,6 +34,9 @@
             // 
             // videoControl
             // 
+            this.videoControl.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.videoControl.BackColor = System.Drawing.Color.Black;
             this.videoControl.Location = new System.Drawing.Point(12, 12);
             this.videoControl.Name = "videoControl";

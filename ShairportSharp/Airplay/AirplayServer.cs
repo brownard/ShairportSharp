@@ -6,6 +6,7 @@ using System.Text;
 using ShairportSharp.Http;
 using ShairportSharp.Helpers;
 using ShairportSharp.Base;
+using ShairportSharp.Mirroring;
 
 namespace ShairportSharp.Airplay
 {
@@ -27,6 +28,8 @@ namespace ShairportSharp.Airplay
         object photoSync = new object();
         Dictionary<string, Dictionary<string, byte[]>> photoCache = new Dictionary<string, Dictionary<string, byte[]>>();
 
+        MirroringServer mirroringServer;
+
         #endregion
 
         #region Ctor
@@ -37,7 +40,7 @@ namespace ShairportSharp.Airplay
             serverInfo = new AirplayServerInfo()
             {
                 ProtocolVersion = "1.0",
-                ServerVersion = "130.14",
+                ServerVersion = Constants.VERSION,
                 Features = AirplayFeature.Photo |
                 AirplayFeature.PhotoCaching |
                 AirplayFeature.Slideshow |
@@ -45,6 +48,8 @@ namespace ShairportSharp.Airplay
                 AirplayFeature.VideoHTTPLiveStreams |
                 AirplayFeature.VideoVolumeControl
             };
+
+            mirroringServer = new MirroringServer();
         }
 
         public AirplayServer(string name, string password = null)
@@ -68,6 +73,11 @@ namespace ShairportSharp.Airplay
         public AirplayServerInfo ServerInfo
         {
             get { return serverInfo; }
+        }
+
+        public MirroringServer MirroringServer
+        {
+            get { return mirroringServer; }
         }
 
         #endregion
@@ -205,6 +215,9 @@ namespace ShairportSharp.Airplay
             serverInfo.Model = ModelName;
             serverInfo.DeviceId = macAddress.HexStringFromBytes(":");
             Emitter = new AirplayEmitter(Name.ComputerNameIfNullOrEmpty(), serverInfo, Port, !string.IsNullOrEmpty(Password), ios8Workaround);
+
+            mirroringServer.Password = Password;
+            mirroringServer.Start();
         }
 
         protected override AirplaySession OnSocketAccepted(System.Net.Sockets.Socket socket)

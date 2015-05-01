@@ -71,7 +71,7 @@ namespace AirPlayer
 
                 if (Vmr9 == null || !Vmr9.IsVMR9Connected)
                 {
-                    Logger.Instance.Warn("AirPlayerVideo: Failed to render file -> No video renderer connected");
+                    Logger.Instance.Warn("AirPlayerMirroring: Failed to render file -> No video renderer connected");
                     mediaCtrl = null;
                     Cleanup();
                     return false;
@@ -109,7 +109,7 @@ namespace AirPlayer
             m_ar = GUIGraphicsContext.ARType;
             VideoRendererStatistics.VideoState = VideoRendererStatistics.State.VideoPresent;
             _updateNeeded = true;
-            Logger.Instance.Info("AirPlayerVideo: Play '{0}'", m_strCurrentFile);
+            Logger.Instance.Info("AirPlayerMirroring: Play '{0}'", m_strCurrentFile);
 
             m_bStarted = false;
             if (!GetInterfaces())
@@ -119,7 +119,7 @@ namespace AirPlayer
                 return false;
             }
 
-            AnalyseStreams();
+            //AnalyseStreams();
             //SelectSubtitles();
             //SelectAudioLanguage();
             OnInitialized();
@@ -159,7 +159,7 @@ namespace AirPlayer
                 DsError.ThrowExceptionForHR(hr);
                 if (hr == 1) // S_FALSE from IMediaControl::Run means: The graph is preparing to run, but some filters have not completed the transition to a running state.
                 {
-                    // wait max. 20 seconds for the graph to transition to the running state
+                    // wait max. 10 seconds for the graph to transition to the running state
                     DateTime startTime = DateTime.Now;
                     FilterState filterState;
                     do
@@ -171,13 +171,13 @@ namespace AirPlayer
                     if (hr != 0) // S_OK
                     {
                         DsError.ThrowExceptionForHR(hr);
-                        throw new Exception(string.Format("IMediaControl.GetState after 20 seconds: 0x{0} - '{1}'", hr.ToString("X8"), DsError.GetErrorText(hr)));
+                        throw new Exception(string.Format("IMediaControl.GetState after 10 seconds: 0x{0} - '{1}'", hr.ToString("X8"), DsError.GetErrorText(hr)));
                     }
                 }
             }
             catch (Exception error)
             {
-                Logger.Instance.Warn("AirPlayerVideo: Unable to play with reason: {0}", error.Message);
+                Logger.Instance.Warn("AirPlayerMirroring: Unable to play with reason: {0}", error.Message);
             }
             if (hr != 0) // S_OK
             {

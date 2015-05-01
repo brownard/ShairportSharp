@@ -12,64 +12,62 @@ using System.Threading;
 
 namespace ShairportSharp.Mirroring
 {
+    public class MirroringPacket
+    {
+        public ulong NTPTimeStamp { get; set; }
+        public byte[] Nalus { get; set; }
+        public H264CodecData CodecData { get; set; }
+    }
+
     public class MirroringStream
     {
-        const int START_CODE_LENGTH = 3;
         object syncRoot = new object();
         bool isWaiting;
         bool isStopped;
-        List<MirroringMessage> backBuffer;
+        List<MirroringPacket> backBuffer;
         H264CodecData codecData;
-        ICryptoTransform c;
-
-        public event EventHandler CodecDataChanged;
-        protected virtual void OnCodecDataChanged()
-        {
-            if (CodecDataChanged != null)
-                CodecDataChanged(this, EventArgs.Empty);
-        }
+        ICryptoTransform cipher;
 
         public MirroringStream(MirroringSetup setup, H264CodecData codecData)
         {
             this.codecData = codecData;
-            backBuffer = new List<MirroringMessage>();
+            backBuffer = new List<MirroringPacket>();
             //some 3rd party apps don't encrypt the data so don't try and decrypt
             if (setup.AESKey != null)
-                c = new Aes128CounterMode(setup.IV).CreateDecryptor(setup.AESKey, null);
+                cipher = new Aes128CounterMode(setup.IV).CreateDecryptor(setup.AESKey, null);
         }
 
         public H264CodecData CodecData 
         {
             get { return codecData; }
-            set
-            {
-                codecData = value;
-                OnCodecDataChanged();
-            }
         }
-        
-        public void AddPacket(MirroringMessage packet)
+
+        public void AddPacket(MirroringMessage message)
         {
             if (isStopped)
                 return;
-
-            if (packet.PayloadType == 0)
+            
+            MirroringPacket packet = new MirroringPacket();
+            if (message.PayloadType == PayloadType.Video)
             {
                 //encrypted video data
-                byte[] decrypted = decryptPacket(packet.Content);
-                packet.Content = NaluParser.ParseNalus(decrypted, codecData.NALSizeMinusOne + 1, START_CODE_LENGTH);
+                byte[] decrypted = decryptPacket(message.Payload);
+                packet.Nalus = NaluParser.ParseNalus(decrypted, codecData.NALSizeMinusOne + 1);
             }
-            else if (packet.PayloadType == 1)
+            else if (message.PayloadType == PayloadType.Codec)
             {
                 //unencrypted codec data
-                codecData = new H264CodecData(packet.Content);
-                //create SPS/PPS nalus
-                byte[] nalu = new byte[2 * START_CODE_LENGTH + codecData.SPS.Length + codecData.PPS.Length];
-                NaluParser.AddStartCodes(codecData.SPS, 0, nalu, 0, codecData.SPS.Length, START_CODE_LENGTH);
-                NaluParser.AddStartCodes(codecData.PPS, 0, nalu, codecData.SPS.Length + START_CODE_LENGTH, codecData.PPS.Length, START_CODE_LENGTH);
-                packet.Content = nalu;
+                H264CodecData codecData = new H264CodecData(message.Payload);
+                this.codecData = codecData;
+                packet.CodecData = codecData;
+                packet.Nalus = NaluParser.CreateParameterSet(codecData.SPS, codecData.PPS);
             }
-            
+            else
+            {
+                Logger.Warn("MirroringStream: Tried to add incorrect PayloadType '{0}'", message.PayloadType);
+                return;
+            }
+
             lock (syncRoot)
             {
                 backBuffer.Add(packet);
@@ -81,7 +79,7 @@ namespace ShairportSharp.Mirroring
             }
         }
 
-        public MirroringMessage TakePacket()
+        public MirroringPacket TakePacket()
         {
             if (isStopped)
                 return null;
@@ -91,13 +89,13 @@ namespace ShairportSharp.Mirroring
                 if (!checkBuffer())
                     return null;
 
-                MirroringMessage packet = backBuffer[0];
+                MirroringPacket packet = backBuffer[0];
                 backBuffer.RemoveAt(0);
                 return packet;
             }
         }
 
-        public MirroringMessage[] TakeAllPackets()
+        public MirroringPacket[] TakeAllPackets()
         {
             if (isStopped)
                 return null;
@@ -107,7 +105,7 @@ namespace ShairportSharp.Mirroring
                 if (!checkBuffer())
                     return null;
 
-                MirroringMessage[] packets = backBuffer.ToArray();
+                MirroringPacket[] packets = backBuffer.ToArray();
                 backBuffer.Clear();
                 return packets;
             }
@@ -139,9 +137,9 @@ namespace ShairportSharp.Mirroring
 
         byte[] decryptPacket(byte[] buffer)
         {
-            if (c == null)
+            if (cipher == null)
                 return buffer;
-            return c.TransformFinalBlock(buffer, 0, buffer.Length);
+            return cipher.TransformFinalBlock(buffer, 0, buffer.Length);
         }
     }
 }

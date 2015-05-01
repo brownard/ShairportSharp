@@ -58,7 +58,9 @@
     <Compile Include="Airplay\AirplayServer.cs" />
     <Compile Include="Airplay\AirplaySession.cs" />
     <Compile Include="Airplay\IPlistResponse.cs" />
+    <Compile Include="Base\NamedServer.cs" />
     <Compile Include="Http\HttpUtils.cs" />
+    <Compile Include="Mirroring\BitReader.cs" />
     <Compile Include="Mirroring\H264CodecData.cs" />
     <Compile Include="Mirroring\MirroringInfo.cs" />
     <Compile Include="Mirroring\MirroringMessage.cs" />
@@ -98,6 +100,7 @@
     <Compile Include="Log\ILog.cs" />
     <Compile Include="Log\Logger.cs" />
     <Compile Include="Mirroring\NaluParser.cs" />
+    <Compile Include="Mirroring\SPSUnit.cs" />
     <Compile Include="Raop\RaopEmitter.cs" />
     <Compile Include="Raop\RSAKey.cs" />
     <Compile Include="Raop\DmapData.cs" />

@@ -23,11 +23,11 @@ namespace AirPlayer.Common.DirectShow
 
     public class MirroringFileParser : FileParser
     {
-        const int FOURCC_AVC1 = 0x31435641;
-        static readonly Guid SUBTYPE_AVC1 = new Guid(0x31435641, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71);
+        //const int FOURCC_AVC1 = 0x31435641;
+        //static readonly Guid SUBTYPE_AVC1 = new Guid(0x31435641, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71);
         protected MirroringStream stream;
 
-        public MirroringFileParser() : base(true) { }
+        public MirroringFileParser() : base(false) { }
 
         public void SetSource(MirroringStream stream)
         {
@@ -41,46 +41,37 @@ namespace AirPlayer.Common.DirectShow
 
         protected override HRESULT LoadTracks()
         {
-            m_Tracks.Add(new MirrorDemuxTrack(this, getMediaType(), stream));
+            m_Tracks.Add(new MirrorDemuxTrack(this, stream));
             return S_OK;
         }
 
-        public override HRESULT ProcessDemuxPackets()
-        {
-            MirroringMessage[] packets = stream.TakeAllPackets();
-            if (packets == null)
-                return S_FALSE;
+        //public override HRESULT ProcessDemuxPackets()
+        //{
+        //    MirroringMessage[] packets = stream.TakeAllPackets();
+        //    if (packets == null)
+        //        return S_FALSE;
 
-            foreach (MirroringMessage packet in packets)
-            {
-                PacketData packetData = new PacketData();
-                packetData.Buffer = packet.Content;
-                packetData.Size = packet.Content.Length;
-                packetData.Start = 0;
-                packetData.Stop = 0;
-                m_Tracks[0].AddToCache(ref packetData);
-            }
-            return S_OK;
-        }
-
-        AMMediaType getMediaType()
-        {
-            VideoInfoHeader2 vi = new VideoInfoHeader2();
-            vi.AvgTimePerFrame = 400000;
-            vi.BmiHeader.Width = 960;
-            vi.BmiHeader.Height = 640;
-            vi.BmiHeader.Planes = 1;
-            vi.BmiHeader.Compression = 0x34363248;
-
-            AMMediaType amt = new AMMediaType();
-            amt.majorType = MediaType.Video;
-            amt.subType = MediaSubType.H264;
-            amt.temporalCompression = true;
-            amt.fixedSizeSamples = false;
-            amt.sampleSize = 1;
-            amt.SetFormat(vi);
-            return amt;
-        }
+        //    foreach (MirroringMessage packet in packets)
+        //    {
+        //        ExtendedPacketData packetData = new ExtendedPacketData();
+        //        packetData.Buffer = packet.NALUs;
+        //        packetData.Size = packet.NALUs.Length;
+        //        packetData.Start = 0;
+        //        packetData.Stop = 0;
+        //        if (!firstSample)
+        //        {
+        //            if (packet.PayloadType == PayloadType.Codec)
+        //                packetData.SetSPS(packet.CodecData.SPS);
+        //        }
+        //        else 
+        //        {
+        //            firstSample = false;
+        //        }
+        //        PacketData pd = (PacketData)packetData;
+        //        m_Tracks[0].AddToCache(ref pd);
+        //    }
+        //    return S_OK;
+        //}
 
         //AMMediaType getMediaType()
         //{
@@ -141,26 +132,19 @@ namespace AirPlayer.Common.DirectShow
         //        Marshal.FreeCoTaskMem(_ptr);
         //    }
         //}
-
-        //long convertToDSTime(ulong ntpTime)
-        //{
-        //    long seconds = (uint)((ntpTime >> 32) & 0xFFFFFFFF) * UNITS;
-        //    uint fraction = (uint)(ntpTime & 0xFFFFFFFF);
-        //    long fractionSecs = (long)(((double)fraction / uint.MaxValue) * UNITS);
-        //    return seconds + fractionSecs;
-        //}
     }
 
     class MirrorDemuxTrack : DemuxTrack
     {
         object mediaTypeSync = new object();
-        protected AMMediaType pmt;
         protected MirroringStream stream;
+        MirroringPacket[] packetCache;
+        int currentPacketIndex;
+        bool firstSample = true;
 
-        public MirrorDemuxTrack(FileParser parser, AMMediaType pmt, MirroringStream stream)
+        public MirrorDemuxTrack(FileParser parser, MirroringStream stream)
             : base(parser, TrackType.Video)
         {
-            this.pmt = pmt;
             this.stream = stream;
         }
 
@@ -173,22 +157,107 @@ namespace AirPlayer.Common.DirectShow
 
         public override HRESULT GetMediaType(int iPosition, ref AMMediaType pmt)
         {
-            pmt.Set(this.pmt);
+            pmt.Set(getMediaType(stream.CodecData));
             return NOERROR;
         }
 
-        //public override PacketData GetNextPacket()
-        //{
-        //    MirroringMessage packet = stream.TakePacket();
-        //    if (packet == null)
-        //        return null;
+        public override HRESULT ReadMediaSample(ref IMediaSampleImpl pSample)
+        {
+            MirroringPacket mirroringPacket = getNextMirroringPacket();
+            if (mirroringPacket == null)
+                return S_FALSE;
 
-        //    PacketData packetData = new PacketData();
-        //    packetData.Buffer = packet.Content;
-        //    packetData.Size = packet.Content.Length;
-        //    packetData.Start = 0;
-        //    packetData.Stop = 0;
-        //    return packetData;
-        //}
+            PacketData _packet = getPacketData(mirroringPacket);
+            if (!firstSample && mirroringPacket.CodecData != null)
+                pSample.SetMediaType(getMediaType(mirroringPacket.CodecData));
+
+            firstSample = false;
+            pSample.SetMediaTime(null, null);
+            pSample.SetPreroll(false);
+            pSample.SetDiscontinuity(false);
+            pSample.SetSyncPoint(_packet.SyncPoint);
+            pSample.SetTime(_packet.Start, _packet.Stop);
+
+            IntPtr pBuffer;
+            pSample.GetPointer(out pBuffer);
+            int _readed = 0;
+            ASSERT(pSample.GetSize() >= _packet.Size);
+
+            _readed = FillSampleBuffer(pBuffer, pSample.GetSize(), ref _packet);
+            _packet.Dispose();
+            pSample.SetActualDataLength(_readed);
+
+            m_bFirstSample = false;
+
+            if (_readed == 0) return S_FALSE;
+
+            return NOERROR;
+        }
+                
+        AMMediaType getMediaType(H264CodecData codecData)
+        {
+            SPSUnit spsUnit = new SPSUnit(codecData.SPS);
+            int width = spsUnit.Width();
+            int height = spsUnit.Height();
+
+            VideoInfoHeader2 vi = new VideoInfoHeader2();
+            vi.SrcRect.right = width;
+            vi.SrcRect.bottom = height;
+            vi.TargetRect.right = width;
+            vi.TargetRect.bottom = height;
+            if (width > height)
+            {
+                vi.PictAspectRatioX = 3;
+                vi.PictAspectRatioY = 2;
+            }
+            else
+            {
+                vi.PictAspectRatioX = 2;
+                vi.PictAspectRatioY = 3;
+            }
+            vi.BmiHeader.Width = width;
+            vi.BmiHeader.Height = height;
+            vi.BmiHeader.Planes = 1;
+            vi.BmiHeader.Compression = 0x34363248;
+
+            AMMediaType amt = new AMMediaType();
+            amt.majorType = MediaType.Video;
+            amt.subType = MediaSubType.H264;
+            amt.temporalCompression = true;
+            amt.fixedSizeSamples = false;
+            amt.sampleSize = 1;
+            amt.SetFormat(vi);
+            return amt;
+        }
+
+        MirroringPacket getNextMirroringPacket()
+        {
+            if (packetCache == null || currentPacketIndex == packetCache.Length)
+            {
+                currentPacketIndex = 0;
+                packetCache = stream.TakeAllPackets();
+                if (packetCache == null)
+                    return null;
+            }
+            return packetCache[currentPacketIndex++];
+        }
+
+        PacketData getPacketData(MirroringPacket packet)
+        {
+            PacketData packetData = new PacketData();
+            packetData.Buffer = packet.Nalus;
+            packetData.Size = packet.Nalus.Length;
+            packetData.Start = 0; // convertToDSTime(packet.NTPTimeStamp);
+            packetData.Stop = 0;
+            return packetData;
+        }
+
+        static long convertToDSTime(ulong ntpTime)
+        {
+            long seconds = (uint)((ntpTime >> 32) & 0xFFFFFFFF) * UNITS;
+            uint fraction = (uint)(ntpTime & 0xFFFFFFFF);
+            long fractionSecs = (long)(((double)fraction / uint.MaxValue) * UNITS);
+            return seconds + fractionSecs;
+        }
     }
 }

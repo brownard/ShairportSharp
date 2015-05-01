@@ -13,7 +13,6 @@ using System.IO;
 using DirectShow;
 using System.Runtime.InteropServices;
 using AirPlayer.Common.DirectShow;
-using MediaPortal.UI.Players.Video.Tools;
 using ShairportSharp.Mirroring;
 
 namespace ShairportSharp_Test
@@ -30,7 +29,7 @@ namespace ShairportSharp_Test
         {
             InitializeComponent();
             this.server = server;
-            m_Playback = new rotPlayer();
+            m_Playback = new RotPlayer();
             m_Playback.VideoControl = this.videoControl;
             m_Playback.OnPlaybackStart += Playback_OnPlaybackStart;
             m_Playback.OnPlaybackStop += Playback_OnPlaybackStop;

@@ -76,6 +76,9 @@ namespace AirPlayer
 
         bool isAudioPlaying;
         bool isVideoPlaying;
+
+        MirroringPlayer currentMirroringPlayer;
+        bool isMirroringStarting;
         
         #endregion
 
@@ -187,6 +190,7 @@ namespace AirPlayer
                 airplayServer.VolumeChanged += airplayServer_VolumeChanged;
             airplayServer.SessionStopped += airplayServer_SessionStopped;
 
+            airplayServer.MirroringServer.Authenticating += MirroringServer_Authenticating;
             airplayServer.MirroringServer.Started += MirroringServer_Started;
 
             airplayServer.Start();
@@ -195,19 +199,6 @@ namespace AirPlayer
             g_Player.PlayBackStopped += g_Player_PlayBackStopped;
             g_Player.PlayBackEnded += g_Player_PlayBackEnded;
             GUIWindowManager.OnNewAction += GUIWindowManager_OnNewAction;
-        }
-
-        void MirroringServer_Started(object sender, ShairportSharp.Mirroring.MirroringStartedEventArgs e)
-        {
-            invoke(() =>
-                {
-                    stopCurrentItem();
-                    IPlayer player = new MirroringPlayer(e.Stream);
-                    IPlayerFactory savedFactory = g_Player.Factory;
-                    g_Player.Factory = new PlayerFactory(player);
-                    g_Player.Play(MirroringPlayer.DUMMY_URL, g_Player.MediaType.Video);
-                    g_Player.Factory = savedFactory;
-                }, false);
         }
         
         public void Stop()
@@ -705,6 +696,42 @@ namespace AirPlayer
 
         #endregion
 
+        #region Mirroring Event Handlers
+
+        void MirroringServer_Authenticating(object sender, EventArgs e)
+        {
+            invoke(() =>
+            {
+                stopCurrentItem();
+                cleanupPlayback();
+                GUIWaitCursor.Init();
+                GUIWaitCursor.Show();
+                isMirroringStarting = true;
+            });
+        }
+
+        void MirroringServer_Started(object sender, ShairportSharp.Mirroring.MirroringStartedEventArgs e)
+        {
+            invoke(() =>
+            {
+                if (!isMirroringStarting)
+                    return;
+
+                isMirroringStarting = false;
+                GUIWaitCursor.Hide();
+                stopCurrentItem();
+                currentMirroringPlayer = new MirroringPlayer(e.Stream);
+                IPlayerFactory savedFactory = g_Player.Factory;
+                g_Player.Factory = new PlayerFactory(currentMirroringPlayer);
+                bool isPlaying = g_Player.Play(MirroringPlayer.DUMMY_URL, g_Player.MediaType.Video);
+                g_Player.Factory = savedFactory;
+                if (isPlaying)
+                    g_Player.ShowFullScreenWindow();
+            }, false);
+        }
+
+        #endregion
+
         #region Mediaportal Event Handlers
 
         void GUIWindowManager_OnNewAction(MediaPortal.GUI.Library.Action action)
@@ -729,6 +756,8 @@ namespace AirPlayer
                 case MediaPortal.GUI.Library.Action.ActionType.ACTION_STOP:
                     if (bufferingPlayer != null)
                         bufferingPlayer.StopBuffering();
+                    else if (currentMirroringPlayer != null)
+                        airplayServer.MirroringServer.StopCurrentSession();
                     break;
                 case MediaPortal.GUI.Library.Action.ActionType.ACTION_PREV_CHAPTER:
                 case MediaPortal.GUI.Library.Action.ActionType.ACTION_PREV_ITEM:
@@ -773,7 +802,7 @@ namespace AirPlayer
             if (currentVideoPlayer != null)
             {
                 cleanupVideoPlayback();
-            }
+            }            
         }
 
         #endregion
@@ -797,6 +826,7 @@ namespace AirPlayer
         {
             cleanupAudioPlayback();
             cleanupVideoPlayback();
+            cleanupMirroringPlayback();
         }
 
         void cleanupAudioPlayback()
@@ -842,6 +872,16 @@ namespace AirPlayer
             currentVideoSessionId = null;
             currentVideoPlayer = null;
             currentVideoUrl = null;
+        }
+
+        void cleanupMirroringPlayback()
+        {
+            if (isMirroringStarting)
+            {
+                GUIWaitCursor.Hide();
+                isMirroringStarting = false;
+            }
+            currentMirroringPlayer = null;
         }
 
         void restoreVolume()

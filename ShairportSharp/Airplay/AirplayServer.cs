@@ -10,7 +10,7 @@ using ShairportSharp.Mirroring;
 
 namespace ShairportSharp.Airplay
 {
-    public class AirplayServer : Server<AirplaySession>
+    public class AirplayServer : NamedServer<AirplaySession>
     {
         #region Consts
 

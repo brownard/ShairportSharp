@@ -63,7 +63,7 @@ namespace ShairportSharp.Mirroring
 
             if (currentMessage != null)
             {
-                currentMessage.Content = content;
+                currentMessage.Payload = content;
                 OnMirroringMessageReceived(new MirroringMessageEventArgs(currentMessage));
                 currentMessage = null;
             }

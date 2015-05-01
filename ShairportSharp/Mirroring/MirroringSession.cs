@@ -40,6 +40,13 @@ namespace ShairportSharp.Mirroring
             messageBuffer = mirroingMessageBuffer;
         }
 
+        public event EventHandler Authenticating;
+        protected virtual void OnAuthenticating()
+        {
+            if (Authenticating != null)
+                Authenticating(this, EventArgs.Empty);
+        }
+
         public event EventHandler<MirroringStartedEventArgs> Started;
         protected virtual void OnStarted(MirroringStartedEventArgs e)
         {
@@ -65,9 +72,14 @@ namespace ShairportSharp.Mirroring
             else if (request.Method == "POST")
             {
                 if (request.Uri == "/fp-setup")
+                {
                     response = handleFpRequest(request);
+                }
                 else if (request.Uri == "/stream")
-                    response = handleStream(request);
+                {
+                    handleStream(request);
+                    return null;
+                }
             }
 
             if (response == null)
@@ -84,41 +96,37 @@ namespace ShairportSharp.Mirroring
 
         void messageBuffer_MirroringMessageReceived(object sender, MirroringMessageEventArgs e)
         {
-            uint payloadType = e.Message.PayloadType;
-            if (payloadType == 0)
+            PayloadType payloadType = e.Message.PayloadType;
+            if (payloadType == PayloadType.Video)
             {
                 if (mirroringStream != null)
                     mirroringStream.AddPacket(e.Message);
             }
-            else if (payloadType == 1)
+            else if (payloadType == PayloadType.Codec)
             {
-                var codecData = new H264CodecData(e.Message.Content);
+                var codecData = new H264CodecData(e.Message.Payload);
                 if (mirroringStream == null)
                 {
                     mirroringStream = new MirroringStream(mirroringSetup, codecData);
                     OnStarted(new MirroringStartedEventArgs(mirroringStream));
                 }
-                else
-                {
-                    mirroringStream.CodecData = codecData;
-                }
                 mirroringStream.AddPacket(e.Message);
             }
-            else if (payloadType == 2)
-            {
-                //Heartbeat
-            }
-            else
-            {
-                Logger.Debug("MirroringSession: Unknown payload type '{0}'", e.Message.PayloadType);
-            }
+            //else if (payloadType == PayloadType.Heartbeat)
+            //{
+            //    //Heartbeat
+            //}
+            //else
+            //{
+            //    //Unknown
+            //}
         }
 
-        HttpResponse handleStream(HttpRequest request)
+        void handleStream(HttpRequest request)
         {
             Dictionary<string, object> plist;
             if (!HttpUtils.TryGetPlist(request, out plist))
-                return null;
+                return;
 
             mirroringSetup = new MirroringSetup(plist);
             if (mirroringSetup.FPKey != null && sapHandler != null)
@@ -129,7 +137,6 @@ namespace ShairportSharp.Mirroring
                 mirroringSetup.AESKey = decryptedKey;
             }
             mirroingMessageBuffer.IsDataMode = true;
-            return null;
         }
 
         HttpResponse getStreamXml()
@@ -151,6 +158,7 @@ namespace ShairportSharp.Mirroring
             byte[] fpResponse;
             if (sapHandler == null)
             {
+                OnAuthenticating();
                 sapHandler = new SapHandler();
                 Logger.Debug("MirroringSession: Init SAP");
                 sapHandler.Init();

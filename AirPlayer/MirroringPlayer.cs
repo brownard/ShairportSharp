@@ -54,13 +54,18 @@ namespace AirPlayer
                 videoWin = (IVideoWindow)graphBuilder;
 
                 //add source
+
                 var sourceFilter = new MirroringSourceFilter(stream);
                 managedGraphBuilder.AddFilter(sourceFilter, sourceFilter.Name);
+
                 var lavVideo = new DirectShow.Helper.DSFilter(new Guid("{EE30215D-164F-4A92-A4EB-9D4C13390F9F}"));
                 managedGraphBuilder.AddFilter(lavVideo.Value, "LAV Video Decoder");
+
+                //var msVideo = new DirectShow.Helper.DSFilter(new Guid("{212690FB-83E5-4526-8FD7-74478B7939CD}"));
+                //managedGraphBuilder.AddFilter(msVideo.Value, "Microsoft DTV-DVD Video Decoder");
+
                 var source2 = new DirectShow.Helper.DSFilter(sourceFilter);
-                managedGraphBuilder.Connect(source2.OutputPin.Value, lavVideo.InputPin.Value);
-                lavVideo.OutputPin.Render();
+                managedGraphBuilder.Render(source2.OutputPin.Value);
 
                 DirectShowUtil.EnableDeInterlace(graphBuilder);
 
@@ -70,16 +75,6 @@ namespace AirPlayer
                     mediaCtrl = null;
                     Cleanup();
                     return false;
-                }
-
-                try
-                {
-                    // remove filter that are not used from the graph
-                    DirectShowUtil.RemoveUnusedFiltersFromGraph(graphBuilder);
-                }
-                catch (Exception ex)
-                {
-                    Logger.Instance.Warn("Error during RemoveUnusedFiltersFromGraph: {0}", ex.ToString());
                 }
 
                 this.Vmr9.SetDeinterlaceMode();
@@ -125,8 +120,8 @@ namespace AirPlayer
             }
 
             AnalyseStreams();
-            SelectSubtitles();
-            SelectAudioLanguage();
+            //SelectSubtitles();
+            //SelectAudioLanguage();
             OnInitialized();
 
             int hr = mediaEvt.SetNotifyWindow(GUIGraphicsContext.ActiveForm, WM_GRAPHNOTIFY, IntPtr.Zero);
@@ -172,7 +167,7 @@ namespace AirPlayer
                         Thread.Sleep(100);
                         hr = mediaCtrl.GetState(100, out filterState); // check with timeout max. 10 times a second if the state changed
                     }
-                    while ((hr != 0) && ((DateTime.Now - startTime).TotalSeconds <= 20));
+                    while ((hr != 0) && ((DateTime.Now - startTime).TotalSeconds <= 10));
                     if (hr != 0) // S_OK
                     {
                         DsError.ThrowExceptionForHR(hr);

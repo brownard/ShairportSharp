@@ -13,12 +13,13 @@ using System.Threading.Tasks;
 
 namespace ShairportSharp_Test
 {
-    public class rotPlayer : DSFilePlayback
+    public class RotPlayer : DSFilePlayback
     {
-        DirectShow.DsROTEntry _rot = null;
+        protected DsROTEntry _rot;
+
         protected override HRESULT OnInitInterfaces()
         {
-            _rot = new DirectShow.DsROTEntry(m_GraphBuilder);
+            _rot = new DsROTEntry(m_GraphBuilder);
             return base.OnInitInterfaces();
         }
 
@@ -37,10 +38,9 @@ namespace ShairportSharp_Test
         }
     }
 
-    public class MirrorPlayer : DSFilePlayback
+    public class MirrorPlayer : RotPlayer
     {
         MirroringStream stream;
-        DsROTEntry _rot = null;
 
         public MirrorPlayer(MirroringStream stream)
         {
@@ -57,28 +57,19 @@ namespace ShairportSharp_Test
 
             var lavVideo = new DSFilter(new Guid("{EE30215D-164F-4A92-A4EB-9D4C13390F9F}"));
             hr = m_GraphBuilder.AddFilter(lavVideo.Value, "LAV Video Decoder");
-            //var lavVideo = new DSFilter(new Guid("{212690FB-83E5-4526-8FD7-74478B7939CD}"));
-            //hr = m_GraphBuilder.AddFilter(lavVideo.Value, "Microsoft DTV-DVD Video Decoder");
             new HRESULT(hr).Throw();
 
-            DSFilter source2 = new DSFilter(sourceFilter);
-            hr = m_GraphBuilder.Connect(source2.OutputPin.Value, lavVideo.InputPin.Value);
-            hr = m_GraphBuilder.Render(lavVideo.OutputPin.Value);
-            return new HRESULT(hr);
-        }
+            //var msVideo = new DSFilter(new Guid("{212690FB-83E5-4526-8FD7-74478B7939CD}"));
+            //hr = m_GraphBuilder.AddFilter(msVideo.Value, "Microsoft DTV-DVD Video Decoder");
+            //new HRESULT(hr).Throw();
 
-        public override void Dispose()
-        {
-            if (_rot != null)
-            {
-                try
-                {
-                    _rot.Dispose();
-                }
-                catch { }
-                _rot = null;
-            }
-            base.Dispose();
+            //var amdVideo = new DSFilter(new Guid("{37A4D808-E76C-11D2-935C-00A024E52661}"));
+            //hr = m_GraphBuilder.AddFilter(amdVideo.Value, "ATI MPEG Video Decoder");
+            //new HRESULT(hr).Throw();
+
+            DSFilter source2 = new DSFilter(sourceFilter);
+            hr = m_GraphBuilder.Render(source2.OutputPin.Value);
+            return new HRESULT(hr);
         }
     }
 }

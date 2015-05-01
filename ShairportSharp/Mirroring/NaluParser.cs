@@ -8,7 +8,8 @@ namespace ShairportSharp.Mirroring
 {
     static class NaluParser
     {
-        public static byte[] ParseNalus(byte[] nalus, int lengthSize, int startCodeLength)
+        public const int START_CODE_LENGTH = 3;
+        public static byte[] ParseNalus(byte[] nalus, int lengthSize)
         {
             List<int> lengths = new List<int>();
             int totalLength = 0;
@@ -23,29 +24,55 @@ namespace ShairportSharp.Mirroring
 
                 if (!checkSize(nalusLength, offset, length))
                     break;
+                //if (length > 0 && (nalus[offset] & 0x1F) == 5)
+                //    isIdr = true;
                 offset += length;
                 totalLength += length;
                 lengths.Add(length);
             }
 
-            byte[] nalusWithStartCodes = new byte[startCodeLength * lengths.Count + totalLength];
+            byte[] nalusWithStartCodes = new byte[START_CODE_LENGTH * lengths.Count + totalLength];
             offset = lengthSize;
             int dstOffset = 0;
             foreach (int size in lengths)
             {
-                AddStartCodes(nalus, offset, nalusWithStartCodes, dstOffset, size, startCodeLength);
+                AddStartCodes(nalus, offset, nalusWithStartCodes, dstOffset, size);
                 offset += size + lengthSize;
-                dstOffset += startCodeLength + size;
+                dstOffset += START_CODE_LENGTH + size;
             }
             return nalusWithStartCodes;
         }
 
-        public static void AddStartCodes(byte[] nalu, int srcOffset, byte[] dst, int dstOffset, int count, int startCodeLength)
+        public static byte[] CreateParameterSet(byte[] sps, byte[] pps)
         {
-            for (int i = 0; i < startCodeLength - 1; i++)
+            int spsLength = sps != null ? sps.Length : 0;
+            int ppsLength = pps != null ? pps.Length : 0;
+            int length = 0;
+            int ppsOffset = 0;
+            if (spsLength != 0)
+            {
+                length = START_CODE_LENGTH + spsLength;
+                ppsOffset = length;
+            }
+            if (ppsLength != 0)
+            {
+                length += START_CODE_LENGTH + ppsLength;
+            }
+
+            byte[] nalu = new byte[length];
+            if (spsLength != 0)
+                AddStartCodes(sps, 0, nalu, 0, spsLength);
+            if (ppsLength != 0)
+                AddStartCodes(pps, 0, nalu, ppsOffset, ppsLength);
+            return nalu;
+        }
+
+        public static void AddStartCodes(byte[] nalu, int srcOffset, byte[] dst, int dstOffset, int count)
+        {
+            for (int i = 0; i < START_CODE_LENGTH - 1; i++)
                 dst[dstOffset + i] = 0x00;
 
-            int actualOffset = dstOffset + startCodeLength;
+            int actualOffset = dstOffset + START_CODE_LENGTH;
             dst[actualOffset - 1] = 0x01;
             Buffer.BlockCopy(nalu, srcOffset, dst, actualOffset, count);
         }

@@ -13,44 +13,12 @@ namespace ShairportSharp.Base
         #region Variables
 
         protected object SyncRoot = new object();
-        protected BonjourEmitter Emitter;
         HttpConnectionHandler listener = null; 
         
         object connectionSync = new object();
         List<T> connections = new List<T>();
 
         #endregion
-
-        string name;
-        /// <summary>
-        // The broadcasted name of the Airplay server. Defaults to the machine name if null or empty.
-        /// </summary>
-        public string Name
-        {
-            get { return name; }
-            set { name = value; }
-        }
-
-        string password;
-        /// <summary>
-        /// The password needed to connect. Set to null or empty to not require a password.
-        /// </summary>
-        public string Password
-        {
-            get { return password; }
-            set { password = value; }
-        }
-
-        byte[] macAddress = null;
-        /// <summary>
-        /// The MAC address used to identify this server. If null or empty the actual MAC address of this computer will be used.
-        /// Set to an alternative value to allow multiple servers on the same computer.
-        /// </summary>
-        public byte[] MacAddress
-        {
-            get { return macAddress; }
-            set { macAddress = value; }
-        }
 
         int port;
         public int Port
@@ -59,16 +27,11 @@ namespace ShairportSharp.Base
             set { port = value; }
         }
 
-        string modelName = Constants.DEFAULT_MODEL_NAME;
-        /// <summary>
-        /// The model of the server, should be in the format '[NAME], [VERSION]'
-        /// In most cases can be left as the default 'ShairportSharp, 1'
-        /// </summary>
-        public string ModelName
-        {
-            get { return modelName; }
-            set { modelName = value; }
-        }
+        protected virtual void OnStarting() { }
+        protected virtual void OnStarted() { }
+        protected virtual void OnStopping() { }
+        protected virtual void OnConnectionClosed(T connection) { }
+        protected abstract T OnSocketAccepted(Socket socket);
 
         public void Start()
         {
@@ -81,8 +44,7 @@ namespace ShairportSharp.Base
                 listener = new HttpConnectionHandler(IPAddress.Any, port);
                 listener.SocketAccepted += listener_SocketAccepted;
                 listener.Start();
-                if (Emitter != null)
-                    Emitter.Publish();
+                OnStarted();
             }
         }
 
@@ -97,8 +59,7 @@ namespace ShairportSharp.Base
                 {
                     connections.Add(connection);
                     connection.Start();
-                }
-                
+                }                
             }
         }
 
@@ -117,11 +78,6 @@ namespace ShairportSharp.Base
             lock (SyncRoot)
             {
                 OnStopping();
-                if (Emitter != null)
-                {
-                    Emitter.Stop();
-                    Emitter = null;
-                }
                 if (listener != null)
                 {
                     listener.Stop();
@@ -144,11 +100,5 @@ namespace ShairportSharp.Base
             foreach (T connection in lConnections)
                 connection.Close();
         }
-
-        protected virtual void OnStarting() { }
-        protected virtual void OnStopping() { }
-        protected virtual void OnConnectionClosed(T connection) { }
-        protected abstract T OnSocketAccepted(Socket socket);
-
     }
 }

@@ -1,7 +1,6 @@
 ﻿using AirPlayer.Common.DirectShow;
 using DirectShow;
 using DirectShow.Helper;
-using MediaPortal.UI.Players.Video.Tools;
 using ShairportSharp.Airplay;
 using ShairportSharp.Audio;
 using ShairportSharp.Mirroring;

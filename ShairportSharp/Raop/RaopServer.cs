@@ -18,7 +18,7 @@ namespace ShairportSharp.Raop
     /// <summary>
     /// The main class used for broadcasting and listening for new connections
     /// </summary>
-    public class RaopServer : Server<RaopSession>
+    public class RaopServer : NamedServer<RaopSession>
     {
         #region Consts
 
@@ -177,6 +177,7 @@ namespace ShairportSharp.Raop
                 remoteHandler.Stop();
                 remoteHandler = null;
             }
+            base.OnStopping();
         }
 
         protected override RaopSession OnSocketAccepted(Socket socket)

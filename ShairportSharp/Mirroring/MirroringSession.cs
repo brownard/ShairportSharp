@@ -132,8 +132,9 @@ namespace ShairportSharp.Mirroring
             if (mirroringSetup.FPKey != null && sapHandler != null)
             {
                 Logger.Debug("MirroringSession: Decrypting FP AES key");
+                //Logger.Debug("MirroringSession: {0}", mirroringSetup.FPKey.HexStringFromBytes());
                 byte[] decryptedKey = sapHandler.DecryptKey(mirroringSetup.FPKey);
-                //Logger.Debug("MirroringSession: Received AES key - {0}", decryptedKey.HexStringFromBytes());
+                Logger.Debug("MirroringSession: Received AES key - {0}", decryptedKey.HexStringFromBytes());
                 mirroringSetup.AESKey = decryptedKey;
             }
             mirroingMessageBuffer.IsDataMode = true;
@@ -163,12 +164,14 @@ namespace ShairportSharp.Mirroring
                 Logger.Debug("MirroringSession: Init SAP");
                 sapHandler.Init();
                 Logger.Debug("MirroringSession: SAP challenge 1");
+                //Logger.Debug("MirroringSession: {0}", request.Content.HexStringFromBytes());
                 fpResponse = sapHandler.Challenge(request.Content, 0);
                 //Logger.Debug("MirroringSession: SAP response 1 - {0}", fpResponse.HexStringFromBytes());
             }
             else
             {
                 Logger.Debug("MirroringSession: SAP challenge 2");
+                //Logger.Debug("MirroringSession: {0}", request.Content.HexStringFromBytes());
                 fpResponse = sapHandler.Challenge(request.Content, 1);
                 //Logger.Debug("MirroringSession: SAP response 2 - {0}", fpResponse.HexStringFromBytes());
             }

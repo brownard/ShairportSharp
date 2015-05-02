@@ -367,12 +367,14 @@ namespace ShairportSharp.Raop
                 Logger.Debug("RaopSession: Init SAP");
                 sapHandler.Init();
                 Logger.Debug("RaopSession: SAP challenge 1");
+                //Logger.Debug("RaopSession: {0}", request.Content.HexStringFromBytes());
                 fpResponse = sapHandler.Challenge(request.Content, 0);
                 //Logger.Debug("RaopSession: SAP response 1 - {0}", fpResponse.HexStringFromBytes());
             }
             else
             {
                 Logger.Debug("RaopSession: SAP challenge 2");
+                //Logger.Debug("RaopSession: {0}", request.Content.HexStringFromBytes());
                 fpResponse = sapHandler.Challenge(request.Content, 1);
                 //Logger.Debug("RaopSession: SAP response 2 - {0}", fpResponse.HexStringFromBytes());
             }
@@ -415,8 +417,9 @@ namespace ShairportSharp.Raop
                     {
                         byte[] encryptedKey = decodeBase64(m.Groups[2].Value);
                         Logger.Debug("RaopSession: Decrypting FP AES key");
+                        //Logger.Debug("RaopSession: {0}", encryptedKey.HexStringFromBytes());
                         byte[] lKey = sapHandler.DecryptKey(encryptedKey);
-                        //Logger.Debug("RaopSession: Received AES Key - {0}", encryptedKey.HexStringFromBytes());
+                        Logger.Debug("RaopSession: Received AES Key - {0}", lKey.HexStringFromBytes());
                         aesKey = lKey;
                     }
                     else if (m.Groups[1].Value == "aesiv")

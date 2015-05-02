@@ -24,6 +24,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AirPlayer.MediaPortal2", "A
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Arm7", "Arm7\Arm7.csproj", "{32F1F23B-F262-4DA0-B798-43C048B68A65}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{5CE8A573-D845-4EB6-97E7-710ECE3EAC72}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -123,6 +125,18 @@ Global
 		{32F1F23B-F262-4DA0-B798-43C048B68A65}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{32F1F23B-F262-4DA0-B798-43C048B68A65}.Release|Win32.ActiveCfg = Release|Any CPU
 		{32F1F23B-F262-4DA0-B798-43C048B68A65}.Release|x86.ActiveCfg = Release|Any CPU
+		{5CE8A573-D845-4EB6-97E7-710ECE3EAC72}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5CE8A573-D845-4EB6-97E7-710ECE3EAC72}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5CE8A573-D845-4EB6-97E7-710ECE3EAC72}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{5CE8A573-D845-4EB6-97E7-710ECE3EAC72}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{5CE8A573-D845-4EB6-97E7-710ECE3EAC72}.Debug|Win32.ActiveCfg = Debug|Any CPU
+		{5CE8A573-D845-4EB6-97E7-710ECE3EAC72}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{5CE8A573-D845-4EB6-97E7-710ECE3EAC72}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5CE8A573-D845-4EB6-97E7-710ECE3EAC72}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5CE8A573-D845-4EB6-97E7-710ECE3EAC72}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{5CE8A573-D845-4EB6-97E7-710ECE3EAC72}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{5CE8A573-D845-4EB6-97E7-710ECE3EAC72}.Release|Win32.ActiveCfg = Release|Any CPU
+		{5CE8A573-D845-4EB6-97E7-710ECE3EAC72}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

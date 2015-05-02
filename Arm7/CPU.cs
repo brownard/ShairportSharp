@@ -56,7 +56,7 @@ namespace Arm7
         Dictionary<string, bool> allow_unaligned;
 
         bool saturated;
-        bool is_halted;
+        //bool is_halted;
         string current;
 
         public CPU(VirtualMemoryController memctlr, ARMv7VirtualMMU mmu)
@@ -161,7 +161,7 @@ namespace Arm7
             this.allow_unaligned["str_reg"] = true;
             this.allow_unaligned["strt"] = true;
 
-            this.is_halted = false;
+            //this.is_halted = false;
             this.current = "";
         }
 
@@ -320,7 +320,6 @@ namespace Arm7
             {
                 case USR_MODE:
                     throw new Exception("get_current_spsr user");
-                    break;
                 case FIQ_MODE:
                     return this.spsr_fiq;
                 case IRQ_MODE:
@@ -856,7 +855,6 @@ namespace Arm7
                         return ror_c(value, amount, true);
                     default:
                         throw new Exception("shift_c");
-                        return 0;
                 }
             }
         }
@@ -2374,7 +2372,6 @@ namespace Arm7
                     break;
                 default:
                     throw new Exception("subs_pc_lr_a2: unknown opcode");
-                    break;
             }
             this.cpsr_write_by_instr(this.get_current_spsr(), 15, true);
             this.branch_to = ret;
@@ -3597,11 +3594,11 @@ namespace Arm7
             var n = (inst >> 16) & 0xf;
             var register_list = inst & 0xffff;
             var n_registers = bitops.bit_count(register_list, 16);
-            var is_pop = false;
-            if (w != 0 && n == 13 && n_registers >= 2)
-            {
-                is_pop = true;
-            }
+            //var is_pop = false;
+            //if (w != 0 && n == 13 && n_registers >= 2)
+            //{
+            //    is_pop = true;
+            //}
             var is_wback = w == 1;
 
             var valn = this.reg(n);
@@ -4030,7 +4027,7 @@ namespace Arm7
         void wfi(long inst, long addr)
         {
             //this.print_inst("WFI", inst, addr);
-            this.is_halted = true;
+            //this.is_halted = true;
             this.cpsr.i = 0;
             //this.print_inst_unimpl(addr, inst, "wfi");
         }
@@ -4537,28 +4534,24 @@ namespace Arm7
                                             return "clrex";
                                             // Clear Exclusive clears the local record of the executing processor that an address has had a request for an exclusive access.
                                             // FIXME: Need to do nothing?
-                                            break;
                                         case 4:
                                             // DSB
                                             return "dsb";
                                             //var option = bitops.get_bits(inst, 3, 0);
                                             // Data Synchronization Barrier
                                             // FIXME: Need to do nothing?
-                                            break;
                                         case 5:
                                             // DMB
                                             return "dmb";
                                             //var option = bitops.get_bits(inst, 3, 0);
                                             // Data Memory Barrier
                                             // FIXME: Need to do nothing?
-                                            break;
                                         case 6:
                                             // ISB
                                             return "isb";
                                             //var option = bitops.get_bits(inst, 3, 0);
                                             // Instruction Synchronization Barrier
                                             // FIXME: Need to do nothing?
-                                            break;
                                         default:
                                             // UNPREDICTABLE
                                             this.abort_unpredictable_instruction("Miscellaneous instructions, memory hints, and Advanced SIMD instructions", inst, addr);
@@ -4724,19 +4717,15 @@ namespace Arm7
                     case 0:
                         // STREX
                         return "strex";
-                        break;
                     case 1:
                         // LDREX
                         return "ldrex";
-                        break;
                     case 2:
                         // STREXD
                         return "strexd";
-                        break;
                     case 3:
                         // LDREXD
                         return "ldrexd";
-                        break;
                     case 4:
                         // STREXB
                         this.abort_not_impl("STREXB", inst, addr);
@@ -4772,11 +4761,9 @@ namespace Arm7
                 case 0:
                     // AND (immediate)
                     return "and_imm";
-                    break;
                 case 1:
                     // EOR (immediate)
                     return "eor_imm";
-                    break;
                 case 2:
                     rn = (inst >> 16) & 0xf;
                     if (rn == 0xf)
@@ -4790,11 +4777,9 @@ namespace Arm7
                         // SUB (immediate)
                         return "sub_imm";
                     }
-                    break;
                 case 3:
                     // RSB (immediate)
                     return "rsb_imm";
-                    break;
                 case 4:
                     rn = (inst >> 16) & 0xf;
                     if (rn == 0xf)
@@ -4808,19 +4793,15 @@ namespace Arm7
                         // ADD (immediate)
                         return "add_imm";
                     }
-                    break;
                 case 5:
                     // ADC (immediate)
                     return "adc_imm";
-                    break;
                 case 6:
                     // SBC (immediate)
                     return "sbc_imm";
-                    break;
                 case 7:
                     // RSC (immediate)
                     return "rsc_imm";
-                    break;
                 case 8:
                     if ((op & 1) == 0)
                     {
@@ -4828,7 +4809,6 @@ namespace Arm7
                     }
                     // TST (immediate)
                     return "tst_imm";
-                    break;
                 case 9:
                     if ((op & 1) == 0)
                     {
@@ -4836,7 +4816,6 @@ namespace Arm7
                     }
                     // TEQ (immediate)
                     return "teq_imm";
-                    break;
                 case 0xa:
                     if ((op & 1) == 0)
                     {
@@ -4844,7 +4823,6 @@ namespace Arm7
                     }
                     // CMP (immediate)
                     return "cmp_imm";
-                    break;
                 case 0xb:
                     if ((op & 1) == 0)
                     {
@@ -4852,23 +4830,18 @@ namespace Arm7
                     }
                     // CMN (immediate)
                     return "cmn_imm";
-                    break;
                 case 0xc:
                     // ORR (immediate)
                     return "orr_imm";
-                    break;
                 case 0xd:
                     // MOV (immediate) A1
                     return "mov_imm_a1";
-                    break;
                 case 0xe:
                     // BIC (immediate)
                     return "bic_imm";
-                    break;
                 case 0xf:
                     // MVN (immediate)
                     return "mvn_imm";
-                    break;
                 default:
                     break;
             }
@@ -4941,7 +4914,6 @@ namespace Arm7
                                         case 3:
                                             // WFI
                                             return "wfi";
-                                            break;
                                         case 4:
                                             // SEV
                                             this.abort_not_impl("SEV", inst, addr);
@@ -5000,11 +4972,9 @@ namespace Arm7
                         case 1:
                             // BX
                             return "bx";
-                            break;
                         case 3:
                             // CLZ
                             return "clz";
-                            break;
                         default:
                             this.abort_unknown_inst(inst, addr);
                             break;
@@ -5025,7 +4995,6 @@ namespace Arm7
                     }
                     // BLX (register)
                     return "blx_reg";
-                    break;
                 case 5:
                     // Saturating addition and subtraction
                     this.abort_not_impl("Saturating addition and subtraction", inst, addr);
@@ -5067,31 +5036,24 @@ namespace Arm7
                 case 0:
                     // AND (register)
                     return "and_reg";
-                    break;
                 case 1:
                     // EOR (register)
                     return "eor_reg";
-                    break;
                 case 2:
                     // SUB (register)
                     return "sub_reg";
-                    break;
                 case 3:
                     // RSB (register)
                     return "rsb_reg";
-                    break;
                 case 4:
                     // ADD (register)
                     return "add_reg";
-                    break;
                 case 5:
                     // ADC (register)
                     return "adc_reg";
-                    break;
                 case 6:
                     // SBC (register)
                     return "sbc_reg";
-                    break;
                 case 7:
                     // RSC (register)
                     this.abort_not_impl("RSC (register)", inst, addr);
@@ -5103,7 +5065,6 @@ namespace Arm7
                     }
                     // TST (register)
                     return "tst_reg";
-                    break;
                 case 9:
                     if ((op1 & 1) == 0)
                     {
@@ -5111,7 +5072,6 @@ namespace Arm7
                     }
                     // TEQ (register)
                     return "teq_reg";
-                    break;
                 case 0xa:
                     if ((op1 & 1) == 0)
                     {
@@ -5119,7 +5079,6 @@ namespace Arm7
                     }
                     // CMP (register)
                     return "cmp_reg";
-                    break;
                 case 0xb:
                     if ((op1 & 1) == 0)
                     {
@@ -5127,11 +5086,9 @@ namespace Arm7
                     }
                     // CMN (register)
                     return "cmn_reg";
-                    break;
                 case 0xc:
                     // ORR (register)
                     return "orr_reg";
-                    break;
                 case 0xd:
                     switch (op3)
                     {
@@ -5146,15 +5103,12 @@ namespace Arm7
                                 // LSL (immediate)
                                 return "lsl_imm";
                             }
-                            break;
                         case 1:
                             // LSR (immediate)
                             return "lsr_imm";
-                            break;
                         case 2:
                             // ASR (immediate)
                             return "asr_imm";
-                            break;
                         case 3:
                             if (op2 == 0)
                             {
@@ -5166,7 +5120,6 @@ namespace Arm7
                                 // ROR (immediate)
                                 return "ror_imm";
                             }
-                            break;
                         default:
                             break;
                     }
@@ -5174,11 +5127,9 @@ namespace Arm7
                 case 0xe:
                     // BIC (register)
                     return "bic_reg";
-                    break;
                 case 0xf:
                     // MVN (register)
                     return "mvn_reg";
-                    break;
                 default:
                     break;
             }
@@ -5198,23 +5149,18 @@ namespace Arm7
                 case 0:
                     // AND (register-shifted register)
                     return "and_rsr";
-                    break;
                 case 1:
                     // EOR (register-shifted register)
                     return "eor_rsr";
-                    break;
                 case 2:
                     // SUB (register-shifted register)
                     return "sub_rsr";
-                    break;
                 case 3:
                     // RSB (register-shifted register)
                     return "rsb_rsr";
-                    break;
                 case 4:
                     // ADD (register-shifted register)
                     return "add_rsr";
-                    break;
                 case 5:
                     // ADC (register-shifted register)
                     this.abort_not_impl("ADC (register-shifted register)", inst, addr);
@@ -5222,7 +5168,6 @@ namespace Arm7
                 case 6:
                     // SBC (register-shifted register)
                     return "sbc_rsr";
-                    break;
                 case 7:
                     // RSC (register-shifted register)
                     this.abort_not_impl("RSC (register-shifted register)", inst, addr);
@@ -5234,7 +5179,6 @@ namespace Arm7
                     }
                     // TST (register-shifted register)
                     return "tst_rsr";
-                    break;
                 case 9:
                     if ((op1 & 1) == 0)
                     {
@@ -5250,7 +5194,6 @@ namespace Arm7
                     }
                     // CMP (register-shifted register)
                     return "cmp_rsr";
-                    break;
                 case 0xb:
                     if ((op1 & 1) == 0)
                     {
@@ -5262,22 +5205,18 @@ namespace Arm7
                 case 0xc:
                     // ORR (register-shifted register)
                     return "orr_rsr";
-                    break;
                 case 0xd:
                     switch (op2)
                     {
                         case 0:
                             // LSL (register)
                             return "lsl_reg";
-                            break;
                         case 1:
                             // LSR (register)
                             return "lsr_reg";
-                            break;
                         case 2:
                             // ASR (register)
                             return "asr_reg";
-                            break;
                         case 3:
                             // ROR (register)
                             this.abort_not_impl("ROR (register)", inst, addr);
@@ -5289,11 +5228,9 @@ namespace Arm7
                 case 0xe:
                     // BIC (register-shifted register)
                     return "bic_rsr";
-                    break;
                 case 0xf:
                     // MVN (register-shifted register)
                     return "mvn_rsr";
-                    break;
                 default:
                     break;
             }
@@ -5521,11 +5458,9 @@ namespace Arm7
                 case 0:
                     // MUL
                     return "mul";
-                    break;
                 case 1:
                     // MLA
                     return "mla";
-                    break;
                 case 2:
                     if ((op & 1) != 0)
                     {
@@ -5553,19 +5488,15 @@ namespace Arm7
                 case 4:
                     // UMULL
                     return "umull";
-                    break;
                 case 5:
                     // UMLAL
                     return "umlal";
-                    break;
                 case 6:
                     // SMULL
                     return "smull";
-                    break;
                 case 7:
                     // SMLAL
                     return "smlal";
-                    break;
                 default:
                     break;
             }
@@ -5579,7 +5510,6 @@ namespace Arm7
             var op = (inst >> 25) & 1;
             var op1 = (inst >> 20) & 0x1f;
             var op2 = (inst >> 4) & 0xf;
-            long rn;
 
             if (op != 0)
             {
@@ -5595,11 +5525,9 @@ namespace Arm7
                         case 0x10:
                             // MOV (immediate) A2?
                             return "mov_imm_a2";
-                            break;
                         case 0x14:
                             // MOVT
                             return "movt";
-                            break;
                         default:
                             if ((op1 >> 3) == 2 && (op1 & 1) == 0)
                             {
@@ -5612,7 +5540,6 @@ namespace Arm7
                                 // Data-processing (immediate)
                                 return this.decode_dataproc_imm(inst, addr);
                             }
-                            break;
                     }
                 }
             }
@@ -6016,7 +5943,6 @@ namespace Arm7
                                             case 1:
                                                 // REV
                                                 return "rev";
-                                                break;
                                             case 3:
                                                 a = (inst >> 16) & 0xf;
                                                 if (a == 0xf)
@@ -6029,7 +5955,6 @@ namespace Arm7
                                                     // SXTAH
                                                     return "sxtah";
                                                 }
-                                                break;
                                             case 5:
                                                 // REV16
                                                 return "rev16";
@@ -6090,7 +6015,6 @@ namespace Arm7
                                                     // UXTAB
                                                     return "uxtab";
                                                 }
-                                                break;
                                             default:
                                                 this.abort_unknown_inst(inst, addr);
                                                 break;
@@ -6115,7 +6039,6 @@ namespace Arm7
                                                     // UXTAH
                                                     return "uxtah";
                                                 }
-                                                break;
                                             case 5:
                                                 // REVSH
                                                 this.abort_not_impl("REVSH", inst, addr);
@@ -6273,7 +6196,6 @@ namespace Arm7
                                     // BFI
                                     return "bfi";
                                 }
-                                break;
                             }
                             this.abort_unknown_inst(inst, addr);
                             break;
@@ -6306,8 +6228,6 @@ namespace Arm7
             var cond = inst >> 28;
             var op = (inst >> 4) & 1;
             var op1 = (inst >> 25) & 7;
-            long op2;
-            long tmp;
             long rn;
             long coproc;
 
@@ -6331,7 +6251,6 @@ namespace Arm7
                     case 0:
                         // Data-processing and miscellaneous instructions
                         return this.decode_datamisc(inst, addr);
-                        break;
                     case 1:
                         if ((op1 & 1) != 0)
                         {
@@ -6543,19 +6462,15 @@ namespace Arm7
                                         case 0:
                                             // LDMDA / LDMFA
                                             return "ldmda";
-                                            break;
                                         case 2:
                                             // LDM / LDMIA / LDMFD
                                             return "ldm";
-                                            break;
                                         case 4:
                                             // LDMDB / LDMEA
                                             return "ldmdb";
-                                            break;
                                         case 6:
                                             // LDMIB / LDMED
                                             return "ldmib";
-                                            break;
                                         default:
                                             this.abort_unknown_inst(inst, addr);
                                             break;
@@ -6572,15 +6487,12 @@ namespace Arm7
                                         case 2:
                                             // STM / STMIA / STMEA
                                             return "stm";
-                                            break;
                                         case 4:
                                             // STMDB / STMFD
                                             return "stmdb";
-                                            break;
                                         case 6:
                                             // STMIB / STMFA
                                             return "stmib";
-                                            break;
                                         default:
                                             this.abort_unknown_inst(inst, addr);
                                             break;

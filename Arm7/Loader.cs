@@ -168,9 +168,11 @@ namespace Arm7
 
                 if (cpu.is_valid(inst))
                 {
-                    string inst_name = cpu.decode(inst, pc);
                     if (cpu.cond(inst))
+                    {
+                        string inst_name = cpu.decode(inst, pc);
                         cpu.exec(inst_name, inst, pc);
+                    }
                 }
                 else
                 {

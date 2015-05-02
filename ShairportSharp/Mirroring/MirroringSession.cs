@@ -23,7 +23,7 @@ namespace ShairportSharp.Mirroring
         public MirroringStream Stream { get; private set; }
     }
 
-    public class MirroringSession : HttpParser
+    public class MirroringSession : SapSession
     {
         const string DIGEST_REALM = "AirPlay";
 
@@ -38,13 +38,6 @@ namespace ShairportSharp.Mirroring
             mirroingMessageBuffer = new MirroringMessageBuffer();
             mirroingMessageBuffer.MirroringMessageReceived += messageBuffer_MirroringMessageReceived;
             messageBuffer = mirroingMessageBuffer;
-        }
-
-        public event EventHandler Authenticating;
-        protected virtual void OnAuthenticating()
-        {
-            if (Authenticating != null)
-                Authenticating(this, EventArgs.Empty);
         }
 
         public event EventHandler<MirroringStartedEventArgs> Started;
@@ -73,6 +66,7 @@ namespace ShairportSharp.Mirroring
             {
                 if (request.Uri == "/fp-setup")
                 {
+                    Logger.Debug("MirroringSession: Received fp-setup");
                     response = handleFpRequest(request);
                 }
                 else if (request.Uri == "/stream")
@@ -129,13 +123,10 @@ namespace ShairportSharp.Mirroring
                 return;
 
             mirroringSetup = new MirroringSetup(plist);
-            if (mirroringSetup.FPKey != null && sapHandler != null)
+            if (mirroringSetup.FPKey != null)
             {
-                Logger.Debug("MirroringSession: Decrypting FP AES key");
-                //Logger.Debug("MirroringSession: {0}", mirroringSetup.FPKey.HexStringFromBytes());
-                byte[] decryptedKey = sapHandler.DecryptKey(mirroringSetup.FPKey);
-                Logger.Debug("MirroringSession: Received AES key - {0}", decryptedKey.HexStringFromBytes());
-                mirroringSetup.AESKey = decryptedKey;
+                mirroringSetup.AESKey = DecryptSapKey(mirroringSetup.FPKey);
+                Logger.Debug("MirroringSession: Received AES key - {0}", mirroringSetup.AESKey.HexStringFromBytes());
             }
             mirroingMessageBuffer.IsDataMode = true;
         }
@@ -156,25 +147,7 @@ namespace ShairportSharp.Mirroring
 
         HttpResponse handleFpRequest(HttpRequest request)
         {
-            byte[] fpResponse;
-            if (sapHandler == null)
-            {
-                OnAuthenticating();
-                sapHandler = new SapHandler();
-                Logger.Debug("MirroringSession: Init SAP");
-                sapHandler.Init();
-                Logger.Debug("MirroringSession: SAP challenge 1");
-                //Logger.Debug("MirroringSession: {0}", request.Content.HexStringFromBytes());
-                fpResponse = sapHandler.Challenge(request.Content, 0);
-                //Logger.Debug("MirroringSession: SAP response 1 - {0}", fpResponse.HexStringFromBytes());
-            }
-            else
-            {
-                Logger.Debug("MirroringSession: SAP challenge 2");
-                //Logger.Debug("MirroringSession: {0}", request.Content.HexStringFromBytes());
-                fpResponse = sapHandler.Challenge(request.Content, 1);
-                //Logger.Debug("MirroringSession: SAP response 2 - {0}", fpResponse.HexStringFromBytes());
-            }
+            byte[] fpResponse = GetSapResponse(request.Content);
             HttpResponse response = HttpUtils.GetEmptyResponse();
             response.SetHeader("Content-Type", "application/octet-stream");
             response.SetContent(fpResponse);

@@ -19,10 +19,11 @@ using ShairportSharp.Remote;
 using System.Globalization;
 using ShairportSharp.Helpers;
 using ShairportSharp.Sap;
+using ShairportSharp.Base;
 
 namespace ShairportSharp.Raop
 {    
-    public class RaopSession : HttpParser
+    public class RaopSession : SapSession
     {        
         #region Private Variables
                 
@@ -38,8 +39,6 @@ namespace ShairportSharp.Raop
         int[] fmtp; //audio stream info
         byte[] aesKey; //audio data encryption key
         byte[] aesIV; //IV
-
-        SapHandler sapHandler;
 
         #endregion
 
@@ -202,7 +201,8 @@ namespace ShairportSharp.Raop
             }
             else if (requestType == "POST" && request.Uri == "/fp-setup")
             {
-                byte[] fpResponse = getFPResponse(request);
+                Logger.Debug("RaopSession: Received fp-setup");
+                byte[] fpResponse = GetSapResponse(request.Content);
                 response.SetContent(fpResponse);
             }
             else if (requestType == "ANNOUNCE")
@@ -358,29 +358,6 @@ namespace ShairportSharp.Raop
             return null;
         }
 
-        byte[] getFPResponse(HttpRequest request)
-        {
-            byte[] fpResponse;
-            if (sapHandler == null)
-            {
-                sapHandler = new SapHandler();
-                Logger.Debug("RaopSession: Init SAP");
-                sapHandler.Init();
-                Logger.Debug("RaopSession: SAP challenge 1");
-                //Logger.Debug("RaopSession: {0}", request.Content.HexStringFromBytes());
-                fpResponse = sapHandler.Challenge(request.Content, 0);
-                //Logger.Debug("RaopSession: SAP response 1 - {0}", fpResponse.HexStringFromBytes());
-            }
-            else
-            {
-                Logger.Debug("RaopSession: SAP challenge 2");
-                //Logger.Debug("RaopSession: {0}", request.Content.HexStringFromBytes());
-                fpResponse = sapHandler.Challenge(request.Content, 1);
-                //Logger.Debug("RaopSession: SAP response 2 - {0}", fpResponse.HexStringFromBytes());
-            }
-            return fpResponse;
-        }
-
         void getSessionParams(HttpRequest request)
         {
             MatchCollection matches = Regex.Matches(request.GetContentString(), "^a=([^:]+):(.+)", RegexOptions.Multiline);
@@ -416,11 +393,8 @@ namespace ShairportSharp.Raop
                     else if (m.Groups[1].Value == "fpaeskey")
                     {
                         byte[] encryptedKey = decodeBase64(m.Groups[2].Value);
-                        Logger.Debug("RaopSession: Decrypting FP AES key");
-                        //Logger.Debug("RaopSession: {0}", encryptedKey.HexStringFromBytes());
-                        byte[] lKey = sapHandler.DecryptKey(encryptedKey);
-                        Logger.Debug("RaopSession: Received AES Key - {0}", lKey.HexStringFromBytes());
-                        aesKey = lKey;
+                        aesKey = DecryptSapKey(encryptedKey);
+                        Logger.Debug("RaopSession: Received AES Key - {0}", aesKey.HexStringFromBytes());
                     }
                     else if (m.Groups[1].Value == "aesiv")
                     {

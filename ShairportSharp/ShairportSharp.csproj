@@ -59,6 +59,7 @@
     <Compile Include="Airplay\AirplaySession.cs" />
     <Compile Include="Airplay\IPlistResponse.cs" />
     <Compile Include="Base\NamedServer.cs" />
+    <Compile Include="Base\SapSession.cs" />
     <Compile Include="Http\HttpUtils.cs" />
     <Compile Include="Mirroring\BitReader.cs" />
     <Compile Include="Mirroring\H264CodecData.cs" />

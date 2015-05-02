@@ -19,6 +19,7 @@ using MediaPortal.UiComponents.Media.Models;
 using ShairportSharp.Airplay;
 using ShairportSharp.Audio;
 using ShairportSharp.Helpers;
+using ShairportSharp.Mirroring;
 using ShairportSharp.Raop;
 using ShairportSharp.Remote;
 using System;
@@ -56,7 +57,6 @@ namespace AirPlayer.MediaPortal2
         string lastVideoUrl;
         bool lastUseMPUrlSourceFilter;
         DateTime videoReceiveTime = DateTime.MinValue;
-        bool isVideoPlaying;
 
         object photoInfoSync = new object();
         string photoSessionId;
@@ -69,6 +69,10 @@ namespace AirPlayer.MediaPortal2
         uint currentStartStamp;
         uint currentStopStamp;
         bool isAudioPlaying;
+
+        object mirroringInfoSync = new object();
+        bool isMirroringBuffering;
+        bool isMirroringPlaying;
 
         object volumeSync = new object();
         int? savedVolume;
@@ -154,6 +158,14 @@ namespace AirPlayer.MediaPortal2
                     }
                 }
             }
+            else if (mediaItem is MirroringItem)
+            {
+                lock (mirroringInfoSync)
+                {
+                    airplayServer.MirroringServer.StopCurrentSession();
+                    cleanupMirroringPlayback();
+                }
+            }
         }
 
         #endregion
@@ -182,6 +194,10 @@ namespace AirPlayer.MediaPortal2
             airplayServer.PlaybackRateChanged += airplayServer_PlaybackRateChanged;
             airplayServer.VolumeChanged += airplayServer_VolumeChanged;
             airplayServer.SessionStopped += airplayServer_SessionStopped;
+
+            airplayServer.MirroringServer.Authenticating += MirroringServer_Authenticating;
+            airplayServer.MirroringServer.Started += MirroringServer_Started;
+            airplayServer.MirroringServer.SessionClosed += MirroringServer_SessionClosed;
 
             init();
         }
@@ -616,6 +632,42 @@ namespace AirPlayer.MediaPortal2
 
         #endregion
 
+        #region Mirroring Event Handlers
+        
+        void MirroringServer_Authenticating(object sender, EventArgs e)
+        {
+            lock (mirroringInfoSync)
+            {
+                stopPlayer<AirplayMirroringPlayer>();
+                cleanupMirroringPlayback();
+                ServiceRegistration.Get<ISuperLayerManager>().ShowBusyScreen();
+                isMirroringBuffering = true;
+            }
+        }
+
+        void MirroringServer_Started(object sender, MirroringStartedEventArgs e)
+        {
+            lock (mirroringInfoSync)
+            {
+                if (!isMirroringBuffering)
+                    return;
+                isMirroringBuffering = false;
+                ServiceRegistration.Get<ISuperLayerManager>().HideBusyScreen();
+
+                MirroringItem item = new MirroringItem(e.Stream);
+                PlayItemsModel.CheckQueryPlayAction(item);
+                isMirroringPlaying = true;
+            }
+        }
+
+        void MirroringServer_SessionClosed(object sender, EventArgs e)
+        {
+            lock (mirroringInfoSync)
+                cleanupMirroringPlayback();
+        }
+
+        #endregion
+
         #region Utils
 
         T getPlayer<T>()
@@ -666,6 +718,16 @@ namespace AirPlayer.MediaPortal2
             restoreVolume();
             currentVideoSessionId = null;
             currentVideoUrl = null;
+        }
+
+        void cleanupMirroringPlayback()
+        {
+            if (isMirroringBuffering)
+            {
+                ServiceRegistration.Get<ISuperLayerManager>().HideBusyScreen();
+                isMirroringBuffering = false;
+            }
+            isMirroringPlaying = false;
         }
 
         void restoreVolume()

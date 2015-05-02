@@ -8,13 +8,13 @@ using System.Text;
 
 namespace ShairportSharp.Base
 {
-    public abstract class Server<T> where T : ISocketHandler
+    public abstract class Server<T> where T : HttpParser
     {
         #region Variables
 
         protected object SyncRoot = new object();
-        HttpConnectionHandler listener = null; 
-        
+        HttpConnectionHandler listener = null;
+
         object connectionSync = new object();
         List<T> connections = new List<T>();
 
@@ -59,7 +59,7 @@ namespace ShairportSharp.Base
                 {
                     connections.Add(connection);
                     connection.Start();
-                }                
+                }
             }
         }
 

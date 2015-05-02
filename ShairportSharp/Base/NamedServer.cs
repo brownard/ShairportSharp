@@ -1,11 +1,12 @@
-﻿using System;
+﻿using ShairportSharp.Http;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
 namespace ShairportSharp.Base
 {
-    public abstract class NamedServer<T> : Server<T> where T : ISocketHandler
+    public abstract class NamedServer<T> : Server<T> where T : HttpParser
     {
         protected BonjourEmitter Emitter;
         

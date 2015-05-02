@@ -23,7 +23,6 @@
 //   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //   THE SOFTWARE.
 
-
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -31,10 +30,28 @@ using System.IO;
 using System.Text;
 using System.Xml;
 
-namespace PlistCS
+namespace ShairportSharp.Plist
 {
-    public static class Plist
+    public static class PlistParser
     {
+        public static bool TryGetPlist(byte[] input, out Dictionary<string, object> plist)
+        {
+            plist = null;
+            if (input != null && input.Length != 0)
+            {
+                try
+                {
+                    plist = (Dictionary<string, object>)readPlist(input);
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Plist: Exception parsing plist - {0}", ex);
+                }
+            }
+            return false;
+        }
+
         private static List<int> offsetTable = new List<int>();
         private static List<byte> objectTable = new List<byte>();
         private static int refCount;

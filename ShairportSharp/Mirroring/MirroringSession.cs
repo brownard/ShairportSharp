@@ -1,5 +1,4 @@
-﻿using PlistCS;
-using ShairportSharp.Base;
+﻿using ShairportSharp.Base;
 using ShairportSharp.Http;
 using ShairportSharp.Sap;
 using ShairportSharp.Helpers;
@@ -10,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
+using ShairportSharp.Plist;
 
 namespace ShairportSharp.Mirroring
 {
@@ -125,7 +125,7 @@ namespace ShairportSharp.Mirroring
         void handleStream(HttpRequest request)
         {
             Dictionary<string, object> plist;
-            if (!HttpUtils.TryGetPlist(request, out plist))
+            if (!PlistParser.TryGetPlist(request.Content, out plist))
                 return;
 
             mirroringSetup = new MirroringSetup(plist);

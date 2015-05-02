@@ -256,6 +256,7 @@ namespace ShairportSharp.Airplay
             }
             if (closed)
                 OnSessionClosed(new AirplayEventArgs(connection.SessionId));
+            base.OnConnectionClosed(connection);
         }
 
         #endregion

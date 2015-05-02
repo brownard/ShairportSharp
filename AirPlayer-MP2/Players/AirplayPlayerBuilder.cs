@@ -3,6 +3,7 @@ using MediaPortal.Common;
 using MediaPortal.Common.Logging;
 using MediaPortal.Common.MediaManagement;
 using MediaPortal.Common.PluginManager;
+using MediaPortal.UI.Players.Video;
 using MediaPortal.UI.Presentation.Players;
 using System;
 using System.Collections.Generic;
@@ -24,6 +25,10 @@ namespace AirPlayer.MediaPortal2.Players
             AudioItem audioItem = mediaItem as AudioItem;
             if (audioItem != null)
                 return getAudioPlayer(audioItem);
+
+            MirroringItem mirroringItem = mediaItem as MirroringItem;
+            if (mirroringItem != null)
+                return getMirroringPlayer(mirroringItem);
 
             ImageItem imageItem = mediaItem as ImageItem;
             if (imageItem != null)
@@ -52,6 +57,24 @@ namespace AirPlayer.MediaPortal2.Players
             return (IPlayer)player;
         }
 
+        IPlayer getMirroringPlayer(MirroringItem mirroringItem)
+        {
+            AirplayMirroringPlayer player = new AirplayMirroringPlayer(mirroringItem.MirroringStream);
+            try
+            {
+                player.SetMediaItem(mirroringItem.GetResourceLocator(), null);
+            }
+            catch (Exception e)
+            {
+                ServiceRegistration.Get<ILogger>().Warn("AirplayAudioPlayer: Unable to play mirroring stream", e);
+                IDisposable disposablePlayer = player as IDisposable;
+                if (disposablePlayer != null)
+                    disposablePlayer.Dispose();
+                throw;
+            }
+            return (IPlayer)player;
+        }
+        
         IPlayer getImagePlayer(ImageItem mediaItem)
         {
             AirplayImagePlayer player = new AirplayImagePlayer();

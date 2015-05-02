@@ -187,7 +187,6 @@ namespace ShairportSharp.Raop
             raop.UDPPort = AudioPort;
             raop.BufferSize = AudioBufferSize;
             raop.StreamStarting += streamStarting;
-            raop.Closed += streamStopped;
             raop.StreamReady += raop_StreamReady;
             raop.ProgressChanged += raop_ProgressChanged;
             raop.MetaDataChanged += raop_MetaDataChanged;
@@ -196,6 +195,15 @@ namespace ShairportSharp.Raop
             lock (sessionLock)
                 currentSession = raop;
             return raop;
+        }
+
+        protected override void OnConnectionClosed(RaopSession connection)
+        {
+            OnStreamStopped(EventArgs.Empty);
+            lock (sessionLock)
+                if (connection == currentSession)
+                    currentSession = null;
+            base.OnConnectionClosed(connection);
         }
 
         /// <summary>
@@ -260,14 +268,6 @@ namespace ShairportSharp.Raop
         void streamStarting(object sender, RaopEventArgs e)
         {
             OnStreamStarting(e);
-        }
-
-        void streamStopped(object sender, EventArgs e)
-        {
-            OnStreamStopped(e);
-            lock (sessionLock)
-                if (sender == currentSession)
-                    currentSession = null;
         }
 
         void raop_StreamReady(object sender, RaopEventArgs e)

@@ -1,5 +1,5 @@
-﻿using PlistCS;
-using ShairportSharp.Airplay;
+﻿using ShairportSharp.Airplay;
+using ShairportSharp.Plist;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,35 +31,16 @@ namespace ShairportSharp.Http
             if (binary)
             {
                 response["Content-Type"] = "application/x-apple-binary-plist";
-                response.SetContent(Plist.writeBinary(plist));
+                response.SetContent(PlistParser.writeBinary(plist));
             }
             else
             {
                 response["Content-Type"] = "text/x-apple-plist+xml";
-                string plistXml = Plist.writeXml(plist);
+                string plistXml = PlistParser.writeXml(plist);
                 //Logger.Debug("Created plist xml - '{0}'", plistXml);
                 response.SetContent(plistXml);
             }
             return response;
-        }
-
-        public static bool TryGetPlist(HttpMessage message, out Dictionary<string, object> plist)
-        {
-            plist = null;
-            if (message.ContentLength > 0)
-            {
-                try
-                {
-                    plist = (Dictionary<string, object>)Plist.readPlist(message.Content);
-                    return true;
-                }
-                catch (Exception ex)
-                {
-                    Logger.Error("Exception parsing plist - {0}", ex);
-                    Logger.Error("Exception message\r\n{0}", message);
-                }
-            }
-            return false;
         }
 
         public static string RfcTimeNow()

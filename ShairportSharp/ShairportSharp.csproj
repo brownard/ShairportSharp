@@ -70,7 +70,7 @@
     <Compile Include="Mirroring\MirroringStream.cs" />
     <Compile Include="Airplay\PlaybackInfo.cs" />
     <Compile Include="Airplay\PlaybackStateInfo.cs" />
-    <Compile Include="Airplay\Plist.cs" />
+    <Compile Include="Plist\Plist.cs" />
     <Compile Include="Airplay\SlideshowFeatures.cs" />
     <Compile Include="AlacDecoder\AlacDecodeUtils.cs" />
     <Compile Include="AlacDecoder\AlacFile.cs" />
@@ -84,7 +84,6 @@
     <Compile Include="Audio\AudioSession.cs" />
     <Compile Include="Audio\BiquadFilter.cs" />
     <Compile Include="Audio\DecryptedAudioBuffer.cs" />
-    <Compile Include="Base\ISocketHandler.cs" />
     <Compile Include="Base\Server.cs" />
     <Compile Include="Base\BonjourEmitter.cs" />
     <Compile Include="Constants.cs" />

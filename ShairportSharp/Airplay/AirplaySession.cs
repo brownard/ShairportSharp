@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
-using PlistCS;
 using System.Globalization;
 using ShairportSharp.Helpers;
+using ShairportSharp.Plist;
 
 namespace ShairportSharp.Airplay
 {
@@ -66,7 +66,7 @@ namespace ShairportSharp.Airplay
             HttpRequest request = new HttpRequest("POST", "/event", "HTTP/1.1");
             request["Content-Type"] = "text/x-apple-plist+xml";
             request["X-Apple-Session-ID"] = sessionId;
-            string plistXml = PlistCS.Plist.writeXml(info.GetPlist());
+            string plistXml = PlistParser.writeXml(info.GetPlist());
             //Logger.Debug("Created plist xml - '{0}'", plistXml);
             request.SetContent(plistXml);
             Logger.Debug("AirplaySession: Sending playback state '{0}' - '{1}'", category, state);
@@ -275,7 +275,7 @@ namespace ShairportSharp.Airplay
             {
                 Dictionary<string, object> plist;
                 object action;
-                if (HttpUtils.TryGetPlist(request, out plist) && plist.TryGetValue("type", out action) && action as string == "playlistRemove")
+                if (PlistParser.TryGetPlist(request.Content, out plist) && plist.TryGetValue("type", out action) && action as string == "playlistRemove")
                 {
                     OnStopped(new AirplayEventArgs(sessionId));
                 }
@@ -299,8 +299,8 @@ namespace ShairportSharp.Airplay
                 if (request.ContentLength > 0 && request["Content-Type"] == "application/x-apple-binary-plist")
                 {
                     Dictionary<string, object> plist;
-                    if (HttpUtils.TryGetPlist(request, out plist))
-                        Logger.Debug("Request plist - " + Plist.writeXml(plist));
+                    if (PlistParser.TryGetPlist(request.Content, out plist))
+                        Logger.Debug("Request plist - " + PlistParser.writeXml(plist));
                 }
                 response = HttpUtils.GetEmptyResponse();
             }
@@ -354,7 +354,7 @@ namespace ShairportSharp.Airplay
         HttpResponse handleSlideshowSettings(HttpRequest request)
         {
             Dictionary<string, object> plist;
-            if (HttpUtils.TryGetPlist(request, out plist))
+            if (PlistParser.TryGetPlist(request.Content, out plist))
             {
                 string playState = (string)plist["state"];
                 Dictionary<string, object> settings = (Dictionary<string, object>)plist["settings"];
@@ -385,7 +385,7 @@ namespace ShairportSharp.Airplay
             if (request["Content-Type"] == "application/x-apple-binary-plist")
             {
                 Dictionary<string, object> plist;
-                if (HttpUtils.TryGetPlist(request, out plist))
+                if (PlistParser.TryGetPlist(request.Content, out plist))
                 {
                     if (plist.ContainsKey("Content-Location"))
                         contentLocation = (string)plist["Content-Location"];
@@ -422,7 +422,7 @@ namespace ShairportSharp.Airplay
             Logger.Debug("Airplay Session: Playback info requested");
             PlaybackInfoEventArgs e = new PlaybackInfoEventArgs(SessionId);
             OnPlaybackInfoRequested(e);
-            Logger.Debug("Airplay Session: Playback Info\r\n'{0}'", Plist.writeXml(e.PlaybackInfo.GetPlist()));
+            Logger.Debug("Airplay Session: Playback Info\r\n'{0}'", PlistParser.writeXml(e.PlaybackInfo.GetPlist()));
             return HttpUtils.GetPlistResponse(e.PlaybackInfo);
         }
 

@@ -2,6 +2,7 @@
 using AirPlayer.Common.Player;
 using AirPlayer.MediaPortal2.MediaItems;
 using DirectShow.Helper;
+using MediaPortal.Common.MediaManagement;
 using MediaPortal.UI.Players.Video;
 using MediaPortal.UI.Presentation.Players;
 using System;
@@ -12,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace AirPlayer.MediaPortal2.Players
 {
-    public class AirplayAudioPlayer : BaseDXPlayer, MediaPortal.UI.Presentation.Players.IAudioPlayer, Common.Player.IAudioPlayer, IReusablePlayer
+    public class AirplayAudioPlayer : BaseDXPlayer, MediaPortal.UI.Presentation.Players.IAudioPlayer, IReusablePlayer
     {
         public const string MIMETYPE = "airplay-audio/airplayer";
         public const string DUMMY_FILE = "airplay://localhost/AirPlayerAudio.airplay";
@@ -97,7 +98,7 @@ namespace AirPlayer.MediaPortal2.Players
             }
         }
 
-        public bool NextItem(MediaPortal.Common.MediaManagement.MediaItem mediaItem, StartTime startTime)
+        public bool NextItem(MediaItem mediaItem, StartTime startTime)
         {
             AudioItem audioItem = mediaItem as AudioItem;
             return audioItem != null && audioItem.PlayerSettings == null;

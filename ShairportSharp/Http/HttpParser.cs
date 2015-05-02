@@ -16,7 +16,7 @@ namespace ShairportSharp.Http
         public bool ManualClose { get; set; }
     }
 
-    public abstract class HttpParser : ISocketHandler, IDisposable
+    public abstract class HttpParser : IDisposable
     {
         #region Variables
 

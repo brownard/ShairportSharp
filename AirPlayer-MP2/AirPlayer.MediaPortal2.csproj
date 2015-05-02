@@ -74,8 +74,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="MediaItems\MirroringItem.cs" />
     <Compile Include="Players\AirplayAudioPlayer.cs" />
     <Compile Include="AirPlayer.cs" />
+    <Compile Include="Players\AirplayMirroringPlayer.cs" />
     <Compile Include="Players\AirplayVideoPlayer.cs" />
     <Compile Include="MediaItems\AudioItem.cs" />
     <Compile Include="Players\AirplayPlayerBuilder.cs" />

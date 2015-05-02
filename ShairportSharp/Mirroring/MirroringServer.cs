@@ -48,12 +48,25 @@ namespace ShairportSharp.Mirroring
                 Started(this, e);
         }
 
+        public event EventHandler SessionClosed;
+        protected virtual void OnSessionClosed(EventArgs e)
+        {
+            if (SessionClosed != null)
+                SessionClosed(this, e);
+        }
+
         protected override MirroringSession OnSocketAccepted(Socket socket)
         {
             MirroringSession session = new MirroringSession(socket, Password);
             session.Authenticating += session_Authenticating;
             session.Started += session_Started;
             return session;
+        }
+
+        protected override void OnConnectionClosed(MirroringSession connection)
+        {
+            OnSessionClosed(EventArgs.Empty);
+            base.OnConnectionClosed(connection);
         }
 
         void session_Authenticating(object sender, EventArgs e)

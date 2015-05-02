@@ -10,14 +10,14 @@ namespace Arm7
     {
         public abstract long ld_byte(long addr);
 
-        public abstract void st_byte(long addr, int onebyte);
+        public abstract void st_byte(long addr, byte onebyte);
 
         public long ld_byte_fast(long addr)
         {
             return ld_byte(addr);
         }
 
-        public void st_byte_fast(long addr, int onebyte)
+        public void st_byte_fast(long addr, byte onebyte)
         {
             st_byte(addr, onebyte);
         }
@@ -89,10 +89,10 @@ namespace Arm7
             return page.Data[page.Offset + addr % vm.page_size];
         }
 
-        public override void st_byte(long addr, int onebyte)
+        public override void st_byte(long addr, byte onebyte)
         {
             PageStruct page = vm.Lookup(addr);
-            page.Data[page.Offset + addr % vm.page_size] = (byte)onebyte;
+            page.Data[page.Offset + addr % vm.page_size] = onebyte;
         }
     }
 

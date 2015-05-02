@@ -670,7 +670,7 @@ namespace Arm7
                     for (var i = 0; i < 4; i++)
                     {
                         phyaddr = mmu.TranslateToPhysicalAddress(addr + i);
-                        memctlr.st_byte(phyaddr, (int)BitOps.get_bits(word, 8 * i + 7, 8 * i));
+                        memctlr.st_byte(phyaddr, (byte)BitOps.get_bits(word, 8 * i + 7, 8 * i));
                     }
                 }
             }
@@ -722,7 +722,7 @@ namespace Arm7
                     for (int i = 0; i < 2; i++)
                     {
                         phyaddr = mmu.TranslateToPhysicalAddress(addr + i);
-                        memctlr.st_byte(phyaddr, (int)BitOps.get_bits(hw, 8 * i + 7, 8 * i));
+                        memctlr.st_byte(phyaddr, (byte)BitOps.get_bits(hw, 8 * i + 7, 8 * i));
                     }
                 }
             }
@@ -742,7 +742,7 @@ namespace Arm7
         public void st_byte(long addr, long b)
         {
             long phyaddr = mmu.TranslateToPhysicalAddress(addr, true);
-            memctlr.st_byte(phyaddr, (int)b);
+            memctlr.st_byte(phyaddr, (byte)b);
         }
 
         public long fetch_instruction(long addr)
@@ -750,8 +750,6 @@ namespace Arm7
             long phyaddr = mmu.TranslateToPhysicalAddress(addr);
             return memctlr.ld_word_fast(phyaddr);
         }
-
-
 
         string shift_type_name(int type)
         {

@@ -45,7 +45,7 @@ namespace Tests
         };
 
         [TestMethod]
-        public void TestMethod1()
+        public void SapChallenge()
         {
             for (int i = 0; i < Challenge1.Length; i++)
             {

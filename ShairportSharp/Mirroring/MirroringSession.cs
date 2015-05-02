@@ -27,7 +27,6 @@ namespace ShairportSharp.Mirroring
     {
         const string DIGEST_REALM = "AirPlay";
 
-        SapHandler sapHandler;
         MirroringSetup mirroringSetup;
         MirroringStream mirroringStream;
         MirroringMessageBuffer mirroingMessageBuffer;

@@ -4455,7 +4455,7 @@ namespace Arm7
                     bl_imm(inst, addr);
                     break;
                 default:
-                    Console.WriteLine("exec {0}", inst_name);
+                    //Console.WriteLine("exec {0}", inst_name);
                     break;
             }
         }

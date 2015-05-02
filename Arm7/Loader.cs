@@ -234,7 +234,7 @@ namespace Arm7
             if (r == 0)
                 cpu.regs[0] = 0;
             else
-                cpu.regs[0] = bitops.uint32(r);
+                cpu.regs[0] = BitOps.uint32(r);
             cpu.regs[15] = cpu.regs[14];
         }
 
@@ -262,7 +262,7 @@ namespace Arm7
 
         void hle_arc4random(CPU cpu)
         {
-            cpu.regs[0] = bitops.uint32(4);
+            cpu.regs[0] = BitOps.uint32(4);
             cpu.regs[15] = cpu.regs[14];
         }
 
@@ -275,7 +275,7 @@ namespace Arm7
                 r = 0;
             else
                 r = a % b;
-            cpu.regs[0] = bitops.uint32(r);
+            cpu.regs[0] = BitOps.uint32(r);
             cpu.regs[15] = cpu.regs[14];
         }
 
@@ -284,7 +284,7 @@ namespace Arm7
             long a = cpu.regs[0];
             long b = cpu.regs[1];
             long r = a - (a / b) * b;
-            cpu.regs[0] = bitops.uint32(r);
+            cpu.regs[0] = BitOps.uint32(r);
             cpu.regs[15] = cpu.regs[14];
         }
 
@@ -293,7 +293,7 @@ namespace Arm7
             long a = cpu.regs[0];
             long b = cpu.regs[1];
             long r = a / b;
-            cpu.regs[0] = bitops.uint32(r);
+            cpu.regs[0] = BitOps.uint32(r);
             cpu.regs[15] = cpu.regs[14];
         }
 

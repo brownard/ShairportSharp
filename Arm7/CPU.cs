@@ -644,7 +644,7 @@ namespace Arm7
                     for (int i = 0; i < 4; i++)
                     {
                         phyaddr = mmu.TranslateToPhysicalAddress(addr + i);
-                        val = bitops.set_bits(val, 8 * i + 7, 8 * i, memctlr.ld_byte(phyaddr));
+                        val = BitOps.set_bits(val, 8 * i + 7, 8 * i, memctlr.ld_byte(phyaddr));
                     }
                     return val;
                 }
@@ -670,7 +670,7 @@ namespace Arm7
                     for (var i = 0; i < 4; i++)
                     {
                         phyaddr = mmu.TranslateToPhysicalAddress(addr + i);
-                        memctlr.st_byte(phyaddr, (int)bitops.get_bits(word, 8 * i + 7, 8 * i));
+                        memctlr.st_byte(phyaddr, (int)BitOps.get_bits(word, 8 * i + 7, 8 * i));
                     }
                 }
             }
@@ -696,7 +696,7 @@ namespace Arm7
                     for (int i = 0; i < 2; i++)
                     {
                         phyaddr = mmu.TranslateToPhysicalAddress(addr + i);
-                        val = bitops.set_bits(val, 8 * i + 7, 8 * i, memctlr.ld_byte(phyaddr));
+                        val = BitOps.set_bits(val, 8 * i + 7, 8 * i, memctlr.ld_byte(phyaddr));
                     }
                     return val;
                 }
@@ -722,7 +722,7 @@ namespace Arm7
                     for (int i = 0; i < 2; i++)
                     {
                         phyaddr = mmu.TranslateToPhysicalAddress(addr + i);
-                        memctlr.st_byte(phyaddr, (int)bitops.get_bits(hw, 8 * i + 7, 8 * i));
+                        memctlr.st_byte(phyaddr, (int)BitOps.get_bits(hw, 8 * i + 7, 8 * i));
                     }
                 }
             }
@@ -838,17 +838,17 @@ namespace Arm7
                     case 1: // LSR
                         //assert(amount > 0, "lsr: amount > 0");
                         this.carry_out = (amount == 32) ? 0 : ((value >> (amount - 1)) & 1);
-                        result = bitops.lsr(value, amount);
+                        result = BitOps.lsr(value, amount);
                         //assert(result >= 0, "lsr: result = " + result.toString());
                         return result;
                     case 2: // ASR
                         //assert(amount > 0, "asr: amount > 0");
                         this.carry_out = (amount == 32) ? 0 : ((value >> (amount - 1)) & 1);
-                        result = bitops.asr(value, amount);
+                        result = BitOps.asr(value, amount);
                         return result;
                     case 3: // RRX
                         this.carry_out = value & 1;
-                        result = bitops.set_bit(value >> 1, 31, carry_in);
+                        result = BitOps.set_bit(value >> 1, 31, carry_in);
                         //assert(result >= 0, "rrx");
                         return result;
                     case 4: // ROR
@@ -862,7 +862,7 @@ namespace Arm7
         long ror_c(long value, int amount, bool write)
         {
             //assert(amount !== 0);
-            long result = bitops.ror(value, amount);
+            long result = BitOps.ror(value, amount);
             //assert(result >= 0, "ror");
             if (write)
                 this.carry_out = result >> 31;
@@ -904,13 +904,13 @@ namespace Arm7
         long add_with_carry(long x, long y, int carry_in)
         {
             var unsigned_sum = x + y + carry_in;
-            var signed_sum = bitops.sint32(x) + bitops.sint32(y) + carry_in;
+            var signed_sum = BitOps.sint32(x) + BitOps.sint32(y) + carry_in;
             //var result = bitops.get_bits64(unsigned_sum, 31, 0);
             var result = unsigned_sum & 0xffffffff;
             //if (result < 0)
             //result += 0x100000000;
             this.carry_out = (result == unsigned_sum) ? 0 : 1;
-            this.overflow = (bitops.sint32(result) == signed_sum) ? 0 : 1;
+            this.overflow = (BitOps.sint32(result) == signed_sum) ? 0 : 1;
             return result;
         }
 
@@ -922,7 +922,7 @@ namespace Arm7
 
         string cond_postfix(int inst)
         {
-            long cond = bitops.get_bits(inst, 31, 28);
+            long cond = BitOps.get_bits(inst, 31, 28);
             switch (cond)
             {
                 case 0: return "eq";
@@ -1077,7 +1077,7 @@ namespace Arm7
             var imm32 = this.expand_imm_c(imm12, this.cpsr.c);
 
             var valn = this.reg(n);
-            var ret = bitops.and(valn, imm32);
+            var ret = BitOps.and(valn, imm32);
             if (d == 15)
             {
                 this.branch_to = ret;
@@ -1123,7 +1123,7 @@ namespace Arm7
 
             var valn = this.reg(n);
             var imm32 = this.expand_imm_c(imm12, this.cpsr.c);
-            var ret = bitops.and(valn, bitops.not(imm32));
+            var ret = BitOps.and(valn, BitOps.not(imm32));
             if (d == 15)
             {
                 this.branch_to = ret;
@@ -1165,7 +1165,7 @@ namespace Arm7
                 imm32 = imm26 | 0xfc000000;
             this.regs[14] = this.get_pc() - 4;
             // BranchWritePC(Align(PC,4) + imm32);
-            this.branch_to = this.align(bitops.lsl((this.get_pc()) >> 2, 2), 4) + imm32;
+            this.branch_to = this.align(BitOps.lsl((this.get_pc()) >> 2, 2), 4) + imm32;
             if (this.branch_to >= 0x100000000)
                 this.branch_to -= 0x100000000;
             //this.print_inst_branch(addr, inst, "bl", this.branch_to);
@@ -1191,7 +1191,7 @@ namespace Arm7
             var imm12 = inst & 0xfff;
             var valn = this.reg(n);
             var imm32 = this.expand_imm(imm12);
-            var ret = this.add_with_carry(valn, bitops.not(imm32), 1);
+            var ret = this.add_with_carry(valn, BitOps.not(imm32), 1);
             this.set_apsr(ret, true);
             //this.print_inst_imm(addr, inst, "cmp", null, null, n, imm32);
         }
@@ -1206,7 +1206,7 @@ namespace Arm7
             var imm32 = this.expand_imm_c(imm12, this.cpsr.c);
 
             var valn = this.reg(n);
-            var ret = bitops.xor(valn, imm32);
+            var ret = BitOps.xor(valn, imm32);
             if (d == 15)
             {
                 this.branch_to = ret;
@@ -1329,7 +1329,7 @@ namespace Arm7
             var data = this.ld_halfword(address);
             if (is_wback)
                 this.regs[n] = offset_addr;
-            this.regs[t] = bitops.sign_extend(data, 16, 32);
+            this.regs[t] = BitOps.sign_extend(data, 16, 32);
             //this.print_inst_imm(addr, inst, "ldrsh", null, t, n, imm32, true, is_wback, is_add, is_index);
         }
 
@@ -1353,7 +1353,7 @@ namespace Arm7
             var data = this.ld_halfword(address);
             if (is_wback)
                 this.regs[n] = offset_addr;
-            this.regs[t] = bitops.sign_extend(data, 16, 32);
+            this.regs[t] = BitOps.sign_extend(data, 16, 32);
             //this.print_inst_reg(addr, inst, "ldrsh", null, t, n, m, this.SRType_LSL, 0);
         }
 
@@ -1455,7 +1455,7 @@ namespace Arm7
             var imm12 = inst & 0xfff;
             var imm16 = (imm4 << 12) + imm12;
 
-            this.regs[d] = bitops.set_bits(this.reg(d), 16, 31, imm16);
+            this.regs[d] = BitOps.set_bits(this.reg(d), 16, 31, imm16);
             //this.print_inst_imm(addr, inst, "movw", false, d, null, imm32);
         }
 
@@ -1488,7 +1488,7 @@ namespace Arm7
             var imm12 = inst & 0xfff;
             var imm32 = this.expand_imm_c(imm12, this.cpsr.c);
 
-            var ret = bitops.not(imm32);
+            var ret = BitOps.not(imm32);
             if (d == 15)
             {
                 this.branch_to = ret;
@@ -1512,7 +1512,7 @@ namespace Arm7
 
             var valn = this.reg(n);
             var imm32 = this.expand_imm_c(imm12, this.cpsr.c);
-            var ret = bitops.or(valn, imm32);
+            var ret = BitOps.or(valn, imm32);
             if (d == 15)
             {
                 this.branch_to = ret;
@@ -1558,7 +1558,7 @@ namespace Arm7
             var imm12 = inst & 0xfff;
             var imm32 = this.expand_imm(imm12);
             var valn = this.reg(n);
-            var ret = this.add_with_carry(bitops.not(valn), imm32, 1);
+            var ret = this.add_with_carry(BitOps.not(valn), imm32, 1);
             if (d == 15)
             {
                 this.branch_to = ret;
@@ -1582,7 +1582,7 @@ namespace Arm7
             var imm32 = this.expand_imm(imm12);
 
             var valn = this.reg(n);
-            var ret = this.add_with_carry(bitops.not(valn), imm32, this.cpsr.c);
+            var ret = this.add_with_carry(BitOps.not(valn), imm32, this.cpsr.c);
             if (d == 15)
             {
                 this.branch_to = ret;
@@ -1653,7 +1653,7 @@ namespace Arm7
             var imm32 = this.expand_imm(imm12);
 
             var valn = this.reg(n);
-            var ret = this.add_with_carry(valn, bitops.not(imm32), this.cpsr.c);
+            var ret = this.add_with_carry(valn, BitOps.not(imm32), this.cpsr.c);
             if (d == 15)
             {
                 this.branch_to = ret;
@@ -1731,7 +1731,7 @@ namespace Arm7
             var imm12 = inst & 0xfff;
             var imm32 = this.expand_imm(imm12);
 
-            var ret = this.add_with_carry(this.reg(n), bitops.not(imm32), 1);
+            var ret = this.add_with_carry(this.reg(n), BitOps.not(imm32), 1);
             if (d == 15)
             {
                 this.branch_to = ret;
@@ -1753,7 +1753,7 @@ namespace Arm7
 
             var valn = this.reg(n);
             var imm32 = this.expand_imm_c(imm12, this.cpsr.c);
-            var ret = bitops.xor(valn, imm32);
+            var ret = BitOps.xor(valn, imm32);
             this.set_apsr(ret, false);
             //this.print_inst_imm(addr, inst, "teq", null, null, n, imm32);
         }
@@ -1766,7 +1766,7 @@ namespace Arm7
 
             var valn = this.reg(n);
             var imm32 = this.expand_imm_c(imm12, this.cpsr.c);
-            var ret = bitops.and(valn, imm32);
+            var ret = BitOps.and(valn, imm32);
             this.set_apsr(ret, false);
             //this.print_inst_imm(addr, inst, "tst", null, null, n, imm32);
         }
@@ -1858,7 +1858,7 @@ namespace Arm7
             var valm = this.reg(m);
             this.decode_imm_shift(type, imm5);
             var shifted = this.shift_c(valm, this.shift_t, this.shift_n, this.cpsr.c);
-            var ret = bitops.and(valn, shifted);
+            var ret = BitOps.and(valn, shifted);
             if (d == 15)
             {
                 this.branch_to = ret;
@@ -1880,7 +1880,7 @@ namespace Arm7
             var m = (inst >> 8) & 0xf;
             var n = inst & 0xf;
 
-            var shift_n = bitops.get_bits(this.reg(m), 7, 0);
+            var shift_n = BitOps.get_bits(this.reg(m), 7, 0);
             var ret = this.shift_c(this.reg(n), SRType_ASR, (int)shift_n, this.cpsr.c);
             if (d == 15)
             {
@@ -1909,7 +1909,7 @@ namespace Arm7
             var valm = this.reg(m);
             this.decode_imm_shift(type, imm5);
             var shifted = this.shift_c(valm, this.shift_t, this.shift_n, this.cpsr.c);
-            var ret = bitops.and(valn, bitops.not(shifted));
+            var ret = BitOps.and(valn, BitOps.not(shifted));
             if (d == 15)
             {
                 this.branch_to = ret;
@@ -1931,7 +1931,7 @@ namespace Arm7
             var lsbit = (inst >> 7) & 0x1f;
 
             if (msbit >= lsbit)
-                this.regs[d] = bitops.clear_bits(this.regs[d], (int)msbit, (int)lsbit);
+                this.regs[d] = BitOps.clear_bits(this.regs[d], (int)msbit, (int)lsbit);
             else
                 this.abort_unpredictable_instruction("BFC", inst, addr);
             //this.print_inst_ubfx(addr, inst, "bfc", d, null, msbit, lsbit);
@@ -1946,7 +1946,7 @@ namespace Arm7
             var n = inst & 0xf;
 
             if (msbit >= lsbit)
-                this.regs[d] = bitops.set_bits(this.regs[d], (int)msbit, (int)lsbit, bitops.get_bits(this.reg(n), (int)(msbit - lsbit), 0));
+                this.regs[d] = BitOps.set_bits(this.regs[d], (int)msbit, (int)lsbit, BitOps.get_bits(this.reg(n), (int)(msbit - lsbit), 0));
             else
                 this.abort_unpredictable_instruction("BFI", inst, addr);
             //this.print_inst_ubfx(addr, inst, "bfi", d, n, msbit, lsbit);
@@ -2001,7 +2001,7 @@ namespace Arm7
             var d = (inst >> 12) & 0xf;
             var m = inst & 0xf;
 
-            this.regs[d] = bitops.count_leading_zero_bits(this.reg(m));
+            this.regs[d] = BitOps.count_leading_zero_bits(this.reg(m));
             //this.print_inst_reg(addr, inst, "clz", null, d, null, m);
         }
 
@@ -2034,7 +2034,7 @@ namespace Arm7
             var valm = this.reg(m);
             this.decode_imm_shift(type, imm5);
             var shifted = this.shift(valm, this.shift_t, this.shift_n, this.cpsr.c);
-            var ret = this.add_with_carry(valn, bitops.not(shifted), 1);
+            var ret = this.add_with_carry(valn, BitOps.not(shifted), 1);
             this.set_apsr(ret, true);
             //this.print_inst_reg(addr, inst, "cmp", null, null, n, m, this.shift_t, this.shift_n);
         }
@@ -2053,7 +2053,7 @@ namespace Arm7
             var valm = this.reg(m);
             this.decode_imm_shift(type, imm5);
             var shifted = this.shift_c(valm, this.shift_t, this.shift_n, this.cpsr.c);
-            var ret = bitops.xor(valn, shifted);
+            var ret = BitOps.xor(valn, shifted);
             if (d == 15)
             {
                 this.branch_to = ret;
@@ -2087,7 +2087,7 @@ namespace Arm7
             var offset = this.shift(this.reg(m), this.shift_t, this.shift_n, this.cpsr.c);
             var offset_addr = (valn + (is_add ? offset : -offset)) & 0xffffffff;
             var address = is_index ? offset_addr : valn;
-            address = bitops.get_bits64(address, 31, 0); // XXX
+            address = BitOps.get_bits64(address, 31, 0); // XXX
             var data = this.ld_word(address);
             if (is_wback)
                 this.regs[n] = offset_addr;
@@ -2153,8 +2153,8 @@ namespace Arm7
         void ldrex(long inst, long addr)
         {
             //this.print_inst("LDREX", inst, addr);
-            var n = bitops.get_bits(inst, 19, 16);
-            var t = bitops.get_bits(inst, 15, 12);
+            var n = BitOps.get_bits(inst, 19, 16);
+            var t = BitOps.get_bits(inst, 15, 12);
 
             var imm32 = 0;
             var address = (this.reg(n) + imm32) & 0xffffffff;
@@ -2167,8 +2167,8 @@ namespace Arm7
         void ldrexd(long inst, long addr)
         {
             //this.print_inst("LDREXD", inst, addr);
-            var n = bitops.get_bits(inst, 19, 16);
-            var t = bitops.get_bits(inst, 15, 12);
+            var n = BitOps.get_bits(inst, 19, 16);
+            var t = BitOps.get_bits(inst, 15, 12);
             var t2 = t + 1;
 
             var address = this.reg(n);
@@ -2194,7 +2194,7 @@ namespace Arm7
             var offset = imm32;
             var offset_addr = (valn + (is_add ? offset : -offset)) & 0xffffffff;
             var address = valn;
-            address = bitops.get_bits64(address, 31, 0); // XXX
+            address = BitOps.get_bits64(address, 31, 0); // XXX
             var data = this.ld_word(address);
             if (t == 15)
                 this.branch_to = data;
@@ -2211,7 +2211,7 @@ namespace Arm7
             var m = (inst >> 8) & 0xf;
             var n = inst & 0xf;
 
-            var shift_n = bitops.get_bits(this.reg(m), 7, 0);
+            var shift_n = BitOps.get_bits(this.reg(m), 7, 0);
             var ret = this.shift_c(this.reg(n), SRType_LSL, (int)shift_n, this.cpsr.c);
             if (d == 15)
             {
@@ -2234,7 +2234,7 @@ namespace Arm7
             var m = (inst >> 8) & 0xf;
             var n = inst & 0xf;
 
-            var shift_n = bitops.get_bits(this.reg(m), 7, 0);
+            var shift_n = BitOps.get_bits(this.reg(m), 7, 0);
             var ret = this.shift_c(this.reg(n), SRType_LSR, (int)shift_n, this.cpsr.c);
             if (d == 15)
             {
@@ -2335,16 +2335,16 @@ namespace Arm7
             switch (opcode)
             {
                 case 0:
-                    ret = bitops.and(this.reg(n), operand2);
+                    ret = BitOps.and(this.reg(n), operand2);
                     break;
                 case 1:
-                    ret = bitops.xor(this.reg(n), operand2);
+                    ret = BitOps.xor(this.reg(n), operand2);
                     break;
                 case 2:
-                    ret = this.add_with_carry(this.reg(n), bitops.not(operand2), 1);
+                    ret = this.add_with_carry(this.reg(n), BitOps.not(operand2), 1);
                     break;
                 case 3:
-                    ret = this.add_with_carry(bitops.not(this.reg(n)), operand2, 1);
+                    ret = this.add_with_carry(BitOps.not(this.reg(n)), operand2, 1);
                     break;
                 case 4:
                     ret = this.add_with_carry(this.reg(n), operand2, 0);
@@ -2353,22 +2353,22 @@ namespace Arm7
                     ret = this.add_with_carry(this.reg(n), operand2, this.cpsr.c);
                     break;
                 case 6:
-                    ret = this.add_with_carry(this.reg(n), bitops.not(operand2), this.cpsr.c);
+                    ret = this.add_with_carry(this.reg(n), BitOps.not(operand2), this.cpsr.c);
                     break;
                 case 7:
-                    ret = this.add_with_carry(bitops.not(this.reg(n)), operand2, this.cpsr.c);
+                    ret = this.add_with_carry(BitOps.not(this.reg(n)), operand2, this.cpsr.c);
                     break;
                 case 0xc:
-                    ret = bitops.or(this.reg(n), operand2);
+                    ret = BitOps.or(this.reg(n), operand2);
                     break;
                 case 0xd:
                     ret = operand2;
                     break;
                 case 0xe:
-                    ret = bitops.and(this.reg(n), bitops.not(operand2));
+                    ret = BitOps.and(this.reg(n), BitOps.not(operand2));
                     break;
                 case 0xf:
-                    ret = bitops.not(operand2);
+                    ret = BitOps.not(operand2);
                     break;
                 default:
                     throw new Exception("subs_pc_lr_a2: unknown opcode");
@@ -2459,7 +2459,7 @@ namespace Arm7
             else
             {
                 // CPSR AND '11111000 11111111 00000011 11011111'
-                this.regs[d] = bitops.and(this.psr_to_value(this.cpsr), 0xf8ff03df);
+                this.regs[d] = BitOps.and(this.psr_to_value(this.cpsr), 0xf8ff03df);
             }
             //this.print_inst_mrs(addr, inst, d);
         }
@@ -2522,7 +2522,7 @@ namespace Arm7
             var valm = this.reg(m);
             this.decode_imm_shift(type, imm5);
             var shifted = this.shift_c(valm, this.shift_t, this.shift_n, this.cpsr.c);
-            var ret = bitops.not(shifted);
+            var ret = BitOps.not(shifted);
             if (d == 15)
             {
                 this.branch_to = ret;
@@ -2550,7 +2550,7 @@ namespace Arm7
             var valm = this.reg(m);
             this.decode_imm_shift(type, imm5);
             var shifted = this.shift_c(valm, this.shift_t, this.shift_n, this.cpsr.c);
-            var ret = bitops.or(valn, shifted);
+            var ret = BitOps.or(valn, shifted);
             if (d == 15)
             {
                 this.branch_to = ret;
@@ -2567,15 +2567,15 @@ namespace Arm7
         void rev(long inst, long addr)
         {
             //this.print_inst("REV", inst, addr);
-            var d = bitops.get_bits(inst, 15, 12);
-            var m = bitops.get_bits(inst, 3, 0);
+            var d = BitOps.get_bits(inst, 15, 12);
+            var m = BitOps.get_bits(inst, 3, 0);
 
             var valm = this.reg(m);
             long ret = 0;
-            ret = bitops.set_bits(ret, 31, 24, bitops.get_bits(valm, 7, 0));
-            ret = bitops.set_bits(ret, 23, 16, bitops.get_bits(valm, 15, 8));
-            ret = bitops.set_bits(ret, 15, 8, bitops.get_bits(valm, 23, 16));
-            ret = bitops.set_bits(ret, 7, 0, bitops.get_bits(valm, 31, 24));
+            ret = BitOps.set_bits(ret, 31, 24, BitOps.get_bits(valm, 7, 0));
+            ret = BitOps.set_bits(ret, 23, 16, BitOps.get_bits(valm, 15, 8));
+            ret = BitOps.set_bits(ret, 15, 8, BitOps.get_bits(valm, 23, 16));
+            ret = BitOps.set_bits(ret, 7, 0, BitOps.get_bits(valm, 31, 24));
             this.regs[d] = ret;
             //this.print_inst_reg(addr, inst, "rev", null, d, null, m);
         }
@@ -2583,15 +2583,15 @@ namespace Arm7
         void rev16(long inst, long addr)
         {
             //this.print_inst("REV16", inst, addr);
-            var d = bitops.get_bits(inst, 15, 12);
-            var m = bitops.get_bits(inst, 3, 0);
+            var d = BitOps.get_bits(inst, 15, 12);
+            var m = BitOps.get_bits(inst, 3, 0);
 
             var valm = this.reg(m);
             long ret = 0;
-            ret = bitops.set_bits(ret, 31, 24, bitops.get_bits(valm, 23, 16));
-            ret = bitops.set_bits(ret, 23, 16, bitops.get_bits(valm, 31, 24));
-            ret = bitops.set_bits(ret, 15, 8, bitops.get_bits(valm, 7, 0));
-            ret = bitops.set_bits(ret, 7, 0, bitops.get_bits(valm, 15, 8));
+            ret = BitOps.set_bits(ret, 31, 24, BitOps.get_bits(valm, 23, 16));
+            ret = BitOps.set_bits(ret, 23, 16, BitOps.get_bits(valm, 31, 24));
+            ret = BitOps.set_bits(ret, 15, 8, BitOps.get_bits(valm, 7, 0));
+            ret = BitOps.set_bits(ret, 7, 0, BitOps.get_bits(valm, 15, 8));
             this.regs[d] = ret;
             //this.print_inst_reg(addr, inst, "rev16", null, d, null, m);
         }
@@ -2610,7 +2610,7 @@ namespace Arm7
             var valm = this.reg(m);
             this.decode_imm_shift(type, imm5);
             var shifted = this.shift(valm, this.shift_t, this.shift_n, this.cpsr.c);
-            var ret = this.add_with_carry(bitops.not(valn), shifted, 1);
+            var ret = this.add_with_carry(BitOps.not(valn), shifted, 1);
             if (d == 15)
             {
                 this.branch_to = ret;
@@ -2638,7 +2638,7 @@ namespace Arm7
             var valm = this.reg(m);
             this.decode_imm_shift(type, imm5);
             var shifted = this.shift(valm, this.shift_t, this.shift_n, this.cpsr.c);
-            var ret = this.add_with_carry(valn, bitops.not(shifted), this.cpsr.c);
+            var ret = this.add_with_carry(valn, BitOps.not(shifted), this.cpsr.c);
             if (d == 15)
             {
                 this.branch_to = ret;
@@ -2662,7 +2662,7 @@ namespace Arm7
 
             var msbit = lsbit + widthminus1;
             if (msbit <= 31)
-                this.regs[d] = bitops.sign_extend(bitops.get_bits(this.reg(n), (int)msbit, (int)lsbit), (int)(msbit - lsbit + 1), 32);
+                this.regs[d] = BitOps.sign_extend(BitOps.get_bits(this.reg(n), (int)msbit, (int)lsbit), (int)(msbit - lsbit + 1), 32);
             else
                 this.abort_unpredictable_instruction("SBFX", inst, addr);
             //this.print_inst_ubfx(addr, inst, "sbfx", d, n, lsbit, widthminus1 + 1);
@@ -2707,7 +2707,7 @@ namespace Arm7
             //this.regs[dhi] = ret.high;
             //this.regs[dlo] = ret.low;
 
-            var ret = bitops.sint32(this.reg(n)) * bitops.sint32(this.reg(m));
+            var ret = BitOps.sint32(this.reg(n)) * BitOps.sint32(this.reg(m));
             ret = ret % (long)Math.Pow(2, 64);
             this.regs[dhi] = ret >> 32;
             this.regs[dlo] = ret & 0xffffffff;
@@ -2739,7 +2739,7 @@ namespace Arm7
             if (B != 0)
             {
                 var data = this.ld_byte(address);
-                this.st_byte(address, bitops.get_bits(valm, 7, 0));
+                this.st_byte(address, BitOps.get_bits(valm, 7, 0));
                 this.regs[Rd] = data;
             }
             else
@@ -2798,7 +2798,7 @@ namespace Arm7
             var valm = this.reg(m);
             this.decode_imm_shift(type, imm5);
             var shifted = this.shift(valm, this.shift_t, this.shift_n, this.cpsr.c);
-            var ret = this.add_with_carry(valn, bitops.not(shifted), 1);
+            var ret = this.add_with_carry(valn, BitOps.not(shifted), 1);
             if (d == 15)
             {
                 this.branch_to = ret;
@@ -2820,7 +2820,7 @@ namespace Arm7
             var rotation = ((inst >> 10) & 3) << 3;
 
             var rotated = this.ror(this.reg(m), (int)rotation);
-            this.regs[d] = bitops.sign_extend(bitops.get_bits64(rotated, 7, 0), 8, 32);
+            this.regs[d] = BitOps.sign_extend(BitOps.get_bits64(rotated, 7, 0), 8, 32);
             //this.print_inst_reg(addr, inst, "sxtb", null, d, null, m);
         }
 
@@ -2832,7 +2832,7 @@ namespace Arm7
             var rotation = ((inst >> 10) & 3) << 3;
 
             var rotated = this.ror(this.reg(m), (int)rotation);
-            this.regs[d] = bitops.sign_extend(bitops.get_bits64(rotated, 15, 0), 16, 32);
+            this.regs[d] = BitOps.sign_extend(BitOps.get_bits64(rotated, 15, 0), 16, 32);
             //this.print_inst_reg(addr, inst, "sxth", null, d, null, m);
         }
 
@@ -2862,7 +2862,7 @@ namespace Arm7
             var valm = this.reg(m);
             this.decode_imm_shift(type, imm5);
             var shifted = this.shift(valm, this.shift_t, this.shift_n, this.cpsr.c);
-            var ret = bitops.xor(valn, shifted);
+            var ret = BitOps.xor(valn, shifted);
             this.set_apsr(ret, false);
             //this.print_inst_reg(addr, inst, "teq", null, null, n, m, this.shift_t, this.shift_n);
         }
@@ -2879,7 +2879,7 @@ namespace Arm7
             var valn = this.reg(n);
             var valm = this.reg(m);
             var shifted = this.shift_c(valm, this.shift_t, this.shift_n, this.cpsr.c);
-            var ret = bitops.and(valn, shifted);
+            var ret = BitOps.and(valn, shifted);
             this.set_apsr(ret, false);
             //this.print_inst_reg(addr, inst, "tst", null, null, n, m, this.shift_t, this.shift_n);
         }
@@ -2887,14 +2887,14 @@ namespace Arm7
         void ubfx(long inst, long addr)
         {
             //this.print_inst("UBFX", inst, addr);
-            var widthminus1 = bitops.get_bits(inst, 20, 16);
-            var d = bitops.get_bits(inst, 15, 12);
-            var lsbit = bitops.get_bits(inst, 11, 7);
-            var n = bitops.get_bits(inst, 3, 0);
+            var widthminus1 = BitOps.get_bits(inst, 20, 16);
+            var d = BitOps.get_bits(inst, 15, 12);
+            var lsbit = BitOps.get_bits(inst, 11, 7);
+            var n = BitOps.get_bits(inst, 3, 0);
 
             var msbit = lsbit + widthminus1;
             if (msbit <= 31)
-                this.regs[d] = bitops.get_bits(this.reg(n), (int)msbit, (int)lsbit);
+                this.regs[d] = BitOps.get_bits(this.reg(n), (int)msbit, (int)lsbit);
             else
                 this.abort_unpredictable_instruction("UBFX", inst, addr);
             //this.print_inst_ubfx(addr, inst, "ubfx", d, n, lsbit, widthminus1 + 1);
@@ -2928,10 +2928,10 @@ namespace Arm7
         {
             //this.print_inst("UMULL", inst, addr);
             var s = inst & 0x00100000;
-            var dhi = bitops.get_bits(inst, 19, 16);
-            var dlo = bitops.get_bits(inst, 15, 12);
-            var m = bitops.get_bits(inst, 11, 8);
-            var n = bitops.get_bits(inst, 3, 0);
+            var dhi = BitOps.get_bits(inst, 19, 16);
+            var dlo = BitOps.get_bits(inst, 15, 12);
+            var m = BitOps.get_bits(inst, 11, 8);
+            var n = BitOps.get_bits(inst, 3, 0);
 
             //var n64_n = new Number64(0, this.reg(n));
             //var n64_m = new Number64(0, this.reg(m));
@@ -2972,21 +2972,21 @@ namespace Arm7
                 ret = i;
                 this.saturated = false;
             }
-            return bitops.get_bits64(ret, 31, 0);
+            return BitOps.get_bits64(ret, 31, 0);
         }
 
         void usat(long inst, long addr)
         {
             //this.print_inst("USAT", inst, addr);
-            var saturate_to = bitops.get_bits(inst, 20, 16);
-            var d = bitops.get_bits(inst, 15, 12);
-            var imm5 = bitops.get_bits(inst, 11, 7);
-            var sh = bitops.get_bit(inst, 6);
-            var n = bitops.get_bits(inst, 3, 0);
+            var saturate_to = BitOps.get_bits(inst, 20, 16);
+            var d = BitOps.get_bits(inst, 15, 12);
+            var imm5 = BitOps.get_bits(inst, 11, 7);
+            var sh = BitOps.get_bit(inst, 6);
+            var n = BitOps.get_bits(inst, 3, 0);
             this.decode_imm_shift(sh << 1, imm5);
 
             var operand = this.shift(this.reg(n), this.shift_t, this.shift_n, this.cpsr.c);
-            var ret = this.unsigned_satq(bitops.sint32(operand), saturate_to);
+            var ret = this.unsigned_satq(BitOps.sint32(operand), saturate_to);
             this.regs[n] = ret;
             if (this.saturated)
                 this.cpsr.q = 1;
@@ -3002,7 +3002,7 @@ namespace Arm7
             var m = inst & 0xf;
 
             var rotated = this.ror(this.reg(m), (int)rotation);
-            this.regs[d] = this.reg(n) + bitops.get_bits64(rotated, 7, 0);
+            this.regs[d] = this.reg(n) + BitOps.get_bits64(rotated, 7, 0);
             //this.print_inst_uxtab(addr, inst, "uxtab", d, n, m, rotation);
         }
 
@@ -3015,7 +3015,7 @@ namespace Arm7
             var rotation = ((inst >> 10) & 3) << 3;
 
             var rotated = this.ror(this.reg(m), (int)rotation);
-            this.regs[d] = this.reg(n) + bitops.get_bits64(rotated, 15, 0);
+            this.regs[d] = this.reg(n) + BitOps.get_bits64(rotated, 15, 0);
             //this.print_inst_uxtab(addr, inst, "uxtah", d, null, m, rotation);
         }
 
@@ -3027,7 +3027,7 @@ namespace Arm7
             var rotation = ((inst >> 10) & 3) << 3;
 
             var rotated = this.ror(this.reg(m), (int)rotation);
-            this.regs[d] = bitops.get_bits64(rotated, 7, 0);
+            this.regs[d] = BitOps.get_bits64(rotated, 7, 0);
             //this.print_inst_uxtab(addr, inst, "uxtb", d, null, m, rotation);
         }
 
@@ -3039,7 +3039,7 @@ namespace Arm7
             var rotation = ((inst >> 10) & 3) << 3;
 
             var rotated = this.ror(this.reg(m), (int)rotation);
-            this.regs[d] = bitops.get_bits64(rotated, 15, 0);
+            this.regs[d] = BitOps.get_bits64(rotated, 15, 0);
             //this.print_inst_uxtab(addr, inst, "uxth", d, null, m, rotation);
         }
 
@@ -3058,7 +3058,7 @@ namespace Arm7
             var m = inst & 0xf;
 
             var shift_t = this.decode_reg_shift((int)type);
-            var shift_n = bitops.get_bits(this.reg(s), 7, 0);
+            var shift_n = BitOps.get_bits(this.reg(s), 7, 0);
             var shifted = this.shift(this.reg(m), shift_t, (int)shift_n, this.cpsr.c);
             var ret = this.add_with_carry(this.reg(n), shifted, 0);
             if (d == 15)
@@ -3085,9 +3085,9 @@ namespace Arm7
             var m = inst & 0xf;
 
             var shift_t = this.decode_reg_shift((int)type);
-            var shift_n = bitops.get_bits(this.reg(s), 7, 0);
+            var shift_n = BitOps.get_bits(this.reg(s), 7, 0);
             var shifted = this.shift_c(this.reg(m), shift_t, (int)shift_n, this.cpsr.c);
-            var ret = bitops.and(this.reg(n), shifted);
+            var ret = BitOps.and(this.reg(n), shifted);
             this.regs[d] = ret;
             if (sf != 0)
                 this.set_apsr(ret, false);
@@ -3105,9 +3105,9 @@ namespace Arm7
             var m = inst & 0xf;
 
             var shift_t = this.decode_reg_shift((int)type);
-            var shift_n = bitops.get_bits(this.reg(s), 7, 0);
+            var shift_n = BitOps.get_bits(this.reg(s), 7, 0);
             var shifted = this.shift_c(this.reg(m), shift_t, (int)shift_n, this.cpsr.c);
-            var ret = bitops.and(this.reg(n), bitops.not(shifted));
+            var ret = BitOps.and(this.reg(n), BitOps.not(shifted));
             if (d == 15)
             {
                 this.branch_to = ret;
@@ -3130,9 +3130,9 @@ namespace Arm7
             var m = inst & 0xf;
 
             var shift_t = this.decode_reg_shift((int)type);
-            var shift_n = bitops.get_bits(this.reg(s), 7, 0);
+            var shift_n = BitOps.get_bits(this.reg(s), 7, 0);
             var shifted = this.shift(this.reg(m), shift_t, (int)shift_n, this.cpsr.c);
-            var ret = this.add_with_carry(this.reg(n), bitops.not(shifted), 1);
+            var ret = this.add_with_carry(this.reg(n), BitOps.not(shifted), 1);
             this.set_apsr(ret, true);
             //this.print_inst_rsr(addr, inst, "cmp", null, null, n, m, shift_t, s);
         }
@@ -3148,9 +3148,9 @@ namespace Arm7
             var m = inst & 0xf;
 
             var shift_t = this.decode_reg_shift((int)type);
-            var shift_n = bitops.get_bits(this.reg(s), 7, 0);
+            var shift_n = BitOps.get_bits(this.reg(s), 7, 0);
             var shifted = this.shift_c(this.reg(m), shift_t, (int)shift_n, this.cpsr.c);
-            var ret = bitops.xor(this.reg(n), shifted);
+            var ret = BitOps.xor(this.reg(n), shifted);
             this.regs[d] = ret;
             if (sf != 0)
                 this.set_apsr(ret, false);
@@ -3167,9 +3167,9 @@ namespace Arm7
             var m = inst & 0xf;
 
             var shift_t = this.decode_reg_shift((int)type);
-            var shift_n = bitops.get_bits(this.reg(s), 7, 0);
+            var shift_n = BitOps.get_bits(this.reg(s), 7, 0);
             var shifted = this.shift_c(this.reg(m), shift_t, (int)shift_n, this.cpsr.c);
-            var ret = bitops.not(shifted);
+            var ret = BitOps.not(shifted);
             this.regs[d] = ret;
             if (sf != 0)
                 this.set_apsr(ret, false);
@@ -3187,9 +3187,9 @@ namespace Arm7
             var m = inst & 0xf;
 
             var shift_t = this.decode_reg_shift((int)type);
-            var shift_n = bitops.get_bits(this.reg(s), 7, 0);
+            var shift_n = BitOps.get_bits(this.reg(s), 7, 0);
             var shifted = this.shift_c(this.reg(m), shift_t, (int)shift_n, this.cpsr.c);
-            var ret = bitops.or(this.reg(n), shifted);
+            var ret = BitOps.or(this.reg(n), shifted);
             this.regs[d] = ret;
             if (sf != 0)
                 this.set_apsr(ret, false);
@@ -3207,9 +3207,9 @@ namespace Arm7
             var m = inst & 0xf;
 
             var shift_t = this.decode_reg_shift((int)type);
-            var shift_n = bitops.get_bits(this.reg(s), 7, 0);
+            var shift_n = BitOps.get_bits(this.reg(s), 7, 0);
             var shifted = this.shift(this.reg(m), shift_t, (int)shift_n, this.cpsr.c);
-            var ret = this.add_with_carry(bitops.not(this.reg(n)), shifted, 1);
+            var ret = this.add_with_carry(BitOps.not(this.reg(n)), shifted, 1);
             if (d == 15)
             {
                 this.branch_to = ret;
@@ -3234,9 +3234,9 @@ namespace Arm7
             var m = inst & 0xf;
 
             var shift_t = this.decode_reg_shift((int)type);
-            var shift_n = bitops.get_bits(this.reg(s), 7, 0);
+            var shift_n = BitOps.get_bits(this.reg(s), 7, 0);
             var shifted = this.shift(this.reg(m), shift_t, (int)shift_n, this.cpsr.c);
-            var ret = this.add_with_carry(this.reg(n), bitops.not(shifted), this.cpsr.c);
+            var ret = this.add_with_carry(this.reg(n), BitOps.not(shifted), this.cpsr.c);
             if (d == 15)
             {
                 this.branch_to = ret;
@@ -3261,9 +3261,9 @@ namespace Arm7
             var m = inst & 0xf;
 
             var shift_t = this.decode_reg_shift((int)type);
-            var shift_n = bitops.get_bits(this.reg(s), 7, 0);
+            var shift_n = BitOps.get_bits(this.reg(s), 7, 0);
             var shifted = this.shift(this.reg(m), shift_t, (int)shift_n, this.cpsr.c);
-            var ret = this.add_with_carry(this.reg(n), bitops.not(shifted), 1);
+            var ret = this.add_with_carry(this.reg(n), BitOps.not(shifted), 1);
             if (d == 15)
             {
                 this.branch_to = ret;
@@ -3286,9 +3286,9 @@ namespace Arm7
             var m = inst & 0xf;
 
             var shift_t = this.decode_reg_shift((int)type);
-            var shift_n = bitops.get_bits(this.reg(s), 7, 0);
+            var shift_n = BitOps.get_bits(this.reg(s), 7, 0);
             var shifted = this.shift_c(this.reg(m), shift_t, (int)shift_n, this.cpsr.c);
-            var ret = bitops.and(this.reg(n), shifted);
+            var ret = BitOps.and(this.reg(n), shifted);
             this.set_apsr(ret, false);
             //this.print_inst_rsr(addr, inst, "tst", null, null, n, m, shift_t, s);
         }
@@ -3367,7 +3367,7 @@ namespace Arm7
             var valn = this.reg(n);
             var offset_addr = valn + (is_add ? imm32 : -imm32);
             var address = is_index ? offset_addr : valn;
-            this.regs[t] = bitops.sign_extend(this.ld_byte(address), 8, 32);
+            this.regs[t] = BitOps.sign_extend(this.ld_byte(address), 8, 32);
             if (is_wback)
                 this.regs[n] = offset_addr;
             //this.print_inst_reg(addr, inst, "ldrsb", null, t, n, m, null, null, true, is_wback, is_add);
@@ -3391,7 +3391,7 @@ namespace Arm7
             var valn = this.reg(n);
             var offset_addr = valn + (is_add ? offset : -offset);
             var address = is_index ? offset_addr : valn;
-            this.regs[t] = bitops.sign_extend(this.ld_byte(address), 8, 32);
+            this.regs[t] = BitOps.sign_extend(this.ld_byte(address), 8, 32);
             if (is_wback)
                 this.regs[n] = offset_addr;
             //this.print_inst_reg(addr, inst, "ldrsb", null, t, n, m, null, null, true, is_wback, is_add);
@@ -3418,7 +3418,7 @@ namespace Arm7
             var offset = this.shift(this.reg(m), this.shift_t, this.shift_n, this.cpsr.c);
             var offset_addr = valn + (is_add ? offset : -offset);
             var address = is_index ? offset_addr : valn;
-            address = bitops.get_bits64(address, 31, 0); // XXX
+            address = BitOps.get_bits64(address, 31, 0); // XXX
             var data = this.reg(t);
             this.st_word(address, data);
             if (is_wback)
@@ -3438,7 +3438,7 @@ namespace Arm7
             var valn = this.reg(n);
             var offset = imm32;
             var offset_addr = valn + (is_add ? offset : -offset);
-            this.st_byte(valn, bitops.get_bits(this.reg(t), 7, 0));
+            this.st_byte(valn, BitOps.get_bits(this.reg(t), 7, 0));
             this.regs[n] = offset_addr;
             //this.print_inst_reg(addr, inst, "strbt", null, t, n, m, this.shift_t, this.shift_n, true, true);
         }
@@ -3458,7 +3458,7 @@ namespace Arm7
             var valn = this.reg(n);
             var offset = this.shift(this.reg(m), this.shift_t, this.shift_n, this.cpsr.c);
             var offset_addr = valn + (is_add ? offset : -offset);
-            this.st_byte(valn, bitops.get_bits(this.reg(t), 7, 0));
+            this.st_byte(valn, BitOps.get_bits(this.reg(t), 7, 0));
             this.regs[n] = offset_addr;
             //this.print_inst_reg(addr, inst, "strbt", null, t, n, m, this.shift_t, this.shift_n, true, true);
         }
@@ -3483,7 +3483,7 @@ namespace Arm7
             var offset = this.shift(this.reg(m), this.shift_t, this.shift_n, this.cpsr.c);
             var offset_addr = (valn + (is_add ? offset : -offset)) & 0xffffffff;
             var address = is_index ? offset_addr : valn;
-            this.st_byte(address, bitops.get_bits(this.reg(t), 7, 0));
+            this.st_byte(address, BitOps.get_bits(this.reg(t), 7, 0));
             if (is_wback)
                 this.regs[n] = offset_addr;
             //this.print_inst_reg(addr, inst, "strb", null, t, n, m, this.shift_t, this.shift_n, true, is_wback);
@@ -3558,7 +3558,7 @@ namespace Arm7
             var valn = this.reg(n);
             var offset_addr = valn + (is_add ? imm32 : -imm32);
             var address = is_index ? offset_addr : valn;
-            this.st_halfword(address, bitops.get_bits(this.reg(t), 15, 0));
+            this.st_halfword(address, BitOps.get_bits(this.reg(t), 15, 0));
             if (is_wback)
                 this.regs[n] = offset_addr;
             //this.print_inst_imm(addr, inst, "strh", null, t, n, imm32, true, is_wback, is_add);
@@ -3581,7 +3581,7 @@ namespace Arm7
             var offset = this.shift(this.reg(m), SRType_LSL, 0, this.cpsr.c);
             var offset_addr = valn + (is_add ? offset : -offset);
             var address = is_index ? offset_addr : valn;
-            this.st_halfword(address, bitops.get_bits(this.reg(t), 15, 0));
+            this.st_halfword(address, BitOps.get_bits(this.reg(t), 15, 0));
             if (is_wback)
                 this.regs[n] = offset_addr;
             //this.print_inst_reg(addr, inst, "strh", null, t, n, m, this.SRType_LSL, 0, true, is_wback, is_add);
@@ -3593,7 +3593,7 @@ namespace Arm7
             var w = (inst >> 21) & 1;
             var n = (inst >> 16) & 0xf;
             var register_list = inst & 0xffff;
-            var n_registers = bitops.bit_count(register_list, 16);
+            var n_registers = BitOps.bit_count(register_list, 16);
             //var is_pop = false;
             //if (w != 0 && n == 13 && n_registers >= 2)
             //{
@@ -3636,7 +3636,7 @@ namespace Arm7
             var w = (inst >> 21) & 1;
             var n = (inst >> 16) & 0xf;
             var register_list = inst & 0x7fff;
-            var n_registers = bitops.bit_count(register_list, 15);
+            var n_registers = BitOps.bit_count(register_list, 15);
             var is_wback = w == 1;
             var is_increment = u == 1;
             var is_wordhigher = p == u;
@@ -3676,7 +3676,7 @@ namespace Arm7
             var u = (inst >> 23) & 1;
             var n = (inst >> 16) & 0xf;
             var register_list = inst & 0x7fff;
-            var n_registers = bitops.bit_count(register_list, 15);
+            var n_registers = BitOps.bit_count(register_list, 15);
             var is_increment = u == 1;
             var is_wordhigher = p == u;
 
@@ -3719,7 +3719,7 @@ namespace Arm7
             var w = (inst >> 21) & 1;
             var n = (inst >> 16) & 0xf;
             var register_list = inst & 0xffff;
-            var n_registers = bitops.bit_count(register_list, 16);
+            var n_registers = BitOps.bit_count(register_list, 16);
 
             var address = this.reg(n) - 4 * n_registers + 4;
             //var reglist = [];
@@ -3749,7 +3749,7 @@ namespace Arm7
             var w = (inst >> 21) & 1;
             var n = (inst >> 16) & 0xf;
             var register_list = inst & 0xffff;
-            var n_registers = bitops.bit_count(register_list, 16);
+            var n_registers = BitOps.bit_count(register_list, 16);
 
             var address = this.reg(n) - 4 * n_registers;
             //var reglist = [];
@@ -3779,7 +3779,7 @@ namespace Arm7
             var w = (inst >> 21) & 1;
             var n = (inst >> 16) & 0xf;
             var register_list = inst & 0xffff;
-            var n_registers = bitops.bit_count(register_list, 16);
+            var n_registers = BitOps.bit_count(register_list, 16);
 
             var address = this.reg(n) + 4;
             //var reglist = [];
@@ -3809,7 +3809,7 @@ namespace Arm7
             var w = (inst >> 21) & 1;
             var n = (inst >> 16) & 0xf;
             var register_list = inst & 0xffff;
-            var n_registers = bitops.bit_count(register_list, 16);
+            var n_registers = BitOps.bit_count(register_list, 16);
 
             //this.log_regs(null);
             var address = this.reg(n);
@@ -3839,7 +3839,7 @@ namespace Arm7
             var w = (inst >> 21) & 1;
             var n = (inst >> 16) & 0xf;
             var register_list = inst & 0xffff;
-            var n_registers = bitops.bit_count(register_list, 16);
+            var n_registers = BitOps.bit_count(register_list, 16);
             var is_push = false;
             var valn = this.reg(n);
             if (w != 0 && n == 13 && n_registers >= 2)
@@ -3878,7 +3878,7 @@ namespace Arm7
             var w = (inst >> 21) & 1;
             var n = (inst >> 16) & 0xf;
             var register_list = inst & 0xffff;
-            var n_registers = bitops.bit_count(register_list, 16);
+            var n_registers = BitOps.bit_count(register_list, 16);
             var valn = this.reg(n);
             //this.log_regs(null);
             var address = valn + 4;
@@ -3909,7 +3909,7 @@ namespace Arm7
             var u = (inst >> 23) & 1;
             var n = (inst >> 16) & 0xf;
             var register_list = inst & 0xffff;
-            var n_registers = bitops.bit_count(register_list, 16);
+            var n_registers = BitOps.bit_count(register_list, 16);
             var is_increment = u == 1;
             var is_wordhigher = p == u;
             if (n == 15 || n_registers < 1)
@@ -5243,7 +5243,7 @@ namespace Arm7
             // [27:24]=0000 [21]=1 [7]=1 [4]=1
             // [7:4]=1011
             // Extra load/store instructions (unprivileged) #1
-            long op = bitops.get_bit(inst, 20);
+            long op = BitOps.get_bit(inst, 20);
             //op2=01
             //if ((op2 & 3) === 0) {
             //    this.abort_unknown_inst(inst, addr);
@@ -5267,7 +5267,7 @@ namespace Arm7
             // [7:4]=11x1
             // Extra load/store instructions (unprivileged) #2
             // op2=1x
-            var op2 = bitops.get_bits(inst, 6, 5);
+            var op2 = BitOps.get_bits(inst, 6, 5);
             //if ((op2 & 3) === 0) {
             //    this.abort_unknown_inst(inst, addr);
             //}
@@ -5290,7 +5290,7 @@ namespace Arm7
             }
             else
             {
-                var rt = bitops.get_bits(inst, 15, 12);
+                var rt = BitOps.get_bits(inst, 15, 12);
                 if ((rt & 1) != 0)
                 {
                     // UNDEFINED
@@ -5648,8 +5648,8 @@ namespace Arm7
                     {
                         // [27:22]=011001 [4]=1
                         // Parallel addition and subtraction, unsigned
-                        op1 = bitops.get_bits(inst, 21, 20);
-                        op2 = bitops.get_bits(inst, 7, 5);
+                        op1 = BitOps.get_bits(inst, 21, 20);
+                        op2 = BitOps.get_bits(inst, 7, 5);
                         switch (op1)
                         {
                             case 1:
@@ -5757,8 +5757,8 @@ namespace Arm7
                     {
                         // [27:22]=011000 [4]=1
                         // Parallel addition and subtraction, signed
-                        op1 = bitops.get_bits(inst, 21, 20);
-                        op2 = bitops.get_bits(inst, 7, 5);
+                        op1 = BitOps.get_bits(inst, 21, 20);
+                        op2 = BitOps.get_bits(inst, 7, 5);
                         switch (op1)
                         {
                             case 1:
@@ -5881,7 +5881,7 @@ namespace Arm7
                                 switch (op2 >> 1)
                                 {
                                     case 1:
-                                        a = bitops.get_bits(inst, 19, 16);
+                                        a = BitOps.get_bits(inst, 19, 16);
                                         if (a == 0xf)
                                         {
                                             // SXTB16
@@ -5920,7 +5920,7 @@ namespace Arm7
                                                 this.abort_not_impl("SSAT16", inst, addr);
                                                 break;
                                             case 3:
-                                                a = bitops.get_bits(inst, 19, 16);
+                                                a = BitOps.get_bits(inst, 19, 16);
                                                 if (a == 0xf)
                                                 {
                                                     // SXTB
@@ -5979,7 +5979,7 @@ namespace Arm7
                             {
                                 this.abort_unknown_inst(inst, addr);
                             }
-                            a = bitops.get_bits(inst, 19, 16);
+                            a = BitOps.get_bits(inst, 19, 16);
                             if (a == 0xf)
                             {
                                 // UXTB16
@@ -6159,7 +6159,7 @@ namespace Arm7
                         case 0:
                             if ((op1 & 1) == 0 && op2 == 0)
                             {
-                                var rd = bitops.get_bits(inst, 15, 12);
+                                var rd = BitOps.get_bits(inst, 15, 12);
                                 if (rd == 0xf)
                                 {
                                     // USAD8
@@ -6566,7 +6566,7 @@ namespace Arm7
                                         this.abort_undefined_instruction("System call, and coprocessor instructions", inst, addr);
                                         break;
                                     case 2:
-                                        coproc = bitops.get_bits(inst, 11, 8);
+                                        coproc = BitOps.get_bits(inst, 11, 8);
                                         if ((coproc >> 1) == 5)
                                         { // 0b101x
                                             // 64-bit transfers between ARM core and extension registers
@@ -6593,7 +6593,7 @@ namespace Arm7
                             }
                             else
                             {
-                                coproc = bitops.get_bits(inst, 11, 8);
+                                coproc = BitOps.get_bits(inst, 11, 8);
                                 if ((coproc >> 1) == 5)
                                 { // 0b101x
                                     // Advanced SIMD, VFP
@@ -6604,7 +6604,7 @@ namespace Arm7
                                 {
                                     if ((op1 & 1) != 0)
                                     {
-                                        rn = bitops.get_bits(inst, 19, 16);
+                                        rn = BitOps.get_bits(inst, 19, 16);
                                         if (rn == 0xf)
                                         {
                                             // LDC, LDC2 (literal)

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Arm7
 {
-    class bitops
+    class BitOps
     {
         public static long xor(long x, long y)
         {

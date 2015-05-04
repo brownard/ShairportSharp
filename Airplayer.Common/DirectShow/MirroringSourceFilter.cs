@@ -136,16 +136,17 @@ namespace AirPlayer.Common.DirectShow
 
     class MirrorDemuxTrack : DemuxTrack
     {
-        object mediaTypeSync = new object();
         protected MirroringStream stream;
         MirroringPacket[] packetCache;
         int currentPacketIndex;
         bool firstSample = true;
+        AMMediaType pmt;
 
         public MirrorDemuxTrack(FileParser parser, MirroringStream stream)
             : base(parser, TrackType.Video)
         {
             this.stream = stream;
+            pmt = getMediaType(stream.CodecData);
         }
 
         public override HRESULT GetTrackAllocatorRequirements(ref int plBufferSize, ref short pwBuffers)
@@ -157,8 +158,12 @@ namespace AirPlayer.Common.DirectShow
 
         public override HRESULT GetMediaType(int iPosition, ref AMMediaType pmt)
         {
-            pmt.Set(getMediaType(stream.CodecData));
-            return NOERROR;
+            if (iPosition == 0)
+            {
+                pmt.Set(this.pmt);
+                return NOERROR;
+            }
+            return VFW_S_NO_MORE_ITEMS;
         }
 
         public override HRESULT ReadMediaSample(ref IMediaSampleImpl pSample)
@@ -193,7 +198,7 @@ namespace AirPlayer.Common.DirectShow
 
             return NOERROR;
         }
-                
+
         AMMediaType getMediaType(H264CodecData codecData)
         {
             SPSUnit spsUnit = new SPSUnit(codecData.SPS);
@@ -205,16 +210,10 @@ namespace AirPlayer.Common.DirectShow
             vi.SrcRect.bottom = height;
             vi.TargetRect.right = width;
             vi.TargetRect.bottom = height;
-            if (width > height)
-            {
-                vi.PictAspectRatioX = 3;
-                vi.PictAspectRatioY = 2;
-            }
-            else
-            {
-                vi.PictAspectRatioX = 2;
-                vi.PictAspectRatioY = 3;
-            }
+
+            int hcf = HCF(width, height);
+            vi.PictAspectRatioX = width / hcf;
+            vi.PictAspectRatioY = height / hcf;
             vi.BmiHeader.Width = width;
             vi.BmiHeader.Height = height;
             vi.BmiHeader.Planes = 1;
@@ -247,7 +246,7 @@ namespace AirPlayer.Common.DirectShow
             PacketData packetData = new PacketData();
             packetData.Buffer = packet.Nalus;
             packetData.Size = packet.Nalus.Length;
-            packetData.Start = 0; // convertToDSTime(packet.NTPTimeStamp);
+            packetData.Start = 0;
             packetData.Stop = 0;
             return packetData;
         }
@@ -258,6 +257,11 @@ namespace AirPlayer.Common.DirectShow
             uint fraction = (uint)(ntpTime & 0xFFFFFFFF);
             long fractionSecs = (long)(((double)fraction / uint.MaxValue) * UNITS);
             return seconds + fractionSecs;
+        }
+
+        static int HCF(int x, int y)
+        {
+            return y == 0 ? x : HCF(y, x % y);
         }
     }
 }

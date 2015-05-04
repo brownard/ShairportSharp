@@ -24,14 +24,14 @@ namespace ShairportSharp.Mirroring
         object syncRoot = new object();
         bool isWaiting;
         bool isStopped;
-        List<MirroringPacket> backBuffer;
+        Queue<MirroringPacket> backBuffer;
         H264CodecData codecData;
         ICryptoTransform cipher;
 
         public MirroringStream(MirroringSetup setup, H264CodecData codecData)
         {
             this.codecData = codecData;
-            backBuffer = new List<MirroringPacket>();
+            backBuffer = new Queue<MirroringPacket>();
             //some 3rd party apps don't encrypt the data so don't try and decrypt
             if (setup.AESKey != null)
                 cipher = new Aes128CounterMode(setup.IV).CreateDecryptor(setup.AESKey, null);
@@ -70,7 +70,7 @@ namespace ShairportSharp.Mirroring
 
             lock (syncRoot)
             {
-                backBuffer.Add(packet);
+                backBuffer.Enqueue(packet);
                 if (isWaiting)
                 {
                     isWaiting = false;
@@ -89,8 +89,7 @@ namespace ShairportSharp.Mirroring
                 if (!checkBuffer())
                     return null;
 
-                MirroringPacket packet = backBuffer[0];
-                backBuffer.RemoveAt(0);
+                MirroringPacket packet = backBuffer.Dequeue();
                 return packet;
             }
         }

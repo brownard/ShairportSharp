@@ -57,6 +57,7 @@ namespace ShairportSharp_Test
 
             var lavVideo = new DSFilter(new Guid("{EE30215D-164F-4A92-A4EB-9D4C13390F9F}"));
             hr = m_GraphBuilder.AddFilter(lavVideo.Value, "LAV Video Decoder");
+            lavVideo.Dispose();
             new HRESULT(hr).Throw();
 
             //var msVideo = new DSFilter(new Guid("{212690FB-83E5-4526-8FD7-74478B7939CD}"));
@@ -69,6 +70,7 @@ namespace ShairportSharp_Test
 
             DSFilter source2 = new DSFilter(sourceFilter);
             hr = m_GraphBuilder.Render(source2.OutputPin.Value);
+            source2.Dispose();
             return new HRESULT(hr);
         }
     }

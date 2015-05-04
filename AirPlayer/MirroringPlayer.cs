@@ -16,6 +16,8 @@ namespace AirPlayer
     class MirroringPlayer : VideoPlayerVMR9
     {
         public const string DUMMY_URL = "http://localhost/AirPlayerMirroring.mp4";
+        const string LAV_VIDEO_GUID = "{EE30215D-164F-4A92-A4EB-9D4C13390F9F}";
+
         DirectShow.IGraphBuilder managedGraphBuilder;
         MirroringStream stream;
 
@@ -58,14 +60,20 @@ namespace AirPlayer
                 var sourceFilter = new MirroringSourceFilter(stream);
                 managedGraphBuilder.AddFilter(sourceFilter, sourceFilter.Name);
 
-                var lavVideo = new DirectShow.Helper.DSFilter(new Guid("{EE30215D-164F-4A92-A4EB-9D4C13390F9F}"));
-                managedGraphBuilder.AddFilter(lavVideo.Value, "LAV Video Decoder");
+                var lavVideo = new DirectShow.Helper.DSFilter(new Guid(LAV_VIDEO_GUID));
+                int hr = managedGraphBuilder.AddFilter(lavVideo.Value, lavVideo.Name);
+                lavVideo.Dispose();
+                new DirectShow.Helper.HRESULT(hr).Throw();
 
                 //var msVideo = new DirectShow.Helper.DSFilter(new Guid("{212690FB-83E5-4526-8FD7-74478B7939CD}"));
-                //managedGraphBuilder.AddFilter(msVideo.Value, "Microsoft DTV-DVD Video Decoder");
+                //int hr = managedGraphBuilder.AddFilter(msVideo.Value, "Microsoft DTV-DVD Video Decoder");
+                //msVideo.Dispose();
+                //new DirectShow.Helper.HRESULT(hr).Throw();
 
                 var source2 = new DirectShow.Helper.DSFilter(sourceFilter);
-                managedGraphBuilder.Render(source2.OutputPin.Value);
+                hr = managedGraphBuilder.Render(source2.OutputPin.Value);
+                source2.Dispose();
+                new DirectShow.Helper.HRESULT(hr).Throw();
 
                 DirectShowUtil.EnableDeInterlace(graphBuilder);
 
@@ -206,6 +214,8 @@ namespace AirPlayer
         public override void Stop()
         {
             Logger.Instance.Info("AirPlayerVideo: Stop");
+            if (stream != null)
+                stream.Stop();
             m_strCurrentFile = "";
             CloseInterfaces();
             m_state = PlayState.Init;

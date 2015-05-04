@@ -192,6 +192,7 @@ namespace AirPlayer
 
             airplayServer.MirroringServer.Authenticating += MirroringServer_Authenticating;
             airplayServer.MirroringServer.Started += MirroringServer_Started;
+            airplayServer.MirroringServer.SessionClosed += MirroringServer_SessionClosed;
 
             airplayServer.Start();
 
@@ -728,6 +729,11 @@ namespace AirPlayer
                 if (isPlaying)
                     g_Player.ShowFullScreenWindow();
             }, false);
+        }
+
+        void MirroringServer_SessionClosed(object sender, EventArgs e)
+        {
+            invoke(cleanupMirroringPlayback, false);
         }
 
         #endregion

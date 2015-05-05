@@ -1,4 +1,8 @@
-﻿using System;
+﻿// This class and associated classes are ported from the Slave-in-the-Magic-Mirror project
+// See https://github.com/espes/Slave-in-the-Magic-Mirror
+// All credit to the original author Espes
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -27,6 +31,7 @@ namespace Arm7
         {
             using (BinaryReader br = new BinaryReader(airtunesdStream))
             {
+                //these are hardcoded values from the airtunesd binary from AppleTV firmware for AppleTV2,1 build 9A334v
                 regions = new List<Region>();
                 regions.Add(new Region { addr = 4096, size = 1982464, data = br.ReadBytes(1982464) });
                 br.BaseStream.Seek(1982464, SeekOrigin.Begin);
@@ -53,8 +58,8 @@ namespace Arm7
 
             memctrl = new VirtualMemoryController(mem);
 
-            loadBindings(dyldInfo.binds, scratchAddr);
-            loadBindings(dyldInfo.lazy_binds, scratchAddr);
+            loadBindings(dyldInfo.Binds, scratchAddr);
+            loadBindings(dyldInfo.LazyBinds, scratchAddr);
 
             ARMv7VirtualMMU mmu = new ARMv7VirtualMMU(mem);
             cpu = new CPU(memctrl, mmu);

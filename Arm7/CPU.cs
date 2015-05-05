@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Adapted from Javascript ARMv7 Emulator
+//
+// Copyright 2012, Ryota Ozak
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;

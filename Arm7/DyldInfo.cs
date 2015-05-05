@@ -55,8 +55,8 @@ namespace Arm7
         const int REBASE_OPCODE_DO_REBASE_ULEB_TIMES_SKIPPING_ULEB = 0x80;
         #endregion
 
-        public List<Symbol> binds;
-        public List<Symbol> lazy_binds;
+        List<Symbol> binds;
+        List<Symbol> lazyBinds;
 
         public DyldInfo(BinaryReader f, List<int> segs)
         {
@@ -70,11 +70,20 @@ namespace Arm7
             List<Symbol> week_binds = read_binds(f, Cmd.weak_bind_size, segs);
 
             f.BaseStream.Seek(Cmd.lazy_bind_off, SeekOrigin.Begin);
-            lazy_binds = read_binds(f, Cmd.lazy_bind_size, segs);
+            lazyBinds = read_binds(f, Cmd.lazy_bind_size, segs);
 
             List<Symbol> exports = new List<Symbol>();
             walk_trie(f, Cmd.export_off, Cmd.export_off, Cmd.export_off + Cmd.export_size, "", exports);
+        }
 
+        public List<Symbol> Binds
+        {
+            get { return binds; }
+        }
+
+        public List<Symbol> LazyBinds
+        {
+            get { return lazyBinds; }
         }
 
         string readString(BinaryReader br)

@@ -6,7 +6,7 @@ using System.Text;
 
 namespace ShairportSharp.Mirroring
 {
-    class MirroringInfo : IPlistResponse
+    public class MirroringInfo : IPlistResponse
     {
         public int Height { get; set; }
         public int Width { get; set; }

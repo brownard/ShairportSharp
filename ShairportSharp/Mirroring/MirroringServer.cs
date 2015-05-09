@@ -13,10 +13,19 @@ namespace ShairportSharp.Mirroring
     {
         const int PORT = 7100;
         object syncRoot = new object();
+        MirroringInfo mirroringInfo;
 
         public MirroringServer()
         {
             Port = PORT;
+            mirroringInfo = new MirroringInfo()
+            {
+                Height = 720,
+                Width = 1280,
+                RefreshRate = (double)1 / 60,
+                Overscanned = true,
+                Version = Constants.VERSION
+            };
         }
 
         string password;
@@ -27,6 +36,11 @@ namespace ShairportSharp.Mirroring
         {
             get { return password; }
             set { password = value; }
+        }
+
+        public MirroringInfo MirroringInfo
+        {
+            get { return mirroringInfo; }
         }
 
         public void StopCurrentSession()
@@ -57,7 +71,7 @@ namespace ShairportSharp.Mirroring
 
         protected override MirroringSession OnSocketAccepted(Socket socket)
         {
-            MirroringSession session = new MirroringSession(socket, Password);
+            MirroringSession session = new MirroringSession(socket, mirroringInfo, Password);
             session.Authenticating += session_Authenticating;
             session.Started += session_Started;
             return session;

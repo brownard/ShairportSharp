@@ -30,13 +30,15 @@ namespace ShairportSharp.Mirroring
         MirroringSetup mirroringSetup;
         MirroringStream mirroringStream;
         MirroringMessageBuffer mirroingMessageBuffer;
+        MirroringInfo mirroringInfo;
 
-        public MirroringSession(Socket socket, string password = null)
+        public MirroringSession(Socket socket, MirroringInfo mirroringInfo, string password = null)
             : base(socket, password, DIGEST_REALM)
         {
             mirroingMessageBuffer = new MirroringMessageBuffer();
             mirroingMessageBuffer.MirroringMessageReceived += messageBuffer_MirroringMessageReceived;
             messageBuffer = mirroingMessageBuffer;
+            this.mirroringInfo = mirroringInfo;
         }
 
         public event EventHandler<MirroringStartedEventArgs> Started;
@@ -45,7 +47,7 @@ namespace ShairportSharp.Mirroring
             if (Started != null)
                 Started(this, e);
         }
-        
+
         protected override HttpResponse HandleRequest(HttpRequest request)
         {
             if (!IsAuthorised(request))
@@ -59,7 +61,7 @@ namespace ShairportSharp.Mirroring
             if (request.Method == "GET")
             {
                 if (request.Uri == "/stream.xml")
-                    response = getStreamXml();
+                    response = HttpUtils.GetPlistResponse(mirroringInfo); ;
             }
             else if (request.Method == "POST")
             {
@@ -128,20 +130,6 @@ namespace ShairportSharp.Mirroring
                 Logger.Debug("MirroringSession: Received AES key - {0}", mirroringSetup.AESKey.HexStringFromBytes());
             }
             mirroingMessageBuffer.IsDataMode = true;
-        }
-
-        HttpResponse getStreamXml()
-        {
-            MirroringInfo info = new MirroringInfo()
-            {
-                Height = 720,
-                Width = 1280,
-                RefreshRate = (double)1 / 60,
-                Overscanned = true,
-                Version = Constants.VERSION
-            };
-
-            return HttpUtils.GetPlistResponse(info);
         }
 
         HttpResponse handleFpRequest(HttpRequest request)

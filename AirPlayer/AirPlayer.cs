@@ -190,6 +190,8 @@ namespace AirPlayer
                 airplayServer.VolumeChanged += airplayServer_VolumeChanged;
             airplayServer.SessionStopped += airplayServer_SessionStopped;
 
+            airplayServer.MirroringServer.MirroringInfo.Width = GUIGraphicsContext.Width;
+            airplayServer.MirroringServer.MirroringInfo.Height = GUIGraphicsContext.Height;
             airplayServer.MirroringServer.Authenticating += MirroringServer_Authenticating;
             airplayServer.MirroringServer.Started += MirroringServer_Started;
             airplayServer.MirroringServer.SessionClosed += MirroringServer_SessionClosed;

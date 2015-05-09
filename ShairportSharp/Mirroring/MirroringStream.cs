@@ -70,6 +70,9 @@ namespace ShairportSharp.Mirroring
 
             lock (syncRoot)
             {
+                if (isStopped)
+                    return;
+
                 backBuffer.Enqueue(packet);
                 if (isWaiting)
                 {

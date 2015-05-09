@@ -86,13 +86,13 @@ namespace Arm7
         public override long ld_byte(long addr)
         {
             PageStruct page = vm.Lookup(addr);
-            return page.Data[page.Offset + addr % vm.page_size];
+            return page.Data[page.Offset + addr % VirtualMemory.PAGE_SIZE];
         }
 
         public override void st_byte(long addr, byte onebyte)
         {
             PageStruct page = vm.Lookup(addr);
-            page.Data[page.Offset + addr % vm.page_size] = onebyte;
+            page.Data[page.Offset + addr % VirtualMemory.PAGE_SIZE] = onebyte;
         }
     }
 
@@ -104,36 +104,34 @@ namespace Arm7
 
     class VirtualMemory
     {
-        uint vm_size;
-        public int page_size;
+        public const int PAGE_SIZE = 4096;
+        const uint VM_SIZE = uint.MaxValue;
         long num_pages;
         PageStruct[] page_map;
 
         public VirtualMemory()
         {
-            vm_size = uint.MaxValue;
-            page_size = 4096;
-            num_pages = vm_size / page_size;
+            num_pages = VM_SIZE / PAGE_SIZE;
             page_map = new PageStruct[num_pages];
         }
 
         public void Map(long addr, long size, byte[] region)
         {
-            long rem1 = addr % page_size;
-            long rem2 = size % page_size;
+            long rem1 = addr % PAGE_SIZE;
+            long rem2 = size % PAGE_SIZE;
             if (rem1 != 0 || rem2 != 0)
                 throw new Exception();
 
-            for (long i = 0; i < size / page_size; i++)
+            for (long i = 0; i < size / PAGE_SIZE; i++)
             {
-                long index = addr / page_size + i;
-                page_map[index] = new PageStruct() { Data = region, Offset = i * page_size };
+                long index = addr / PAGE_SIZE + i;
+                page_map[index] = new PageStruct() { Data = region, Offset = i * PAGE_SIZE };
             }
         }
 
         public PageStruct Lookup(long addr)
         {
-            return page_map[addr / page_size];
+            return page_map[addr / PAGE_SIZE];
         }
     }
 

@@ -37,18 +37,6 @@ namespace ShairportSharp_Test
             m_Playback.OnPlaybackPause += Playback_OnPlaybackPause;
         }
 
-        public VideoForm(AirplayServer server, MirroringStream stream, string sessionId)
-        {
-            InitializeComponent();
-            this.server = server;
-            m_Playback = new MirrorPlayer(stream);
-            m_Playback.VideoControl = this.videoControl;
-            m_Playback.OnPlaybackStart += Playback_OnPlaybackStart;
-            m_Playback.OnPlaybackStop += Playback_OnPlaybackStop;
-            m_Playback.OnPlaybackReady += Playback_OnPlaybackReady;
-            m_Playback.OnPlaybackPause += Playback_OnPlaybackPause;
-        }
-
         public void LoadVideo(VideoEventArgs e)
         {
             hasStarted = false;
@@ -57,11 +45,6 @@ namespace ShairportSharp_Test
             server.SetPlaybackState(sessionId, PlaybackCategory.Video, PlaybackState.Loading);
             m_Playback.Stop();
             m_Playback.FileName = e.ContentLocation;
-        }
-
-        public void Start()
-        {
-            m_Playback.Start();
         }
 
         public void GetProgress(GetPlaybackPositionEventArgs e)

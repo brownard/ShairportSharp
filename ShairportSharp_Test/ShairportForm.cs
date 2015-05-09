@@ -22,10 +22,11 @@ namespace ShairportSharp_Test
 
         AirplayServer airplay;
         RaopServer server;
-        PlayerForm playerForm = null;
-        PhotoForm photoForm = null;
-        VideoForm videoForm = null;
-        bool closed = false;
+        PlayerForm playerForm;
+        PhotoForm photoForm;
+        VideoForm videoForm;
+        MirroringForm mirroringForm;
+        bool closed;
 
         #endregion
 
@@ -77,6 +78,15 @@ namespace ShairportSharp_Test
             {
                 videoForm.Dispose();
                 videoForm = null;
+            }
+        }
+
+        void mirroringForm_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            if (mirroringForm != null)
+            {
+                mirroringForm.Dispose();
+                mirroringForm = null;
             }
         }
 
@@ -134,12 +144,12 @@ namespace ShairportSharp_Test
         {
             BeginInvoke((MethodInvoker)delegate()
             {
-                if (videoForm == null)
+                if (mirroringForm == null)
                 {
-                    videoForm = new VideoForm(airplay, e.Stream, "");
-                    videoForm.FormClosed += videoForm_FormClosed;
-                    videoForm.Show();
-                    videoForm.Start();
+                    mirroringForm = new MirroringForm(e.Stream);
+                    mirroringForm.FormClosed += mirroringForm_FormClosed;
+                    mirroringForm.Show();
+                    mirroringForm.Start();
                 }
             });
         }
@@ -352,6 +362,12 @@ namespace ShairportSharp_Test
                 photoForm.Close();
             if (videoForm != null)
                 videoForm.Close();
+        }
+
+        void closeMirroringForm()
+        {
+            if (mirroringForm != null)
+                mirroringForm.Close();
         }
 
         void logToTextBox(object sender, LogEventArgs e)

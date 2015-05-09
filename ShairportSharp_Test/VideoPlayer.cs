@@ -73,5 +73,15 @@ namespace ShairportSharp_Test
             source2.Dispose();
             return new HRESULT(hr);
         }
+
+        public override void Dispose()
+        {
+            if (stream != null)
+            {
+                stream.Stop();
+                stream = null;
+            }
+            base.Dispose();
+        }
     }
 }

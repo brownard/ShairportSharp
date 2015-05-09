@@ -84,7 +84,7 @@ namespace Arm7
             cpu.regs[14] = EXIT_ADDRESS;
             cpu.regs[15] = function;
             cpu.cpsr.m = USER_MODE; //user mode
-            run(EXIT_ADDRESS);
+            run();
             return cpu.regs[0];
         }
 
@@ -137,7 +137,7 @@ namespace Arm7
             }
         }
 
-        void run(long exit_addr = 0)
+        void run()
         {
             int cnt = 0;
             long pc = 0;
@@ -148,7 +148,7 @@ namespace Arm7
                 cpu.branch_to = -1;
 
                 pc = cpu.regs[15];
-                if (pc == exit_addr)
+                if (pc == EXIT_ADDRESS)
                     break;
 
                 inst = cpu.fetch_instruction(pc);
@@ -175,8 +175,9 @@ namespace Arm7
                 {
                     if (cpu.cond(inst))
                     {
-                        string inst_name = cpu.decode(inst, pc);
-                        cpu.exec(inst_name, inst, pc);
+                        //string inst_name = cpu.decode(inst, pc);
+                        //cpu.exec(inst_name, inst, pc);
+                        cpu.decode(inst, pc);
                     }
                 }
                 else

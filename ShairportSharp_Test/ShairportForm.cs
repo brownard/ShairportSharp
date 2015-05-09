@@ -348,6 +348,7 @@ namespace ShairportSharp_Test
         {
             closeAirtunesForms();
             closeAirplayForms();
+            closeMirroringForm();
         }
 
         void closeAirtunesForms()

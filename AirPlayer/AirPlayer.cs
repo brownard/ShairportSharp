@@ -190,8 +190,7 @@ namespace AirPlayer
                 airplayServer.VolumeChanged += airplayServer_VolumeChanged;
             airplayServer.SessionStopped += airplayServer_SessionStopped;
 
-            airplayServer.MirroringServer.MirroringInfo.Width = GUIGraphicsContext.Width;
-            airplayServer.MirroringServer.MirroringInfo.Height = GUIGraphicsContext.Height;
+            airplayServer.MirroringServer.MirroringInfoRequested += MirroringServer_MirroringInfoRequested;
             airplayServer.MirroringServer.Authenticating += MirroringServer_Authenticating;
             airplayServer.MirroringServer.Started += MirroringServer_Started;
             airplayServer.MirroringServer.SessionClosed += MirroringServer_SessionClosed;
@@ -700,6 +699,13 @@ namespace AirPlayer
         #endregion
 
         #region Mirroring Event Handlers
+        
+        void MirroringServer_MirroringInfoRequested(object sender, ShairportSharp.Mirroring.MirroringInfoEventArgs e)
+        {
+            e.MirroringInfo.Width = GUIGraphicsContext.Width;
+            e.MirroringInfo.Height = GUIGraphicsContext.Height;
+            e.MirroringInfo.RefreshRate = (double)1 / GUIGraphicsContext.MaxFPS;
+        }
 
         void MirroringServer_Authenticating(object sender, EventArgs e)
         {

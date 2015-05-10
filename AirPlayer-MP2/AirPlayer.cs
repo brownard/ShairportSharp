@@ -195,6 +195,7 @@ namespace AirPlayer.MediaPortal2
             airplayServer.VolumeChanged += airplayServer_VolumeChanged;
             airplayServer.SessionStopped += airplayServer_SessionStopped;
 
+            airplayServer.MirroringServer.MirroringInfoRequested += MirroringServer_MirroringInfoRequested;
             airplayServer.MirroringServer.Authenticating += MirroringServer_Authenticating;
             airplayServer.MirroringServer.Started += MirroringServer_Started;
             airplayServer.MirroringServer.SessionClosed += MirroringServer_SessionClosed;
@@ -634,6 +635,14 @@ namespace AirPlayer.MediaPortal2
 
         #region Mirroring Event Handlers
         
+        void MirroringServer_MirroringInfoRequested(object sender, MirroringInfoEventArgs e)
+        {
+            var displayMode = MediaPortal.UI.SkinEngine.SkinManagement.SkinContext.CurrentDisplayMode;
+            e.MirroringInfo.Width = displayMode.Width;
+            e.MirroringInfo.Height = displayMode.Height;
+            e.MirroringInfo.RefreshRate = (double)1 / displayMode.RefreshRate;
+        }
+
         void MirroringServer_Authenticating(object sender, EventArgs e)
         {
             lock (mirroringInfoSync)

@@ -13,19 +13,10 @@ namespace ShairportSharp.Mirroring
     {
         const int PORT = 7100;
         object syncRoot = new object();
-        MirroringInfo mirroringInfo;
 
         public MirroringServer()
         {
             Port = PORT;
-            mirroringInfo = new MirroringInfo()
-            {
-                Height = 720,
-                Width = 1280,
-                RefreshRate = (double)1 / 60,
-                Overscanned = true,
-                Version = Constants.VERSION
-            };
         }
 
         string password;
@@ -38,14 +29,16 @@ namespace ShairportSharp.Mirroring
             set { password = value; }
         }
 
-        public MirroringInfo MirroringInfo
-        {
-            get { return mirroringInfo; }
-        }
-
         public void StopCurrentSession()
         {
             CloseConnections();
+        }
+        
+        public event EventHandler<MirroringInfoEventArgs> MirroringInfoRequested;
+        protected virtual void OnMirroringInfoRequested(MirroringInfoEventArgs e)
+        {
+            if (MirroringInfoRequested != null)
+                MirroringInfoRequested(this, e);
         }
 
         public event EventHandler Authenticating;
@@ -71,7 +64,8 @@ namespace ShairportSharp.Mirroring
 
         protected override MirroringSession OnSocketAccepted(Socket socket)
         {
-            MirroringSession session = new MirroringSession(socket, mirroringInfo, Password);
+            MirroringSession session = new MirroringSession(socket, Password);
+            session.MirroringInfoRequested += session_MirroringInfoRequested;
             session.Authenticating += session_Authenticating;
             session.Started += session_Started;
             return session;
@@ -81,6 +75,11 @@ namespace ShairportSharp.Mirroring
         {
             OnSessionClosed(EventArgs.Empty);
             base.OnConnectionClosed(connection);
+        }
+
+        void session_MirroringInfoRequested(object sender, MirroringInfoEventArgs e)
+        {
+            OnMirroringInfoRequested(e);
         }
 
         void session_Authenticating(object sender, EventArgs e)

@@ -8,6 +8,15 @@ namespace ShairportSharp.Mirroring
 {
     public class MirroringInfo : IPlistResponse
     {
+        public MirroringInfo()
+        {
+            Width = 1280;
+            Height = 720;
+            Overscanned = true;
+            RefreshRate = (double)1 / 60;
+            Version = Constants.VERSION;
+        }
+
         public int Height { get; set; }
         public int Width { get; set; }
         public bool Overscanned { get; set; }

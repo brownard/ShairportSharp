@@ -13,6 +13,16 @@ using ShairportSharp.Plist;
 
 namespace ShairportSharp.Mirroring
 {
+    public class MirroringInfoEventArgs : EventArgs
+    {
+        public MirroringInfoEventArgs()
+        {
+            MirroringInfo = new MirroringInfo();
+        }
+
+        public MirroringInfo MirroringInfo { get; private set; }
+    }
+
     public class MirroringStartedEventArgs : EventArgs
     {
         public MirroringStartedEventArgs(MirroringStream stream)
@@ -30,15 +40,20 @@ namespace ShairportSharp.Mirroring
         MirroringSetup mirroringSetup;
         MirroringStream mirroringStream;
         MirroringMessageBuffer mirroingMessageBuffer;
-        MirroringInfo mirroringInfo;
 
-        public MirroringSession(Socket socket, MirroringInfo mirroringInfo, string password = null)
+        public MirroringSession(Socket socket, string password = null)
             : base(socket, password, DIGEST_REALM)
         {
             mirroingMessageBuffer = new MirroringMessageBuffer();
             mirroingMessageBuffer.MirroringMessageReceived += messageBuffer_MirroringMessageReceived;
             messageBuffer = mirroingMessageBuffer;
-            this.mirroringInfo = mirroringInfo;
+        }
+
+        public event EventHandler<MirroringInfoEventArgs> MirroringInfoRequested;
+        protected virtual void OnMirroringInfoRequested(MirroringInfoEventArgs e)
+        {
+            if (MirroringInfoRequested != null)
+                MirroringInfoRequested(this, e);
         }
 
         public event EventHandler<MirroringStartedEventArgs> Started;
@@ -61,7 +76,11 @@ namespace ShairportSharp.Mirroring
             if (request.Method == "GET")
             {
                 if (request.Uri == "/stream.xml")
-                    response = HttpUtils.GetPlistResponse(mirroringInfo); ;
+                {
+                    MirroringInfoEventArgs e = new MirroringInfoEventArgs();
+                    OnMirroringInfoRequested(e);
+                    response = HttpUtils.GetPlistResponse(e.MirroringInfo);
+                }
             }
             else if (request.Method == "POST")
             {

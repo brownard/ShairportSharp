@@ -62,6 +62,7 @@ namespace ShairportSharp_Test
 
             //var msVideo = new DSFilter(new Guid("{212690FB-83E5-4526-8FD7-74478B7939CD}"));
             //hr = m_GraphBuilder.AddFilter(msVideo.Value, "Microsoft DTV-DVD Video Decoder");
+            //msVideo.Dispose();
             //new HRESULT(hr).Throw();
 
             //var amdVideo = new DSFilter(new Guid("{37A4D808-E76C-11D2-935C-00A024E52661}"));

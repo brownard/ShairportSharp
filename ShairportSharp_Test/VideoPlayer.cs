@@ -65,10 +65,6 @@ namespace ShairportSharp_Test
             //msVideo.Dispose();
             //new HRESULT(hr).Throw();
 
-            //var amdVideo = new DSFilter(new Guid("{37A4D808-E76C-11D2-935C-00A024E52661}"));
-            //hr = m_GraphBuilder.AddFilter(amdVideo.Value, "ATI MPEG Video Decoder");
-            //new HRESULT(hr).Throw();
-
             DSFilter source2 = new DSFilter(sourceFilter);
             hr = m_GraphBuilder.Render(source2.OutputPin.Value);
             source2.Dispose();

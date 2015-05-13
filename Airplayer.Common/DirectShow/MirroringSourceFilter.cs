@@ -49,34 +49,6 @@ namespace AirPlayer.Common.DirectShow
             m_Tracks.Add(new MirrorDemuxTrack(this, stream));
             return S_OK;
         }
-
-        //public override HRESULT ProcessDemuxPackets()
-        //{
-        //    MirroringMessage[] packets = stream.TakeAllPackets();
-        //    if (packets == null)
-        //        return S_FALSE;
-
-        //    foreach (MirroringMessage packet in packets)
-        //    {
-        //        ExtendedPacketData packetData = new ExtendedPacketData();
-        //        packetData.Buffer = packet.NALUs;
-        //        packetData.Size = packet.NALUs.Length;
-        //        packetData.Start = 0;
-        //        packetData.Stop = 0;
-        //        if (!firstSample)
-        //        {
-        //            if (packet.PayloadType == PayloadType.Codec)
-        //                packetData.SetSPS(packet.CodecData.SPS);
-        //        }
-        //        else 
-        //        {
-        //            firstSample = false;
-        //        }
-        //        PacketData pd = (PacketData)packetData;
-        //        m_Tracks[0].AddToCache(ref pd);
-        //    }
-        //    return S_OK;
-        //}
     }
 
     class MirrorDemuxTrack : DemuxTrack

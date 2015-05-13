@@ -15,7 +15,7 @@ namespace AirPlayer.Common.DirectShow
         public MirroringSourceFilter(MirroringStream stream)
             : base("MirroringSourceFilter")
         {
-            ((MirroringFileParser)m_Parsers[0]).SetSource(stream);
+            ((MirroringFileParser)m_Parsers[0]).SetSource(stream, this);
             m_sFileName = "http://localhost/Shairport";
             Load(m_sFileName, null);
         }
@@ -24,12 +24,19 @@ namespace AirPlayer.Common.DirectShow
     public class MirroringFileParser : FileParser
     {
         protected MirroringStream stream;
+        protected BaseFilter filter;
 
         public MirroringFileParser() : base(false) { }
 
-        public void SetSource(MirroringStream stream)
+        public BaseFilter Filter
+        {
+            get { return filter; }
+        }
+
+        public void SetSource(MirroringStream stream, BaseFilter filter)
         {
             this.stream = stream;
+            this.filter = filter;
         }
 
         protected override HRESULT CheckFile()
@@ -79,12 +86,14 @@ namespace AirPlayer.Common.DirectShow
         int currentPacketIndex;
         bool firstSample = true;
         AMMediaType pmt;
+        BaseFilter filter;
 
-        public MirrorDemuxTrack(FileParser parser, MirroringStream stream)
+        public MirrorDemuxTrack(MirroringFileParser parser, MirroringStream stream)
             : base(parser, TrackType.Video)
         {
             this.stream = stream;
             pmt = getMediaType(stream.CodecData);
+            filter = parser.Filter;
         }
 
         public override HRESULT GetTrackAllocatorRequirements(ref int plBufferSize, ref short pwBuffers)
@@ -109,7 +118,7 @@ namespace AirPlayer.Common.DirectShow
             MirroringPacket mirroringPacket = getNextMirroringPacket();
             if (mirroringPacket == null)
                 return S_FALSE;
-
+            
             PacketData _packet = getPacketData(mirroringPacket);
             if (!firstSample && mirroringPacket.CodecData != null)
                 pSample.SetMediaType(getMediaType(mirroringPacket.CodecData));
@@ -184,8 +193,18 @@ namespace AirPlayer.Common.DirectShow
             PacketData packetData = new PacketData();
             packetData.Buffer = packet.Nalus;
             packetData.Size = packet.Nalus.Length;
-            packetData.Start = 0;
-            packetData.Stop = 0;
+            if (filter.State == FilterState.Running)
+            {
+                long streamTime;
+                filter.StreamTime(out streamTime);
+                //schedule for 100ms in the future
+                packetData.Start = (100 * UNITS / MILLISECONDS) + streamTime;
+            }
+            else
+            {
+                packetData.Start = 0;
+            }
+            packetData.Stop = packetData.Start + 1;
             return packetData;
         }
 

@@ -3,6 +3,7 @@ using DirectShowLib;
 using DShowNET.Helper;
 using MediaPortal.GUI.Library;
 using MediaPortal.Player;
+using MediaPortal.Profile;
 using ShairportSharp.Mirroring;
 using System;
 using System.Collections.Generic;
@@ -55,25 +56,24 @@ namespace AirPlayer
                 basicAudio = (IBasicAudio)graphBuilder;
                 videoWin = (IVideoWindow)graphBuilder;
 
-                //add source
+                int hr;
+                var mirroringFilter = new MirroringSourceFilter(stream);
+                using (var sourceFilter = new DirectShow.Helper.DSFilter(mirroringFilter))
+                {
+                    hr = managedGraphBuilder.AddFilter(sourceFilter.Value, sourceFilter.Name);
+                    new DirectShow.Helper.HRESULT(hr).Throw();
 
-                var sourceFilter = new MirroringSourceFilter(stream);
-                managedGraphBuilder.AddFilter(sourceFilter, sourceFilter.Name);
+                    AddVideoFilter();
 
-                var lavVideo = new DirectShow.Helper.DSFilter(new Guid(LAV_VIDEO_GUID));
-                int hr = managedGraphBuilder.AddFilter(lavVideo.Value, lavVideo.Name);
-                lavVideo.Dispose();
-                new DirectShow.Helper.HRESULT(hr).Throw();
+                    hr = managedGraphBuilder.Render(sourceFilter.OutputPin.Value);
+                    new DirectShow.Helper.HRESULT(hr).Throw();
 
-                //var msVideo = new DirectShow.Helper.DSFilter(new Guid("{212690FB-83E5-4526-8FD7-74478B7939CD}"));
-                //int hr = managedGraphBuilder.AddFilter(msVideo.Value, "Microsoft DTV-DVD Video Decoder");
-                //msVideo.Dispose();
-                //new DirectShow.Helper.HRESULT(hr).Throw();
-
-                var source2 = new DirectShow.Helper.DSFilter(sourceFilter);
-                hr = managedGraphBuilder.Render(source2.OutputPin.Value);
-                source2.Dispose();
-                new DirectShow.Helper.HRESULT(hr).Throw();
+                    //The client stops sending data when the screen content isn't changing to save bandwidth/processing
+                    //However this causes the renderer to generate quality control messages leading to some filters dropping frames
+                    //The stream only contains one I-Frame at the start so the video cannot recover from dropped frames
+                    //We override the quality management to prevent the filter receiving the messages
+                    mirroringFilter.SetQualityControl(managedGraphBuilder);
+                }
 
                 DirectShowUtil.EnableDeInterlace(graphBuilder);
 
@@ -220,6 +220,20 @@ namespace AirPlayer
             CloseInterfaces();
             m_state = PlayState.Init;
             GUIGraphicsContext.IsPlaying = false;
+        }
+
+        void AddVideoFilter()
+        {
+            using (Settings xmlreader = new MPSettings())
+            {
+                bool autodecodersettings = xmlreader.GetValueAsBool("movieplayer", "autodecodersettings", false);
+                if (!autodecodersettings) // the user has not chosen automatic graph building by merits
+                {
+                    string filterName = xmlreader.GetValueAsString("movieplayer", "h264videocodec", "");
+                    if (!string.IsNullOrEmpty(filterName))
+                        Utils.AddFilterByName(managedGraphBuilder, DirectShow.FilterCategory.LegacyAmFilterCategory, filterName);
+                }
+            }
         }
     }
 }

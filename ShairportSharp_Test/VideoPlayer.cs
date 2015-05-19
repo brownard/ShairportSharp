@@ -67,6 +67,7 @@ namespace ShairportSharp_Test
 
             DSFilter source2 = new DSFilter(sourceFilter);
             hr = m_GraphBuilder.Render(source2.OutputPin.Value);
+            sourceFilter.SetQualityControl(m_GraphBuilder);
             source2.Dispose();
             return new HRESULT(hr);
         }

@@ -41,6 +41,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DirectShow\GenericPushSourceFilter.cs" />
+    <Compile Include="DirectShow\MediaTypeBuilder.cs" />
     <Compile Include="DirectShow\MirroringSourceFilter.cs" />
     <Compile Include="DirectShow\Utils.cs" />
     <Compile Include="Hls\Downloader.cs" />

@@ -1,4 +1,5 @@
 ﻿using AirPlayer.Common.DirectShow;
+using DirectShow;
 using DirectShow.Helper;
 using MediaPortal.UI.Players.Video;
 using ShairportSharp.Mirroring;
@@ -14,10 +15,9 @@ namespace AirPlayer.MediaPortal2.Players
     {
         public const string MIMETYPE = "video/airplayer-mirroring";
         public const string DUMMY_FILE = "airplay://localhost/AirPlayerMirroring.airplay";
-        const string LAV_VIDEO_GUID = "{EE30215D-164F-4A92-A4EB-9D4C13390F9F}";
 
         MirroringStream stream;
-        DSFilter sourceFilter;
+        MirroringSourceFilter sourceFilter;
 
         public AirplayMirroringPlayer(MirroringStream stream)
         {
@@ -28,29 +28,18 @@ namespace AirPlayer.MediaPortal2.Players
 
         protected override void AddSourceFilter()
         {
-            sourceFilter = new DSFilter(new MirroringSourceFilter(stream));
-            _graphBuilder.AddFilter(sourceFilter.Value, sourceFilter.Name);
-        }
-
-        protected override void AddPreferredCodecs()
-        {
-            try
-            {
-                var lavVideo = new DSFilter(new Guid(LAV_VIDEO_GUID));
-                int hr = _graphBuilder.AddFilter(lavVideo.Value, lavVideo.Name);
-                lavVideo.Dispose();
-                new HRESULT(hr).Throw();
-            }
-            catch (Exception ex)
-            {
-                Logger.Instance.Error("AirplayMirroringPlayer: Failed to add LAV Video to graph -", ex);
-            }
+            sourceFilter = new MirroringSourceFilter(stream);
+            _graphBuilder.AddFilter(sourceFilter, sourceFilter.Name);
         }
 
         protected override void OnBeforeGraphRunning()
         {
             if (sourceFilter != null)
-                _graphBuilder.Render(sourceFilter.OutputPin.Value);
+            {
+                using (DSFilter dsFilter = new DSFilter(sourceFilter))
+                    _graphBuilder.Render(dsFilter.OutputPin.Value);
+                sourceFilter.SetQualityControl(_graphBuilder);
+            }
         }
 
         protected override void AddAudioRenderer()
@@ -62,7 +51,9 @@ namespace AirPlayer.MediaPortal2.Players
         {
             if (sourceFilter != null)
             {
-                sourceFilter.Dispose();
+                //base.FreeCodecs tries to release our filter as a COM object which throws because it's not
+                //remove from _streamSelectors to prevent this
+                _streamSelectors.Remove(sourceFilter as IAMStreamSelect);
                 sourceFilter = null;
             }
             base.FreeCodecs();

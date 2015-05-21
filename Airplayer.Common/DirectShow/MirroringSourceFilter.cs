@@ -1,4 +1,5 @@
-﻿using DirectShow;
+﻿using AirPlayer.Common.H264;
+using DirectShow;
 using DirectShow.BaseClasses;
 using DirectShow.Helper;
 using ShairportSharp.Mirroring;
@@ -102,19 +103,21 @@ namespace AirPlayer.Common.DirectShow
 
     class MirrorDemuxTrack : DemuxTrack
     {
-        protected MirroringStream stream;
+        MirroringFileParser parser;
+        MirroringStream stream;
+        H264CodecData codecData;
         MirroringPacket[] packetCache;
         int currentPacketIndex;
         bool firstSample = true;
         AMMediaType pmt;
-        MirroringFileParser parser;
 
         public MirrorDemuxTrack(MirroringFileParser parser, MirroringStream stream)
             : base(parser, TrackType.Video)
         {
-            this.stream = stream;
-            pmt = getMediaType(stream.CodecData);
             this.parser = parser;
+            this.stream = stream;
+            codecData = stream.CodecData;
+            pmt = getMediaType(codecData);
         }
 
         public override HRESULT GetTrackAllocatorRequirements(ref int plBufferSize, ref short pwBuffers)
@@ -187,8 +190,16 @@ namespace AirPlayer.Common.DirectShow
         PacketData getPacketData(MirroringPacket packet)
         {
             PacketData packetData = new PacketData();
-            packetData.Buffer = packet.Nalus;
-            packetData.Size = packet.Nalus.Length;
+            if (packet.CodecData != null)
+            {
+                codecData = packet.CodecData;
+                packetData.Buffer = NaluParser.CreateParameterSet(codecData.SPS, codecData.PPS);
+            }
+            else
+            {
+                packetData.Buffer = NaluParser.ParseNalus(packet.Nalus, codecData.NALSizeMinusOne + 1);
+            }
+            packetData.Size = packetData.Buffer.Length;
             setTimestamps(packetData);
             return packetData;
         }

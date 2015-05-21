@@ -88,7 +88,7 @@ namespace ShairportSharp.Helpers
             return query;
         }
     }
-
+    
     static class ExtensionMethods
     {
         public static string ComputerNameIfNullOrEmpty(this string name)

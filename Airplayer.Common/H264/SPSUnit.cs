@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace ShairportSharp.Mirroring
+namespace AirPlayer.Common.H264
 {
     public class SPSUnit
     {

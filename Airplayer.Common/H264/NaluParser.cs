@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace ShairportSharp.Mirroring
+namespace AirPlayer.Common.H264
 {
     static class NaluParser
     {
@@ -19,7 +19,7 @@ namespace ShairportSharp.Mirroring
             {
                 if (!checkSize(nalusLength, offset, lengthSize))
                     break;
-                int length = nalus.IntFromBigEndian(offset, lengthSize);
+                int length = intFromBigEndian(nalus, offset, lengthSize);
                 offset += lengthSize;
 
                 if (!checkSize(nalusLength, offset, length))
@@ -85,6 +85,19 @@ namespace ShairportSharp.Mirroring
                 return false;
             }
             return true;
+        }
+
+        static int intFromBigEndian(byte[] buffer, int offset, int count)
+        {
+            if (count > 4)
+                count = 4;
+            int result = 0;
+            for (int x = 0; x < count; x++)
+            {
+                int shift = 8 * (count - 1 - x);
+                result = result | (int)buffer[x + offset] << shift;
+            }
+            return result;
         }
     }
 }

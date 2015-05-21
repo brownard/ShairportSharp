@@ -52,15 +52,13 @@ namespace ShairportSharp.Mirroring
             {
                 //encrypted video data
                 byte[] decrypted = decryptPacket(message.Payload);
-                packet.Nalus = NaluParser.ParseNalus(decrypted, codecData.NALSizeMinusOne + 1);
+                packet.Nalus = decrypted;
             }
             else if (message.PayloadType == PayloadType.Codec)
             {
                 //unencrypted codec data
-                H264CodecData codecData = new H264CodecData(message.Payload);
-                this.codecData = codecData;
+                codecData = new H264CodecData(message.Payload);
                 packet.CodecData = codecData;
-                packet.Nalus = NaluParser.CreateParameterSet(codecData.SPS, codecData.PPS);
             }
             else
             {

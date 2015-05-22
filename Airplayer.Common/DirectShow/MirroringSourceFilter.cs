@@ -108,8 +108,6 @@ namespace AirPlayer.Common.DirectShow
         H264CodecData codecData;
         MirroringPacket[] packetCache;
         int currentPacketIndex;
-        bool firstSample = true;
-        AMMediaType pmt;
 
         public MirrorDemuxTrack(MirroringFileParser parser, MirroringStream stream)
             : base(parser, TrackType.Video)
@@ -117,7 +115,6 @@ namespace AirPlayer.Common.DirectShow
             this.parser = parser;
             this.stream = stream;
             codecData = stream.CodecData;
-            pmt = getMediaType(codecData);
         }
 
         public override HRESULT GetTrackAllocatorRequirements(ref int plBufferSize, ref short pwBuffers)
@@ -131,7 +128,7 @@ namespace AirPlayer.Common.DirectShow
         {
             if (iPosition == 0)
             {
-                pmt.Set(this.pmt);
+                pmt.Set(getMediaType(codecData));
                 return NOERROR;
             }
             return VFW_S_NO_MORE_ITEMS;
@@ -148,31 +145,83 @@ namespace AirPlayer.Common.DirectShow
             if (mirroringPacket == null)
                 return S_FALSE;
 
-            PacketData _packet = getPacketData(mirroringPacket);
-            if (!firstSample && mirroringPacket.CodecData != null)
+            byte[] buffer = GetNalus(mirroringPacket);
+            if (!m_bFirstSample && mirroringPacket.CodecData != null)
                 pSample.SetMediaType(getMediaType(mirroringPacket.CodecData));
 
-            firstSample = false;
             pSample.SetMediaTime(null, null);
             pSample.SetPreroll(false);
             pSample.SetDiscontinuity(false);
-            pSample.SetSyncPoint(_packet.SyncPoint);
-            pSample.SetTime(sanitize(_packet.Start), sanitize(_packet.Stop));
+            pSample.SetSyncPoint(false);
+
+            long start, stop;
+            GetTimestamps(out start, out stop);
+            pSample.SetTime(start, stop);
 
             IntPtr pBuffer;
             pSample.GetPointer(out pBuffer);
-            int _readed = 0;
-            ASSERT(pSample.GetSize() >= _packet.Size);
+            int _read = 0;
+            ASSERT(pSample.GetSize() >= buffer.Length);
 
-            _readed = FillSampleBuffer(pBuffer, pSample.GetSize(), ref _packet);
-            _packet.Dispose();
-            pSample.SetActualDataLength(_readed);
+            _read = FillSampleBuffer(pBuffer, pSample.GetSize(), buffer);
+            pSample.SetActualDataLength(_read);
 
             m_bFirstSample = false;
 
-            if (_readed == 0) return S_FALSE;
+            if (_read == 0) return S_FALSE;
 
             return NOERROR;
+        }
+
+        protected int FillSampleBuffer(IntPtr pBuffer, int _size, byte[] buffer)
+        {
+            int _read = 0;
+            if (buffer != null)
+            {
+                _read = buffer.Length <= _size ? buffer.Length : _size;
+                Marshal.Copy(buffer, 0, pBuffer, _read);
+            }
+            return _read;
+        }
+
+        protected byte[] GetNalus(MirroringPacket packet)
+        {
+            byte[] nalus;
+            if (packet.CodecData != null)
+            {
+                codecData = packet.CodecData;
+                nalus = NaluParser.CreateParameterSet(codecData.SPS, codecData.PPS);
+            }
+            else
+            {
+                nalus = NaluParser.ParseNalus(packet.Nalus, codecData.NALSizeMinusOne + 1);
+            }
+            return nalus;
+        }
+
+        protected void GetTimestamps(out long start, out long stop)
+        {
+            if (parser.TimestampOffset > -1)
+            {
+                if (parser.Filter.State == FilterState.Running)
+                {
+                    long streamTime;
+                    parser.Filter.StreamTime(out streamTime);
+                    //schedule in the future
+                    start = (parser.TimestampOffset * UNITS / MILLISECONDS) + streamTime;
+                    stop = start + 1;
+                }
+                else
+                {
+                    start = 0;
+                    stop = 0;
+                }
+            }
+            else
+            {
+                start = 0;
+                stop = 0;
+            }
         }
 
         MirroringPacket getNextMirroringPacket()
@@ -185,48 +234,6 @@ namespace AirPlayer.Common.DirectShow
                     return null;
             }
             return packetCache[currentPacketIndex++];
-        }
-
-        PacketData getPacketData(MirroringPacket packet)
-        {
-            PacketData packetData = new PacketData();
-            if (packet.CodecData != null)
-            {
-                codecData = packet.CodecData;
-                packetData.Buffer = NaluParser.CreateParameterSet(codecData.SPS, codecData.PPS);
-            }
-            else
-            {
-                packetData.Buffer = NaluParser.ParseNalus(packet.Nalus, codecData.NALSizeMinusOne + 1);
-            }
-            packetData.Size = packetData.Buffer.Length;
-            setTimestamps(packetData);
-            return packetData;
-        }
-
-        void setTimestamps(PacketData packetData)
-        {
-            if (parser.TimestampOffset > -1)
-            {
-                if (parser.Filter.State == FilterState.Running)
-                {
-                    long streamTime;
-                    parser.Filter.StreamTime(out streamTime);
-                    //schedule in the future
-                    packetData.Start = (parser.TimestampOffset * UNITS / MILLISECONDS) + streamTime;
-                    packetData.Stop = packetData.Start + 1;
-                }
-                else
-                {
-                    packetData.Start = 0;
-                    packetData.Stop = 0;
-                }
-            }
-            else
-            {
-                packetData.Start = 0;
-                packetData.Stop = 0;
-            }
         }
 
         static long convertToDSTime(ulong ntpTime)

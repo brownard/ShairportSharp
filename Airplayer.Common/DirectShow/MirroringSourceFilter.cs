@@ -183,9 +183,11 @@ namespace AirPlayer.Common.DirectShow
             }
             return _read;
         }
-
+                
         protected byte[] GetNalus(MirroringPacket packet)
         {
+            //convert the AVCC packets into Annex B as decoders seem to handle
+            //resolution/orientation changes better
             byte[] nalus;
             if (packet.CodecData != null)
             {

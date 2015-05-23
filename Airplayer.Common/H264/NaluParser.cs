@@ -9,6 +9,10 @@ namespace AirPlayer.Common.H264
     static class NaluParser
     {
         public const int START_CODE_LENGTH = 3;
+
+        /// <summary>
+        /// Converts an AVCC format packet into an Annex B format packet
+        /// </summary>
         public static byte[] ParseNalus(byte[] nalus, int lengthSize)
         {
             List<int> lengths = new List<int>();
@@ -43,6 +47,9 @@ namespace AirPlayer.Common.H264
             return nalusWithStartCodes;
         }
 
+        /// <summary>
+        /// Creates an Annex B format packet from SPS and PPS extradata
+        /// </summary>
         public static byte[] CreateParameterSet(byte[] sps, byte[] pps)
         {
             int spsLength = sps != null ? sps.Length : 0;

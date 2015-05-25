@@ -40,6 +40,9 @@ namespace ShairportSharp_Test
 
     public class MirrorPlayer : RotPlayer
     {
+        const string LAV_GUID = "{EE30215D-164F-4A92-A4EB-9D4C13390F9F}";
+        const string MS_GUID = "{212690FB-83E5-4526-8FD7-74478B7939CD}";
+
         MirroringStream stream;
 
         public MirrorPlayer(MirroringStream stream)
@@ -55,20 +58,13 @@ namespace ShairportSharp_Test
             int hr = m_GraphBuilder.AddFilter(sourceFilter, sourceFilter.Name);
             new HRESULT(hr).Throw();
 
-            var lavVideo = new DSFilter(new Guid("{EE30215D-164F-4A92-A4EB-9D4C13390F9F}"));
-            hr = m_GraphBuilder.AddFilter(lavVideo.Value, "LAV Video Decoder");
-            lavVideo.Dispose();
-            new HRESULT(hr).Throw();
+            using (DSFilter video = new DSFilter(new Guid(MS_GUID)))
+                hr = m_GraphBuilder.AddFilter(video.Value, video.Name);
 
-            //var msVideo = new DSFilter(new Guid("{212690FB-83E5-4526-8FD7-74478B7939CD}"));
-            //hr = m_GraphBuilder.AddFilter(msVideo.Value, "Microsoft DTV-DVD Video Decoder");
-            //msVideo.Dispose();
-            //new HRESULT(hr).Throw();
+            using (DSFilter source2 = new DSFilter(sourceFilter))
+                hr = m_GraphBuilder.Render(source2.OutputPin.Value);
 
-            DSFilter source2 = new DSFilter(sourceFilter);
-            hr = m_GraphBuilder.Render(source2.OutputPin.Value);
-            sourceFilter.SetQualityControl(m_GraphBuilder);
-            source2.Dispose();
+            FilterGraphUtils.SetQualityControl(m_GraphBuilder, sourceFilter);
             return new HRESULT(hr);
         }
 

@@ -66,11 +66,13 @@ namespace AirPlayer
                     hr = managedGraphBuilder.Render(sourceFilter.OutputPin.Value);                                
                 new HRESULT(hr).Throw();
 
+                FilterGraphUtils.RemoveUnusedFilters(managedGraphBuilder);
+
                 //The client stops sending data when the screen content isn't changing to save bandwidth/processing
                 //However this causes the renderer to generate quality control messages leading to some filters dropping frames
                 //The stream only contains one I-Frame at the start so the video cannot recover from dropped frames
                 //We override the quality management to prevent the filter receiving the messages
-                mirroringFilter.SetQualityControl(managedGraphBuilder);
+                FilterGraphUtils.SetQualityControl(managedGraphBuilder, mirroringFilter);
 
                 DirectShowUtil.EnableDeInterlace(graphBuilder);
 
@@ -228,7 +230,9 @@ namespace AirPlayer
                 {
                     string filterName = xmlreader.GetValueAsString("movieplayer", "h264videocodec", "");
                     if (!string.IsNullOrEmpty(filterName))
-                        Utils.AddFilterByName(managedGraphBuilder, DirectShow.FilterCategory.LegacyAmFilterCategory, filterName);
+                    {
+                        FilterGraphUtils.AddFilterByName(managedGraphBuilder, DirectShow.FilterCategory.LegacyAmFilterCategory, filterName);
+                    }
                 }
             }
         }

@@ -71,16 +71,7 @@ namespace AirPlayer.Common.DirectShow
             vi.dwLevel = (uint)codecData.Level;
             vi.dwFlags = (uint)codecData.NALSizeMinusOne + 1;
 
-            int offset = 0;
-            byte[] extraData = new byte[codecData.SPSLength + codecData.PPSLength + 4];
-            extraData[offset++] = (byte)(codecData.SPSLength >> 8);
-            extraData[offset++] = (byte)codecData.SPSLength;
-            for (int i = 0; i < codecData.SPSLength; i++)
-                extraData[offset++] = codecData.SPS[i];
-            extraData[offset++] = (byte)(codecData.PPSLength >> 8);
-            extraData[offset++] = (byte)(codecData.PPSLength);
-            for (int i = 0; i < codecData.PPSLength; i++)
-                extraData[offset++] = codecData.PPS[i];
+            byte[] extraData = NaluParser.CreateAVC1ParameterSet(codecData.SPS, codecData.PPS, 2);
             vi.cbSequenceHeader = (uint)extraData.Length;
 
             AMMediaType amt = new AMMediaType();

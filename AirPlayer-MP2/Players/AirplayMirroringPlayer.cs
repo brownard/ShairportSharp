@@ -38,7 +38,7 @@ namespace AirPlayer.MediaPortal2.Players
             {
                 using (DSFilter dsFilter = new DSFilter(sourceFilter))
                     _graphBuilder.Render(dsFilter.OutputPin.Value);
-                sourceFilter.SetQualityControl(_graphBuilder);
+                FilterGraphUtils.SetQualityControl(_graphBuilder, sourceFilter);
             }
         }
 

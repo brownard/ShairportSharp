@@ -43,7 +43,7 @@
     <Compile Include="DirectShow\GenericPushSourceFilter.cs" />
     <Compile Include="DirectShow\MediaTypeBuilder.cs" />
     <Compile Include="DirectShow\MirroringSourceFilter.cs" />
-    <Compile Include="DirectShow\Utils.cs" />
+    <Compile Include="DirectShow\FilterGraphUtils.cs" />
     <Compile Include="H264\BitReader.cs" />
     <Compile Include="H264\NaluParser.cs" />
     <Compile Include="H264\SPSUnit.cs" />

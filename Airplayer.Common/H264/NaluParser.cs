@@ -11,19 +11,19 @@ namespace AirPlayer.Common.H264
         public const int START_CODE_LENGTH = 3;
 
         /// <summary>
-        /// Converts an AVCC format packet into an Annex B format packet
+        /// Creates an Annex B format nalu from an AVC1 format nalu
         /// </summary>
-        public static byte[] ParseNalus(byte[] nalus, int lengthSize)
+        public static byte[] CreateAnnexBNalus(byte[] avc1Nalus, int lengthSize)
         {
             List<int> lengths = new List<int>();
             int totalLength = 0;
-            int nalusLength = nalus.Length;
+            int nalusLength = avc1Nalus.Length;
             int offset = 0;
             while (offset < nalusLength)
             {
                 if (!checkSize(nalusLength, offset, lengthSize))
                     break;
-                int length = intFromBigEndian(nalus, offset, lengthSize);
+                int length = intFromBigEndian(avc1Nalus, offset, lengthSize);
                 offset += lengthSize;
 
                 if (!checkSize(nalusLength, offset, length))
@@ -40,7 +40,7 @@ namespace AirPlayer.Common.H264
             int dstOffset = 0;
             foreach (int size in lengths)
             {
-                AddStartCodes(nalus, offset, nalusWithStartCodes, dstOffset, size);
+                AddStartCode(avc1Nalus, offset, nalusWithStartCodes, dstOffset, size);
                 offset += size + lengthSize;
                 dstOffset += START_CODE_LENGTH + size;
             }
@@ -48,9 +48,9 @@ namespace AirPlayer.Common.H264
         }
 
         /// <summary>
-        /// Creates an Annex B format packet from SPS and PPS extradata
+        /// Creates an Annex B format nalu from SPS and PPS extradata
         /// </summary>
-        public static byte[] CreateParameterSet(byte[] sps, byte[] pps)
+        public static byte[] CreateAnnexBParameterSet(byte[] sps, byte[] pps)
         {
             int spsLength = sps != null ? sps.Length : 0;
             int ppsLength = pps != null ? pps.Length : 0;
@@ -68,13 +68,47 @@ namespace AirPlayer.Common.H264
 
             byte[] nalu = new byte[length];
             if (spsLength != 0)
-                AddStartCodes(sps, 0, nalu, 0, spsLength);
+                AddStartCode(sps, 0, nalu, 0, spsLength);
             if (ppsLength != 0)
-                AddStartCodes(pps, 0, nalu, ppsOffset, ppsLength);
+                AddStartCode(pps, 0, nalu, ppsOffset, ppsLength);
             return nalu;
         }
 
-        public static void AddStartCodes(byte[] nalu, int srcOffset, byte[] dst, int dstOffset, int count)
+        /// <summary>
+        /// Creates an AVC1 format nalu from SPS and PPS extradata
+        /// </summary>
+        public static byte[] CreateAVC1ParameterSet(byte[] sps, byte[] pps, int lengthSize)
+        {
+            int spsLength = sps != null ? sps.Length : 0;
+            int ppsLength = pps != null ? pps.Length : 0;
+            int length = 0;
+            int ppsOffset = 0;
+            if (spsLength != 0)
+            {
+                length = lengthSize + spsLength;
+                ppsOffset = length;
+            }
+            if (ppsLength != 0)
+            {
+                length += lengthSize + ppsLength;
+            }
+
+            byte[] nalu = new byte[length];
+            if (spsLength != 0)
+                AddLengthCode(sps, 0, nalu, 0, spsLength, lengthSize);
+            if (ppsLength != 0)
+                AddLengthCode(pps, 0, nalu, ppsOffset, ppsLength, lengthSize);
+            return nalu;
+        }
+
+        static void AddLengthCode(byte[] nalu, int srcOffset, byte[] dst, int dstOffset, int count, int lengthSize)
+        {
+            for (int i = 0; i < lengthSize; i++)
+                dst[dstOffset + i] = (byte)(count >> (8 * (lengthSize - i - 1)));
+            Buffer.BlockCopy(nalu, srcOffset, dst, dstOffset + lengthSize, count);
+        }
+
+        static void AddStartCode(byte[] nalu, int srcOffset, byte[] dst, int dstOffset, int count)
         {
             for (int i = 0; i < START_CODE_LENGTH - 1; i++)
                 dst[dstOffset + i] = 0x00;

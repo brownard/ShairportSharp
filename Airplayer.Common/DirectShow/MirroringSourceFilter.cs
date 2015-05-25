@@ -24,41 +24,13 @@ namespace AirPlayer.Common.DirectShow
         #region IQualityControl
 
         public int Notify(IntPtr pSelf, Quality q)
-        {
+        {            
             return 0;
         }
 
         public int SetSink(IntPtr piqc)
         {
             return 0;
-        }
-
-        public void SetQualityControl(IGraphBuilder graphBuilder)
-        {
-            IEnumFilters pEnum;
-            if (SUCCEEDED(graphBuilder.EnumFilters(out pEnum)))
-            {
-                IBaseFilter[] aFilters = new IBaseFilter[1];
-                while (S_OK == pEnum.Next(1, aFilters, IntPtr.Zero))
-                {
-                    using (var filter = new DSFilter(aFilters[0]))
-                    {
-                        if (isVideoRenderer(filter))
-                        {
-                            IntPtr pqc = Marshal.GetComInterfaceForObject(this, typeof(IQualityControl));
-                            ((IQualityControl)filter.InputPin.Value).SetSink(pqc);
-                            Marshal.Release(pqc);
-                            break;
-                        }
-                    }
-                }
-                Marshal.ReleaseComObject(pEnum);
-            }
-        }
-
-        static bool isVideoRenderer(DSFilter filter)
-        {
-            return filter.OutputPin == null && filter.InputPin != null && filter.InputPin.ConnectionMediaType != null && filter.InputPin.ConnectionMediaType.majorType == MediaType.Video;
         }
 
         #endregion
@@ -96,20 +68,20 @@ namespace AirPlayer.Common.DirectShow
 
         protected override HRESULT LoadTracks()
         {
-            m_Tracks.Add(new MirrorDemuxTrack(this, stream));
+            m_Tracks.Add(new AVC1DemuxTrack(this, stream));
             return S_OK;
         }
     }
 
-    class MirrorDemuxTrack : DemuxTrack
+    class AVC1DemuxTrack : DemuxTrack
     {
         MirroringFileParser parser;
         MirroringStream stream;
-        H264CodecData codecData;
         MirroringPacket[] packetCache;
         int currentPacketIndex;
+        protected H264CodecData codecData;
 
-        public MirrorDemuxTrack(MirroringFileParser parser, MirroringStream stream)
+        public AVC1DemuxTrack(MirroringFileParser parser, MirroringStream stream)
             : base(parser, TrackType.Video)
         {
             this.parser = parser;
@@ -128,26 +100,26 @@ namespace AirPlayer.Common.DirectShow
         {
             if (iPosition == 0)
             {
-                pmt.Set(getMediaType(codecData));
+                pmt.Set(GetMediaType(codecData));
                 return NOERROR;
             }
             return VFW_S_NO_MORE_ITEMS;
         }
 
-        AMMediaType getMediaType(H264CodecData codecData)
+        protected virtual AMMediaType GetMediaType(H264CodecData codecData)
         {
-            return MediaTypeBuilder.H264(codecData);
+            return MediaTypeBuilder.AVC1(codecData);
         }
 
         public override HRESULT ReadMediaSample(ref IMediaSampleImpl pSample)
         {
-            MirroringPacket mirroringPacket = getNextMirroringPacket();
+            MirroringPacket mirroringPacket = GetNextMirroringPacket();
             if (mirroringPacket == null)
                 return S_FALSE;
 
             byte[] buffer = GetNalus(mirroringPacket);
             if (!m_bFirstSample && mirroringPacket.CodecData != null)
-                pSample.SetMediaType(getMediaType(mirroringPacket.CodecData));
+                pSample.SetMediaType(GetMediaType(mirroringPacket.CodecData));
 
             pSample.SetMediaTime(null, null);
             pSample.SetPreroll(false);
@@ -184,21 +156,14 @@ namespace AirPlayer.Common.DirectShow
             return _read;
         }
                 
-        protected byte[] GetNalus(MirroringPacket packet)
+        protected virtual byte[] GetNalus(MirroringPacket packet)
         {
-            //convert the AVCC packets into Annex B as decoders seem to handle
-            //resolution/orientation changes better
-            byte[] nalus;
             if (packet.CodecData != null)
             {
                 codecData = packet.CodecData;
-                nalus = NaluParser.CreateParameterSet(codecData.SPS, codecData.PPS);
+                return NaluParser.CreateAVC1ParameterSet(packet.CodecData.SPS, packet.CodecData.PPS, packet.CodecData.NALSizeMinusOne + 1);
             }
-            else
-            {
-                nalus = NaluParser.ParseNalus(packet.Nalus, codecData.NALSizeMinusOne + 1);
-            }
-            return nalus;
+            return packet.Nalus;
         }
 
         protected void GetTimestamps(out long start, out long stop)
@@ -226,7 +191,7 @@ namespace AirPlayer.Common.DirectShow
             }
         }
 
-        MirroringPacket getNextMirroringPacket()
+        protected virtual MirroringPacket GetNextMirroringPacket()
         {
             if (packetCache == null || currentPacketIndex == packetCache.Length)
             {
@@ -251,6 +216,29 @@ namespace AirPlayer.Common.DirectShow
             if (time < 0)
                 return null;
             return time;
+        }
+    }
+
+    class H264DemuxTrack : AVC1DemuxTrack
+    {
+        public H264DemuxTrack(MirroringFileParser parser, MirroringStream stream)
+            : base(parser, stream)
+        { }
+
+        protected override AMMediaType GetMediaType(H264CodecData codecData)
+        {
+            return MediaTypeBuilder.H264(codecData);
+        }
+
+        protected override byte[] GetNalus(MirroringPacket packet)
+        {
+            //convert the AVC1 nalus into Annex B
+            if (packet.CodecData != null)
+            {
+                codecData = packet.CodecData;
+                return NaluParser.CreateAnnexBParameterSet(codecData.SPS, codecData.PPS);
+            }
+            return NaluParser.CreateAnnexBNalus(packet.Nalus, codecData.NALSizeMinusOne + 1);
         }
     }
 }

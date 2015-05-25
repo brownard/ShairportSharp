@@ -246,7 +246,7 @@ namespace AirPlayer
             {
                 graphBuilder = (IGraphBuilder)new FilterGraph();
                 iStage = 5;
-                Utils.AddFilterByName(graphBuilder, DirectShow.FilterCategory.AudioRendererCategory, audioDevice);
+                FilterGraphUtils.AddFilterByName(graphBuilder, DirectShow.FilterCategory.AudioRendererCategory, audioDevice);
                 var sourceFilter = new GenericPushSourceFilter(settings.Source, settings.GetMediaType());
                 hr = graphBuilder.AddFilter(sourceFilter, sourceFilter.Name);
                 new HRESULT(hr).Throw();

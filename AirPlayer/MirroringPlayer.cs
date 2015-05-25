@@ -1,4 +1,5 @@
 ﻿using AirPlayer.Common.DirectShow;
+using DirectShow.Helper;
 using DirectShowLib;
 using DShowNET.Helper;
 using MediaPortal.GUI.Library;
@@ -17,7 +18,6 @@ namespace AirPlayer
     class MirroringPlayer : VideoPlayerVMR9
     {
         public const string DUMMY_URL = "http://localhost/AirPlayerMirroring.mp4";
-        const string LAV_VIDEO_GUID = "{EE30215D-164F-4A92-A4EB-9D4C13390F9F}";
 
         DirectShow.IGraphBuilder managedGraphBuilder;
         MirroringStream stream;
@@ -56,24 +56,21 @@ namespace AirPlayer
                 basicAudio = (IBasicAudio)graphBuilder;
                 videoWin = (IVideoWindow)graphBuilder;
 
-                int hr;
                 var mirroringFilter = new MirroringSourceFilter(stream);
-                using (var sourceFilter = new DirectShow.Helper.DSFilter(mirroringFilter))
-                {
-                    hr = managedGraphBuilder.AddFilter(sourceFilter.Value, sourceFilter.Name);
-                    new DirectShow.Helper.HRESULT(hr).Throw();
+                int hr = managedGraphBuilder.AddFilter(mirroringFilter, mirroringFilter.Name);
+                new HRESULT(hr).Throw();
 
-                    AddVideoFilter();
+                AddVideoFilter();
 
-                    hr = managedGraphBuilder.Render(sourceFilter.OutputPin.Value);
-                    new DirectShow.Helper.HRESULT(hr).Throw();
+                using (var sourceFilter = new DSFilter(mirroringFilter))
+                    hr = managedGraphBuilder.Render(sourceFilter.OutputPin.Value);                                
+                new HRESULT(hr).Throw();
 
-                    //The client stops sending data when the screen content isn't changing to save bandwidth/processing
-                    //However this causes the renderer to generate quality control messages leading to some filters dropping frames
-                    //The stream only contains one I-Frame at the start so the video cannot recover from dropped frames
-                    //We override the quality management to prevent the filter receiving the messages
-                    mirroringFilter.SetQualityControl(managedGraphBuilder);
-                }
+                //The client stops sending data when the screen content isn't changing to save bandwidth/processing
+                //However this causes the renderer to generate quality control messages leading to some filters dropping frames
+                //The stream only contains one I-Frame at the start so the video cannot recover from dropped frames
+                //We override the quality management to prevent the filter receiving the messages
+                mirroringFilter.SetQualityControl(managedGraphBuilder);
 
                 DirectShowUtil.EnableDeInterlace(graphBuilder);
 

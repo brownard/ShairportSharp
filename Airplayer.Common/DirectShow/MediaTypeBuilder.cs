@@ -91,7 +91,7 @@ namespace AirPlayer.Common.DirectShow
             IntPtr _ptr = Marshal.AllocCoTaskMem(cb + add);
             try
             {
-                Marshal.StructureToPtr(vi, _ptr, true);
+                Marshal.StructureToPtr(vi, _ptr, false);
                 if (extraData != null)
                     Marshal.Copy(extraData, 0, _ptr + cb - 4, extraData.Length);
                 amt.SetFormat(_ptr, cb + add);

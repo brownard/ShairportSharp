@@ -36,16 +36,22 @@ namespace AirPlayer.Common.DirectShow
             IEnumFilters pEnum;
             if (graphBuilder.EnumFilters(out pEnum) >= 0)
             {
-                IBaseFilter[] aFilters = new IBaseFilter[1];
-                while (pEnum.Next(1, aFilters, IntPtr.Zero) == 0)
+                try
                 {
-                    using (var filter = new DSFilter(aFilters[0]))
+                    IBaseFilter[] aFilters = new IBaseFilter[1];
+                    while (pEnum.Next(1, aFilters, IntPtr.Zero) == 0)
                     {
-                        if (filter.InputPin != null && !filter.InputPin.IsConnected && filter.OutputPin != null && !filter.OutputPin.IsConnected)
-                            graphBuilder.RemoveFilter(filter.Value);
+                        using (var filter = new DSFilter(aFilters[0]))
+                        {
+                            if (filter.InputPin != null && !filter.InputPin.IsConnected && filter.OutputPin != null && !filter.OutputPin.IsConnected)
+                                graphBuilder.RemoveFilter(filter.Value);
+                        }
                     }
                 }
-                Marshal.ReleaseComObject(pEnum);
+                finally
+                {
+                    Marshal.ReleaseComObject(pEnum);
+                }
             }
         }
 
@@ -54,21 +60,33 @@ namespace AirPlayer.Common.DirectShow
             IEnumFilters pEnum;
             if (graphBuilder.EnumFilters(out pEnum) >= 0)
             {
-                IBaseFilter[] aFilters = new IBaseFilter[1];
-                while (pEnum.Next(1, aFilters, IntPtr.Zero) == 0)
+                try
                 {
-                    using (var filter = new DSFilter(aFilters[0]))
+                    IBaseFilter[] aFilters = new IBaseFilter[1];
+                    while (pEnum.Next(1, aFilters, IntPtr.Zero) == 0)
                     {
-                        if (isVideoRenderer(filter))
+                        using (var filter = new DSFilter(aFilters[0]))
                         {
-                            IntPtr piqc = Marshal.GetComInterfaceForObject(iqc, typeof(IQualityControl));
-                            ((IQualityControl)filter.InputPin.Value).SetSink(piqc);
-                            Marshal.Release(piqc);
-                            break;
+                            if (isVideoRenderer(filter))
+                            {
+                                IntPtr piqc = Marshal.GetComInterfaceForObject(iqc, typeof(IQualityControl));
+                                try
+                                {
+                                    ((IQualityControl)filter.InputPin.Value).SetSink(piqc);
+                                }
+                                finally
+                                {
+                                    Marshal.Release(piqc);
+                                }
+                                break;
+                            }
                         }
                     }
                 }
-                Marshal.ReleaseComObject(pEnum);
+                finally
+                {
+                    Marshal.ReleaseComObject(pEnum);
+                }
             }
         }
 

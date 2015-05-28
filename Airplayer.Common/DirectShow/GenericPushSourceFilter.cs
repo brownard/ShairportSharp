@@ -62,8 +62,12 @@ namespace AirPlayer.Common.DirectShow
 
         public override HRESULT GetMediaType(int iPosition, ref AMMediaType pmt)
         {
-            pmt.Set(this.pmt);
-            return NOERROR;
+            if (iPosition == 0)
+            {
+                pmt.Set(this.pmt);
+                return NOERROR;
+            }
+            return VFW_S_NO_MORE_ITEMS;
         }
 
         public override PacketData GetNextPacket()

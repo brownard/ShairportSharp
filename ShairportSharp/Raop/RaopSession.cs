@@ -28,6 +28,8 @@ namespace ShairportSharp.Raop
         #region Private Variables
                 
         const string DIGEST_REALM = "raop";
+        const string ALAC_AUDIO_TYPE = "AppleLossless";
+
         byte[] hardwareAddress;
         byte[] localEndpoint;
         
@@ -36,7 +38,8 @@ namespace ShairportSharp.Raop
 
         object audioServerLock = new object();
         AudioServer audioServer; // Audio listener
-        int[] fmtp; //audio stream info
+        string audioType;
+        string[] fmtp; //audio stream info
         byte[] aesKey; //audio data encryption key
         byte[] aesIV; //IV
 
@@ -365,38 +368,32 @@ namespace ShairportSharp.Raop
             {
                 foreach (Match m in matches)
                 {
-                    if (m.Groups[1].Value == "fmtp")
+                    string parameter = m.Groups[1].Value;
+                    if (parameter == "rtpmap")
+                    {
+                        Match n = Regex.Match(m.Groups[2].Value, @"\d+\s+([^\s]*)");
+                        if (n.Success)
+                            audioType = n.Groups[1].Value;
+                        Logger.Debug("RaopSession: Audio Type '{0}'", m.Groups[2].Value);
+                    }
+                    else if (parameter == "fmtp")
                     {
                         // Parse FMTP as array
-                        string[] temp = m.Groups[2].Value.Split(' ');
-                        fmtp = new int[temp.Length];
-                        for (int i = 0; i < temp.Length; i++)
-                        {
-                            int j;
-                            if (int.TryParse(temp[i], NumberStyles.Any, CultureInfo.InvariantCulture, out j))
-                            {
-                                fmtp[i] = j; // int.Parse(temp[i], CultureInfo.InvariantCulture);
-                            }
-                            else
-                            {
-                                fmtp = null;
-                                break;
-                            }
-                        }
+                        fmtp = m.Groups[2].Value.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                         Logger.Debug("RAOPSession: Received audio info - '{0}'", m.Groups[2].Value);
                     }
-                    else if (m.Groups[1].Value == "rsaaeskey")
+                    else if (parameter == "rsaaeskey")
                     {
                         aesKey = decryptRSA(decodeBase64(m.Groups[2].Value));
                         Logger.Debug("RAOPSession: Received AES Key - '{0}'", m.Groups[2].Value);
                     }
-                    else if (m.Groups[1].Value == "fpaeskey")
+                    else if (parameter == "fpaeskey")
                     {
                         byte[] encryptedKey = decodeBase64(m.Groups[2].Value);
                         aesKey = DecryptSapKey(encryptedKey);
                         Logger.Debug("RaopSession: Received AES Key - {0}", aesKey.HexStringFromBytes());
                     }
-                    else if (m.Groups[1].Value == "aesiv")
+                    else if (parameter == "aesiv")
                     {
                         aesIV = decodeBase64(m.Groups[2].Value);
                         Logger.Debug("RAOPSession: Received AES IV - '{0}'", m.Groups[2].Value);
@@ -419,19 +416,26 @@ namespace ShairportSharp.Raop
 
         bool setupAudioServer(HttpRequest request, out int port)
         {
-            int controlPort = 0;
-            int timingPort = 0;
-            port = 0;
+            port = UDPPort;
+            if (audioType != ALAC_AUDIO_TYPE)
+            {
+                Logger.Warn("Unsupported audio type '{0}'", audioType);
+                return true;
+            }
 
             string value = request.GetHeader("Transport");
+
             // Control port
+            int controlPort = 0;
             Match m = Regex.Match(value, @";control_port=(\d+)");
             if (m.Success)
             {
                 controlPort = int.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture);
                 Logger.Debug("RAOPSession: Set client control port to {0}", controlPort);
             }
+
             // Timing port
+            int timingPort = 0;
             m = Regex.Match(value, @";timing_port=(\d+)");
             if (m.Success)
             {
@@ -440,15 +444,7 @@ namespace ShairportSharp.Raop
             }
 
             lock (audioServerLock)
-            {
-                if (fmtp == null)
-                {
-                    Logger.Warn("RAOPSession: Unable to create Audio Server, received SETUP before ANNOUNCE");
-                    fmtp = new int[12];
-                    //port = UDPPort;
-                    //return true;
-                }
-
+            {                
                 string sessionId = request.Uri;
                 AudioSession session = new AudioSession(aesIV, aesKey, fmtp, controlPort, timingPort, BufferSize);
                 audioServer = new AudioServer(session, UDPPort);

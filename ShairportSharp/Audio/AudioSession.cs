@@ -28,30 +28,29 @@ namespace ShairportSharp.Audio
         int outputSize;
         int bufferSize;
 
-        public AudioSession(byte[] aesiv, byte[] aeskey, int[] fmtp, int controlPort, int timingPort, int bufferSize)
+        public AudioSession(byte[] aesiv, byte[] aeskey, string[] fmtp, int controlPort, int timingPort, int bufferSize)
         {
-            // KEYS
             this.aesIV = aesiv;
             this.aesKey = aeskey;
-
-            // PORTS
             this.controlPort = controlPort;
             this.timingPort = timingPort;
-
             this.bufferSize = bufferSize;
 
             // FMTP
-            frameSize = fmtp[1];
-            _7a = fmtp[2];
-            sampleSize = fmtp[3];
-            rice_historymult = fmtp[4];
-            rice_initialhistory = fmtp[5];
-            rice_kmodifier = fmtp[6];
-            channels = fmtp[7];
-            _80 = fmtp[8];
-            _82 = fmtp[9];
-            _86 = fmtp[10];
-            sampleRate = fmtp[11];
+            if (fmtp != null && fmtp.Length > 11)
+            {
+                frameSize = parseInt(fmtp[1]);
+                _7a = parseInt(fmtp[2]);
+                sampleSize = parseInt(fmtp[3]);
+                rice_historymult = parseInt(fmtp[4]);
+                rice_initialhistory = parseInt(fmtp[5]);
+                rice_kmodifier = parseInt(fmtp[6]);
+                channels = parseInt(fmtp[7]);
+                _80 = parseInt(fmtp[8]);
+                _82 = parseInt(fmtp[9]);
+                _86 = parseInt(fmtp[10]);
+                sampleRate = parseInt(fmtp[11]);
+            }
             outputSize = 4 * (frameSize + 3);
             alacFile = createAlac();
         }
@@ -151,6 +150,14 @@ namespace ShairportSharp.Audio
         public int BufferSizeToFrames()
         {
             return (int)Math.Ceiling(((double)BufferSize * SampleRate) / (FrameSize * 1000)) * 2; //milliseconds to number of frames (doubled)
+        }
+
+        static int parseInt(string s)
+        {
+            int i;
+            if (!int.TryParse(s, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out i))
+                i = 0;
+            return i;
         }
     }
 }
